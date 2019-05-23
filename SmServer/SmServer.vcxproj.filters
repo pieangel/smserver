@@ -1,0 +1,325 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Server">
+      <UniqueIdentifier>{85b089ea-24ba-4cb6-addd-9115ed558dde}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Chart">
+      <UniqueIdentifier>{963019e3-8c4a-4b68-968c-88539da572a1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Global">
+      <UniqueIdentifier>{dcf05268-83f0-468f-9c6d-31a988f08837}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Symbol">
+      <UniqueIdentifier>{fc7c2ac1-fd2b-4b43-a0fa-742548b19275}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Market">
+      <UniqueIdentifier>{6c4c5dc4-8c93-4f4a-97ca-75b2169a98f4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Main">
+      <UniqueIdentifier>{fc4ca6f0-bc32-43a9-8c95-c737649a717e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Database">
+      <UniqueIdentifier>{e729385a-5bf9-4ac0-84e7-bd9b2ece9c7a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Json">
+      <UniqueIdentifier>{199bbd80-6034-47de-badd-1aed4dec96f3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Config">
+      <UniqueIdentifier>{4e99fa18-7290-42f2-84e0-dc67389b7565}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Xml">
+      <UniqueIdentifier>{3370f794-9b5e-4485-b5e3-78cb7a16ccd5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scheduler">
+      <UniqueIdentifier>{489d07e0-9865-4927-9809-287acfb64432}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Format">
+      <UniqueIdentifier>{52fe9490-52b9-47c1-9586-3e25a48ca9bc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Log">
+      <UniqueIdentifier>{6657c39f-114f-4d8b-83be-20804e1285e4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Util">
+      <UniqueIdentifier>{ad235c1c-8203-4bbf-96e7-79f824fe2860}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="HdClient">
+      <UniqueIdentifier>{95882de8-0470-4be3-b227-7e99f1163b4d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="User">
+      <UniqueIdentifier>{4640692a-bbf7-481b-bae0-d11a653f08fa}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="SmChartServer.h">
+      <Filter>Server</Filter>
+    </ClInclude>
+    <ClInclude Include="ServerDefine.h">
+      <Filter>Server</Filter>
+    </ClInclude>
+    <ClInclude Include="SmHttpSession.h">
+      <Filter>Server</Filter>
+    </ClInclude>
+    <ClInclude Include="SmListener.h">
+      <Filter>Server</Filter>
+    </ClInclude>
+    <ClInclude Include="SmWebsocketSession.h">
+      <Filter>Server</Filter>
+    </ClInclude>
+    <ClInclude Include="Global\TemplateSingleton.h">
+      <Filter>Global</Filter>
+    </ClInclude>
+    <ClInclude Include="SmCommon.h">
+      <Filter>Server</Filter>
+    </ClInclude>
+    <ClInclude Include="SmMarket.h">
+      <Filter>Market</Filter>
+    </ClInclude>
+    <ClInclude Include="SmMarketManager.h">
+      <Filter>Market</Filter>
+    </ClInclude>
+    <ClInclude Include="SmSymbol.h">
+      <Filter>Symbol</Filter>
+    </ClInclude>
+    <ClInclude Include="SmSymbolManager.h">
+      <Filter>Symbol</Filter>
+    </ClInclude>
+    <ClInclude Include="framework.h">
+      <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="MainFrm.h">
+      <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="SmServer.h">
+      <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="SmServerDoc.h">
+      <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="SmServerView.h">
+      <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="SmCategory.h">
+      <Filter>Market</Filter>
+    </ClInclude>
+    <ClInclude Include="SmSymbolReader.h">
+      <Filter>Symbol</Filter>
+    </ClInclude>
+    <ClInclude Include="Database\influxdb.hpp">
+      <Filter>Database</Filter>
+    </ClInclude>
+    <ClInclude Include="Json\xpjson.hpp">
+      <Filter>Json</Filter>
+    </ClInclude>
+    <ClInclude Include="SmConfigManager.h">
+      <Filter>Config</Filter>
+    </ClInclude>
+    <ClInclude Include="Xml\tinyxml2.h">
+      <Filter>Xml</Filter>
+    </ClInclude>
+    <ClInclude Include="Xml\pugiconfig.hpp">
+      <Filter>Xml</Filter>
+    </ClInclude>
+    <ClInclude Include="Xml\pugixml.hpp">
+      <Filter>Xml</Filter>
+    </ClInclude>
+    <ClInclude Include="Scheduler\Cron.h">
+      <Filter>Scheduler</Filter>
+    </ClInclude>
+    <ClInclude Include="Scheduler\ctpl.h">
+      <Filter>Scheduler</Filter>
+    </ClInclude>
+    <ClInclude Include="Scheduler\ctpl_stl.h">
+      <Filter>Scheduler</Filter>
+    </ClInclude>
+    <ClInclude Include="Scheduler\InterruptableSleep.h">
+      <Filter>Scheduler</Filter>
+    </ClInclude>
+    <ClInclude Include="Scheduler\Scheduler.h">
+      <Filter>Scheduler</Filter>
+    </ClInclude>
+    <ClInclude Include="Format\core.h">
+      <Filter>Format</Filter>
+    </ClInclude>
+    <ClInclude Include="Format\format.h">
+      <Filter>Format</Filter>
+    </ClInclude>
+    <ClInclude Include="Format\format-inl.h">
+      <Filter>Format</Filter>
+    </ClInclude>
+    <ClInclude Include="Format\ostream.h">
+      <Filter>Format</Filter>
+    </ClInclude>
+    <ClInclude Include="Format\posix.h">
+      <Filter>Format</Filter>
+    </ClInclude>
+    <ClInclude Include="Format\printf.h">
+      <Filter>Format</Filter>
+    </ClInclude>
+    <ClInclude Include="Format\ranges.h">
+      <Filter>Format</Filter>
+    </ClInclude>
+    <ClInclude Include="Format\time.h">
+      <Filter>Format</Filter>
+    </ClInclude>
+    <ClInclude Include="Log\loguru.hpp">
+      <Filter>Log</Filter>
+    </ClInclude>
+    <ClInclude Include="Util\VtStringUtil.h">
+      <Filter>Util</Filter>
+    </ClInclude>
+    <ClInclude Include="SmLogManager.h">
+      <Filter>Log</Filter>
+    </ClInclude>
+    <ClInclude Include="HDCtrl\hdfcommagent.h">
+      <Filter>HdClient</Filter>
+    </ClInclude>
+    <ClInclude Include="SmHdCtrl.h">
+      <Filter>HdClient</Filter>
+    </ClInclude>
+    <ClInclude Include="SmHdClient.h">
+      <Filter>HdClient</Filter>
+    </ClInclude>
+    <ClInclude Include="SmSessionManager.h">
+      <Filter>Server</Filter>
+    </ClInclude>
+    <ClInclude Include="SmRealtimeRegisterManager.h">
+      <Filter>Chart</Filter>
+    </ClInclude>
+    <ClInclude Include="SmUser.h">
+      <Filter>User</Filter>
+    </ClInclude>
+    <ClInclude Include="SmUserManager.h">
+      <Filter>User</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="SmChartServer.cpp">
+      <Filter>Server</Filter>
+    </ClCompile>
+    <ClCompile Include="SmHttpSession.cpp">
+      <Filter>Server</Filter>
+    </ClCompile>
+    <ClCompile Include="SmWebsocketSession.cpp">
+      <Filter>Server</Filter>
+    </ClCompile>
+    <ClCompile Include="SmListener.cpp">
+      <Filter>Server</Filter>
+    </ClCompile>
+    <ClCompile Include="SmCommon.cpp">
+      <Filter>Server</Filter>
+    </ClCompile>
+    <ClCompile Include="SmCategory.cpp">
+      <Filter>Market</Filter>
+    </ClCompile>
+    <ClCompile Include="SmMarket.cpp">
+      <Filter>Market</Filter>
+    </ClCompile>
+    <ClCompile Include="SmMarketManager.cpp">
+      <Filter>Market</Filter>
+    </ClCompile>
+    <ClCompile Include="SmSymbol.cpp">
+      <Filter>Symbol</Filter>
+    </ClCompile>
+    <ClCompile Include="SmSymbolManager.cpp">
+      <Filter>Symbol</Filter>
+    </ClCompile>
+    <ClCompile Include="MainFrm.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
+    <ClCompile Include="SmServer.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
+    <ClCompile Include="SmServerDoc.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
+    <ClCompile Include="SmServerView.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
+    <ClCompile Include="SmSymbolReader.cpp">
+      <Filter>Symbol</Filter>
+    </ClCompile>
+    <ClCompile Include="SmConfigManager.cpp">
+      <Filter>Config</Filter>
+    </ClCompile>
+    <ClCompile Include="Xml\tinyxml2.cpp">
+      <Filter>Xml</Filter>
+    </ClCompile>
+    <ClCompile Include="Xml\pugixml.cpp">
+      <Filter>Xml</Filter>
+    </ClCompile>
+    <ClCompile Include="Format\format.cc">
+      <Filter>Format</Filter>
+    </ClCompile>
+    <ClCompile Include="Format\posix.cc">
+      <Filter>Format</Filter>
+    </ClCompile>
+    <ClCompile Include="Log\loguru.cpp">
+      <Filter>Log</Filter>
+    </ClCompile>
+    <ClCompile Include="Util\VtStringUtil.cpp">
+      <Filter>Util</Filter>
+    </ClCompile>
+    <ClCompile Include="SmLogManager.cpp">
+      <Filter>Log</Filter>
+    </ClCompile>
+    <ClCompile Include="HDCtrl\hdfcommagent.cpp">
+      <Filter>HdClient</Filter>
+    </ClCompile>
+    <ClCompile Include="SmHdCtrl.cpp">
+      <Filter>HdClient</Filter>
+    </ClCompile>
+    <ClCompile Include="SmHdClient.cpp">
+      <Filter>HdClient</Filter>
+    </ClCompile>
+    <ClCompile Include="SmSessionManager.cpp">
+      <Filter>Server</Filter>
+    </ClCompile>
+    <ClCompile Include="SmRealtimeRegisterManager.cpp">
+      <Filter>Chart</Filter>
+    </ClCompile>
+    <ClCompile Include="SmUser.cpp">
+      <Filter>User</Filter>
+    </ClCompile>
+    <ClCompile Include="SmUserManager.cpp">
+      <Filter>User</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="SmServer.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\SmServer.rc2">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\SmServerDoc.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\SmServer.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\Toolbar.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+</Project>
