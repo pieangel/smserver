@@ -201,9 +201,9 @@ void CMainFrame::OnServerStart()
 	// TODO: Add your command handler code here
 	//_ChartServer = new SmChartServer();
 	//_ChartServer->Start();
-	//ScheduleTest();
+	ScheduleTest();
 	//ReadSymbols();
-	InitHdClient();
+	//InitHdClient();
 }
 
 void CMainFrame::DbTest()
@@ -314,10 +314,31 @@ void TimeFuction() {
 	mfrm->ReadSymbols();
 }
 
+void message(const std::string& s) {
+	std::cout << s << std::endl;
+}
+
+void onevent(const int id) {
+	std::cout << id << std::endl;
+}
+
+
+class Functor
+{
+public:
+	int operator()(int a, int b)
+	{
+		return a < b;
+	}
+};
+
 void CMainFrame::ScheduleTest()
 {
 	_Scheduler = new Bosma::Scheduler(12);
-	_Scheduler->at("2019-05-21 11:10:15", TimeFuction);
+	std::chrono::system_clock::time_point tp =_Scheduler->at("2019-05-27 02:29:16", onevent, 1);
+
+	Functor* ff = new Functor();
+	//_Scheduler->at("2017-04-19 12:31:15", ff->(1,1));
 }
 
 void CMainFrame::InitHdClient()

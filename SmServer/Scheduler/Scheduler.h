@@ -101,7 +101,7 @@ namespace Bosma {
         }
 
         template<typename _Callable, typename... _Args>
-        void at(const std::string &time, _Callable &&f, _Args &&... args) {
+		Clock::time_point at(const std::string &time, _Callable &&f, _Args &&... args) {
           // get current time as a tm object
           auto time_now = Clock::to_time_t(Clock::now());
           std::tm tm = *std::localtime(&time_now);
@@ -123,9 +123,12 @@ namespace Bosma {
           } else {
             // could not parse time
             throw std::runtime_error("Cannot parse time string: " + time);
+
           }
 
           in(tp, std::forward<_Callable>(f), std::forward<_Args>(args)...);
+
+		  return tp;
         }
 
         template<typename _Callable, typename... _Args>
