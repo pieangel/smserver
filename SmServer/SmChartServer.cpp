@@ -3,6 +3,7 @@
 #include "SmListener.h"
 #include "SmWebsocketSession.h"
 #include "SmHttpSession.h"
+#include "SmSessionManager.h"
 #include <string>
 
 SmChartServer::SmChartServer()
@@ -23,10 +24,10 @@ void SmChartServer::Start()
 	std::string addr = "192.168.0.38";
 	std::string por = "9991";
 	std::string path = "C:\\Server\\";
-	std::string thread_count = "1";
+	std::string thread_count = "5";
 	auto const address = net::ip::make_address(addr.c_str());
 	auto const port = static_cast<unsigned short>(std::atoi(por.c_str()));
-	auto const doc_root = std::make_shared<std::string>(path);
+	auto const doc_root = path;
 	auto const threads = std::max<int>(1, std::atoi(thread_count.c_str()));
 
 	// The io_context is required for all I/O
@@ -36,7 +37,7 @@ void SmChartServer::Start()
 	std::make_shared<SmListener>(
 		ioc,
 		tcp::endpoint{ address, port },
-		doc_root)->run();
+		std::make_shared<SmSessionManager>(doc_root))->run();
 
 	// Capture SIGINT and SIGTERM to perform a clean shutdown
 	net::signal_set signals(ioc, SIGINT, SIGTERM);

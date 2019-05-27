@@ -2,12 +2,13 @@
 #include "ServerDefine.h"
 #include "SmCommon.h"
 #include <memory>
-
+class SmSessionManager;
 class SmWebsocketSession : public std::enable_shared_from_this<SmWebsocketSession>
 {
 	websocket::stream<beast::tcp_stream> ws_;
 	beast::flat_buffer buffer_;
 	std::vector<boost::shared_ptr<std::string const>> queue_;
+	std::shared_ptr<SmSessionManager> session_mgr_;
 public:
 	// Take ownership of the socket
 	explicit
@@ -15,6 +16,17 @@ public:
 		: ws_(std::move(socket))
 	{
 	}
+
+	SmWebsocketSession(
+		tcp::socket&& socket,
+		std::shared_ptr<SmSessionManager> const& session_mgr)
+		: ws_(std::move(socket))
+		, session_mgr_(session_mgr)
+	{
+
+	}
+
+	~SmWebsocketSession();
 
 	void send(boost::shared_ptr<std::string const> const& ss);
 
@@ -46,17 +58,8 @@ public:
 	}
 
 private:
-	void
-		on_send(boost::shared_ptr<std::string const> const& ss);
-	void
-		on_accept(beast::error_code ec)
-	{
-		if (ec)
-			return SmCommon::fail(ec, "accept");
-
-		// Read a message
-		do_read();
-	}
+	void on_send(boost::shared_ptr<std::string const> const& ss);
+	void on_accept(beast::error_code ec);
 
 	void
 		do_read()
@@ -72,25 +75,7 @@ private:
 	void
 		on_read(
 			beast::error_code ec,
-			std::size_t bytes_transferred)
-	{
-		boost::ignore_unused(bytes_transferred);
-
-		// This indicates that the websocket_session was closed
-		if (ec == websocket::error::closed)
-			return;
-
-		if (ec)
-			SmCommon::fail(ec, "read");
-
-		// Echo the message
-		ws_.text(ws_.got_text());
-		ws_.async_write(
-			buffer_.data(),
-			beast::bind_front_handler(
-				&SmWebsocketSession::on_write,
-				shared_from_this()));
-	}
+			std::size_t bytes_transferred);
 
 	void
 		on_write(
@@ -102,10 +87,15 @@ private:
 		if (ec)
 			return SmCommon::fail(ec, "write");
 
-		// Clear the buffer
-		buffer_.consume(buffer_.size());
+		// Remove the string from the queue
+		queue_.erase(queue_.begin());
 
-		// Do another read
-		do_read();
+		// Send the next message if any
+		if (!queue_.empty())
+			ws_.async_write(
+				net::buffer(*queue_.front()),
+				beast::bind_front_handler(
+					&SmWebsocketSession::on_write,
+					shared_from_this()));
 	}
 };

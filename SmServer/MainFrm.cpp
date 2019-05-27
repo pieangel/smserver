@@ -12,7 +12,6 @@
 #include "SmSymbolReader.h"
 #include "SmMarketManager.h"
 #include "Database/influxdb.hpp"
-#include "Json/xpjson.hpp"
 #include <iostream>
 #include <chrono>
 #include <iomanip>
@@ -25,6 +24,7 @@
 #include "Xml/pugixml.hpp"
 #include "SmSymbolManager.h"
 #include "SmUserManager.h"
+#include "Json/json.hpp"
 using namespace std;
 
 #ifdef _DEBUG
@@ -199,9 +199,9 @@ void CMainFrame::OnUpdateApplicationLook(CCmdUI* pCmdUI)
 void CMainFrame::OnServerStart()
 {
 	// TODO: Add your command handler code here
-	//_ChartServer = new SmChartServer();
-	//_ChartServer->Start();
-	ScheduleTest();
+	_ChartServer = new SmChartServer();
+	_ChartServer->Start();
+	//ScheduleTest();
 	//ReadSymbols();
 	//InitHdClient();
 }
@@ -287,22 +287,29 @@ void CMainFrame::DbTest()
 	std::cout << "local: " << std::put_time(std::localtime(&t), "%c %Z") << '\n';
 
 	std::string db_name = "testx";
-	JSON::Value v;
-	v.read(resp);
-	JSON::Array& a = v["results"][0]["series"][0]["values"].a();
-	for (size_t i = 0; i < a.size(); ++i) {
-		JSON::Array& name = a[i].a();
-		int h, l, o, c, v;
-		std::string time = name[0];
-		h = name[1];
-		l = name[2];
-		o = name[3];
-		c = name[4];
-		v = name[5];
-		CString msg;
-		msg.Format(_T("time = %s, h=%d, l=%d, o=%d, c=%d, v=%d\n"), time.c_str(), h, l, o, c, v);
-		TRACE(msg);
+// 	JSON::Value v;
+// 	v.read(resp);
+// 	JSON::Array& a = v["results"][0]["series"][0]["values"].a();
+// 	for (size_t i = 0; i < a.size(); ++i) {
+// 		JSON::Array& name = a[i].a();
+// 		int h, l, o, c, v;
+// 		std::string time = name[0];
+// 		h = name[1];
+// 		l = name[2];
+// 		o = name[3];
+// 		c = name[4];
+// 		v = name[5];
+// 		CString msg;
+// 		msg.Format(_T("time = %s, h=%d, l=%d, o=%d, c=%d, v=%d\n"), time.c_str(), h, l, o, c, v);
+// 		TRACE(msg);
+// 	}
+
+	auto j2 = R"(
+	{
+		"happy": true,
+		"pi": 3.141
 	}
+	)"_json;
 
 	TRACE(resp.c_str());
 

@@ -27,12 +27,55 @@ SmUser* SmUserManager::AddUser(std::string id, SmWebsocketSession* socket)
 	return user;
 }
 
+SmUser* SmUserManager::AddUser(std::string id, std::string pwd, SmWebsocketSession* socket)
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+
+	if (!socket)
+		return nullptr;
+	SmUser* user = FindUser(id);
+	if (user)
+		return user;
+
+	user = new SmUser();
+	user->Id(id);
+	user->Password(pwd);
+	user->Socket(socket);
+	_UserMap[id] = user;
+	_SocketToUserMap[socket] = user;
+	return user;
+}
+
 void SmUserManager::DeleteUser(std::string id)
 {
 	std::lock_guard<std::mutex> lock(_mutex);
+
 	auto it = _UserMap.find(id);
 	if (it != _UserMap.end()) {
 		delete it->second;
+	}
+}
+
+void SmUserManager::DeleteUser(SmWebsocketSession* socket)
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+
+	if (!socket)
+		return;
+
+	auto it = _SocketToUserMap.find(socket);
+	if (it != _SocketToUserMap.end()) {
+		SmUser* user = it->second;
+		RemoveUser(user->Id());
+		_SocketToUserMap.erase(it);
+	}
+}
+
+void SmUserManager::RemoveUser(std::string id)
+{
+	auto it = _UserMap.find(id);
+	if (it != _UserMap.end()) {
+		_UserMap.erase(it);
 	}
 }
 
@@ -60,4 +103,14 @@ void SmUserManager::SendBroadcastMessage(std::string message)
 		if (auto sp = wp.lock())
 			sp->send(ss);
 
+}
+
+SmUser* SmUserManager::FindUser(std::string id)
+{
+	auto it = _UserMap.find(id);
+	if (it != _UserMap.end()) {
+		return it->second;
+	}
+
+	return nullptr;
 }

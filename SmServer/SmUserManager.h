@@ -19,7 +19,12 @@ public:
 	SmUserManager();
 	~SmUserManager();
 	SmUser* AddUser(std::string id, SmWebsocketSession* socket);
+	SmUser* AddUser(std::string id, std::string pwd, SmWebsocketSession* socket);
 	void DeleteUser(std::string id);
+	void DeleteUser(SmWebsocketSession* socket);
 	void SendBroadcastMessage(std::string message);
+	SmUser* FindUser(std::string id);
+private:
+	void RemoveUser(std::string id);
 };
 

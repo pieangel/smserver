@@ -1,6 +1,6 @@
 #include "SmSessionManager.h"
 #include "SmWebSocketSession.h"
-
+#include "SmUserManager.h"
 SmSessionManager::
 SmSessionManager(std::string doc_root)
 	: doc_root_(std::move(doc_root))
@@ -20,6 +20,8 @@ SmSessionManager::
 leave(SmWebsocketSession* session)
 {
 	std::lock_guard<std::mutex> lock(mutex_);
+	SmUserManager* userMgr = SmUserManager::GetInstance();
+	userMgr->DeleteUser(session);
 	sessions_.erase(session);
 }
 
@@ -45,7 +47,8 @@ send(std::string message)
 	// For each session in our local list, try to acquire a strong
    // pointer. If successful, then send the message on that session.
 	for (auto const& wp : v)
-		if (auto sp = wp.lock())
+		if (auto sp = wp.lock()) {		
 			sp->send(ss);
+		}
 
 }

@@ -2,6 +2,7 @@
 #include "ServerDefine.h"
 #include "SmWebsocketSession.h"
 #include "SmCommon.h"
+#include "SmSessionManager.h"
 
 
 // This function produces an HTTP response for the given
@@ -205,7 +206,8 @@ class SmHttpSession : public std::enable_shared_from_this<SmHttpSession>
 
 	beast::tcp_stream stream_;
 	beast::flat_buffer buffer_;
-	std::shared_ptr<std::string const> doc_root_;
+	//std::shared_ptr<std::string const> doc_root_;
+	std::shared_ptr<SmSessionManager> session_mgr_;
 	queue queue_;
 
 	// The parser is stored in an optional container so we can
@@ -216,9 +218,9 @@ public:
 	// Take ownership of the socket
 	SmHttpSession(
 		tcp::socket&& socket,
-		std::shared_ptr<std::string const> const& doc_root)
+		std::shared_ptr<SmSessionManager> const& session_mgr)
 		: stream_(std::move(socket))
-		, doc_root_(doc_root)
+		, session_mgr_(session_mgr)
 		, queue_(*this)
 	{
 	}
@@ -272,12 +274,13 @@ private:
 			// Create a websocket session, transferring ownership
 			// of both the socket and the HTTP request.
 			std::make_shared<SmWebsocketSession>(
-				stream_.release_socket())->do_accept(parser_->release());
+				stream_.release_socket(), 
+				session_mgr_)->do_accept(parser_->release());
 			return;
 		}
 
 		// Send the response
-		handle_request(*doc_root_, std::move(parser_->release()), queue_);
+		handle_request(session_mgr_->doc_root(), std::move(parser_->release()), queue_);
 
 		// If we aren't at the queue limit, try to pipeline another request
 		if (!queue_.is_full())

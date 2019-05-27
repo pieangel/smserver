@@ -205,7 +205,7 @@
     <ClInclude Include="framework.h" />
     <ClInclude Include="Global\TemplateSingleton.h" />
     <ClInclude Include="HDCtrl\hdfcommagent.h" />
-    <ClInclude Include="Json\xpjson.hpp" />
+    <ClInclude Include="Json\json.hpp" />
     <ClInclude Include="Log\loguru.hpp" />
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="pch.h" />
@@ -226,6 +226,7 @@
     <ClInclude Include="SmLogManager.h" />
     <ClInclude Include="SmMarket.h" />
     <ClInclude Include="SmMarketManager.h" />
+    <ClInclude Include="SmMessageManager.h" />
     <ClInclude Include="SmRealtimeRegisterManager.h" />
     <ClInclude Include="SmRealtimeSymbolServiceManager.h" />
     <ClInclude Include="SmServer.h" />
@@ -288,6 +289,7 @@
     <ClCompile Include="SmLogManager.cpp" />
     <ClCompile Include="SmMarket.cpp" />
     <ClCompile Include="SmMarketManager.cpp" />
+    <ClCompile Include="SmMessageManager.cpp" />
     <ClCompile Include="SmRealtimeRegisterManager.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>

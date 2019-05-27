@@ -53,6 +53,9 @@
     <Filter Include="User">
       <UniqueIdentifier>{4640692a-bbf7-481b-bae0-d11a653f08fa}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Service">
+      <UniqueIdentifier>{1f071981-78f2-4d82-bb20-ac0e47ef9f4d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SmChartServer.h">
@@ -120,9 +123,6 @@
     </ClInclude>
     <ClInclude Include="Database\influxdb.hpp">
       <Filter>Database</Filter>
-    </ClInclude>
-    <ClInclude Include="Json\xpjson.hpp">
-      <Filter>Json</Filter>
     </ClInclude>
     <ClInclude Include="SmConfigManager.h">
       <Filter>Config</Filter>
@@ -205,7 +205,15 @@
     <ClInclude Include="SmUserManager.h">
       <Filter>User</Filter>
     </ClInclude>
-    <ClInclude Include="SmRealtimeSymbolServiceManager.h" />
+    <ClInclude Include="Json\json.hpp">
+      <Filter>Json</Filter>
+    </ClInclude>
+    <ClInclude Include="SmMessageManager.h">
+      <Filter>Server</Filter>
+    </ClInclude>
+    <ClInclude Include="SmRealtimeSymbolServiceManager.h">
+      <Filter>Service</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SmChartServer.cpp">
@@ -301,7 +309,12 @@
     <ClCompile Include="SmUserManager.cpp">
       <Filter>User</Filter>
     </ClCompile>
-    <ClCompile Include="SmRealtimeSymbolServiceManager.cpp" />
+    <ClCompile Include="SmMessageManager.cpp">
+      <Filter>Server</Filter>
+    </ClCompile>
+    <ClCompile Include="SmRealtimeSymbolServiceManager.cpp">
+      <Filter>Service</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="SmServer.rc">

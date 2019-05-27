@@ -1,21 +1,22 @@
 #pragma once
 #include "SmHttpSession.h"
 
-
+class SmSessionManager;
 class SmListener : public std::enable_shared_from_this<SmListener>
 {
 	net::io_context& ioc_;
 	tcp::acceptor acceptor_;
-	std::shared_ptr<std::string const> doc_root_;
+	//std::shared_ptr<std::string const> doc_root_;
+	std::shared_ptr<SmSessionManager> session_mgr_;
 
 public:
 	SmListener(
 		net::io_context& ioc,
 		tcp::endpoint endpoint,
-		std::shared_ptr<std::string const> const& doc_root)
+		std::shared_ptr<SmSessionManager> const& session_mgr)
 		: ioc_(ioc)
 		, acceptor_(net::make_strand(ioc))
-		, doc_root_(doc_root)
+		, session_mgr_(session_mgr)
 	{
 		beast::error_code ec;
 
@@ -84,7 +85,7 @@ private:
 			// Create the http session and run it
 			std::make_shared<SmHttpSession>(
 				std::move(socket),
-				doc_root_)->run();
+				session_mgr_)->run();
 		}
 
 		// Accept another connection
