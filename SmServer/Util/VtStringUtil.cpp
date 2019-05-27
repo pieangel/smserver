@@ -56,3 +56,47 @@ std::vector<std::string> VtStringUtil::split(const std::string& s, const std::st
 
 	return tokens;
 }
+
+
+std::string VtStringUtil::PadLeft(int input, char padding, int len)
+{
+	std::ostringstream out;
+	out << std::internal << std::right << std::setfill(padding) << std::setw(len) << input;
+	return out.str();
+}
+
+std::string VtStringUtil::PadLeft(std::string input, char padding, int len)
+{
+	std::ostringstream out;
+	out << std::right << std::setfill(padding) << std::setw(len) << input;
+	return out.str();
+}
+
+std::string VtStringUtil::PadLeft(double input, char padding, int len, int decimal)
+{
+	std::ostringstream out;
+	out << std::fixed << std::setprecision(decimal) << std::right << std::setfill(padding) << std::setw(len) << input;
+	return out.str();
+}
+
+std::string VtStringUtil::PadRight(int input, char padding, int len)
+{
+	std::ostringstream out;
+	out << std::internal << std::left << std::setfill(padding) << std::setw(len) << input;
+	return out.str();
+}
+
+std::string VtStringUtil::PadRight(std::string input, char padding, int len)
+{
+	std::ostringstream out;
+	out << std::left << std::setfill(padding) << std::setw(len) << input;
+	return out.str();
+}
+
+std::string VtStringUtil::PadRight(double input, char padding, int len, int decimal)
+{
+	std::ostringstream out;
+	out << std::fixed << std::setprecision(decimal) << std::left << std::setfill(padding) << std::setw(len) << input;
+	return out.str();
+}
+

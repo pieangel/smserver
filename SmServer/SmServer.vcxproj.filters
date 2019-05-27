@@ -214,6 +214,9 @@
     <ClInclude Include="SmRealtimeSymbolServiceManager.h">
       <Filter>Service</Filter>
     </ClInclude>
+    <ClInclude Include="SmChartDefine.h">
+      <Filter>Chart</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SmChartServer.cpp">

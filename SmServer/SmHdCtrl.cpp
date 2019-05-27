@@ -6,6 +6,9 @@
 #include "SmHdCtrl.h"
 #include "afxdialogex.h"
 #include "Log/loguru.hpp"
+#include "Util/VtStringUtil.h"
+#include "SmHdClient.h"
+#include <ctime>
 
 // VtHdCtrl dialog
 
@@ -129,6 +132,78 @@ void SmHdCtrl::LogOut()
 	}
 }
 
+void SmHdCtrl::RegisterProduct(std::string symCode)
+{
+	std::string key = VtStringUtil::PadRight(symCode, ' ', 32);
+	int nRealType = 76;
+	m_CommAgent.CommSetBroad(key.c_str(), nRealType);
+	nRealType = 82;
+	m_CommAgent.CommSetBroad(key.c_str(), nRealType);
+}
+
+void SmHdCtrl::UnregisterProduct(std::string symCode)
+{
+	int nRealType = 76;
+	m_CommAgent.CommRemoveBroad(symCode.c_str(), nRealType);
+	nRealType = 82;
+	m_CommAgent.CommRemoveBroad(symCode.c_str(), nRealType);
+}
+
+void SmHdCtrl::GetChartData(SmChartDataRequest req)
+{
+	std::string temp;
+	std::string reqString;
+
+	temp = VtStringUtil::PadRight(req.symbolCode, ' ', 32);
+	reqString.append(temp);
+
+	time_t rawtime;
+	struct tm* timeinfo;
+	char buffer[80];
+
+	time(&rawtime);
+	timeinfo = localtime(&rawtime);
+
+	strftime(buffer, sizeof(buffer), "%Y%m%d", timeinfo);
+	std::string str(buffer);
+	//reqString.append(curDate);
+	//reqString.append(curDate);
+	reqString.append(_T("99999999"));
+	reqString.append(_T("99999999"));
+	reqString.append(_T("9999999999"));
+
+	if (req.next == 0)
+		reqString.append(_T("0"));
+	else
+		reqString.append(_T("1"));
+
+	if (req.chartType == SmChartType::TICK)
+		reqString.append("1");
+	else if (req.chartType == SmChartType::MIN)
+		reqString.append("2");
+	else if (req.chartType == SmChartType::DAY)
+		reqString.append("3");
+	else
+		reqString.append("2");
+
+	temp = VtStringUtil::PadLeft(req.cycle, '0', 2);
+	reqString.append(temp);
+
+	temp = VtStringUtil::PadLeft(req.count, '0', 5);
+	reqString.append(temp);
+
+
+	CString sTrCode = "o51200";
+	CString sInput = reqString.c_str();
+	CString strNextKey = _T("");
+	//int nRqID = m_CommAgent.CommRqData(sTrCode, sInput, sInput.GetLength(), "");
+
+	CString sReqFidInput = "000001002003004005006007008009010011012013014015";
+	//CString strNextKey = m_CommAgent.CommGetNextKey(nRqID, "");
+	int nRqID = m_CommAgent.CommFIDRqData(sTrCode, sInput, sReqFidInput, sInput.GetLength(), strNextKey);
+
+}
+
 BEGIN_MESSAGE_MAP(SmHdCtrl, CDialogEx)
 END_MESSAGE_MAP()
 
@@ -149,7 +224,19 @@ void SmHdCtrl::OnDataRecv(CString sTrCode, LONG nRqID)
 
 void SmHdCtrl::OnGetBroadData(CString strKey, LONG nRealType)
 {
-	int i = 0;
+	if (!_Client)
+		return;
+	switch (nRealType)
+	{
+	case 76: // hoga
+		_Client->OnRcvdAbroadHoga(strKey, nRealType);
+		break;
+	case 82: // sise
+		_Client->OnRcvdAbroadSise(strKey, nRealType);
+		break;
+	default:
+		break;
+	}
 }
 
 void SmHdCtrl::OnGetMsg(CString strCode, CString strMsg)

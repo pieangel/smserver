@@ -1,8 +1,9 @@
 #pragma once
 #include "HDCtrl/hdfcommagent.h"
-
+#include <string>
+#include "SmChartDefine.h"
 // VtHdCtrl dialog
-
+class SmHdClient;
 class SmHdCtrl : public CDialogEx
 {
 	DECLARE_DYNAMIC(SmHdCtrl)
@@ -16,6 +17,8 @@ public:
 	enum { IDD = IDD_HD_CTRL };
 #endif
 
+	SmHdClient* Client() const { return _Client; }
+	void Client(SmHdClient* val) { _Client = val; }
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 
@@ -30,10 +33,14 @@ private:
 	CString m_sUserPw;
 	CString m_sAuthPw;
 	CString m_sAcntPw;
+	SmHdClient* _Client = nullptr;
 public:
 	int Init();
 	int LogIn(CString id, CString pwd, CString cert);
 	int LogOut(CString id);
 	void LogIn();
 	void LogOut();
+	void RegisterProduct(std::string symCode);
+	void UnregisterProduct(std::string symCode);
+	void GetChartData(SmChartDataRequest req);
 };

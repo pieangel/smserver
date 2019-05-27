@@ -217,6 +217,7 @@
     <ClInclude Include="Scheduler\Scheduler.h" />
     <ClInclude Include="ServerDefine.h" />
     <ClInclude Include="SmCategory.h" />
+    <ClInclude Include="SmChartDefine.h" />
     <ClInclude Include="SmChartServer.h" />
     <ClInclude Include="SmCommon.h" />
     <ClInclude Include="SmConfigManager.h" />
