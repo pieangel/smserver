@@ -196,9 +196,6 @@
     <ClInclude Include="SmSessionManager.h">
       <Filter>Server</Filter>
     </ClInclude>
-    <ClInclude Include="SmRealtimeRegisterManager.h">
-      <Filter>Chart</Filter>
-    </ClInclude>
     <ClInclude Include="SmUser.h">
       <Filter>User</Filter>
     </ClInclude>
@@ -216,6 +213,10 @@
     </ClInclude>
     <ClInclude Include="SmChartDefine.h">
       <Filter>Chart</Filter>
+    </ClInclude>
+    <ClInclude Include="SmScheduler.h" />
+    <ClInclude Include="SmRealtimeRegisterManager.h">
+      <Filter>Symbol</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -303,9 +304,6 @@
     <ClCompile Include="SmSessionManager.cpp">
       <Filter>Server</Filter>
     </ClCompile>
-    <ClCompile Include="SmRealtimeRegisterManager.cpp">
-      <Filter>Chart</Filter>
-    </ClCompile>
     <ClCompile Include="SmUser.cpp">
       <Filter>User</Filter>
     </ClCompile>
@@ -317,6 +315,10 @@
     </ClCompile>
     <ClCompile Include="SmRealtimeSymbolServiceManager.cpp">
       <Filter>Service</Filter>
+    </ClCompile>
+    <ClCompile Include="SmScheduler.cpp" />
+    <ClCompile Include="SmRealtimeRegisterManager.cpp">
+      <Filter>Symbol</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

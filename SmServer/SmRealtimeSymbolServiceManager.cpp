@@ -18,8 +18,8 @@ void SmRealtimeSymbolServiceManager::Unregister(std::string user_id)
 
 void SmRealtimeSymbolServiceManager::SendInfo()
 {
-	if (!_Symbol)
-		return;
+	//if (!_Symbol)
+	//	return;
 	std::string message = "test message";
 	// Put the message in a shared pointer so we can re-use it for each client
 	auto const ss = boost::make_shared<std::string const>(std::move(message));
@@ -33,7 +33,8 @@ void SmRealtimeSymbolServiceManager::SendInfo()
 		v.reserve(_UserMap.size());
 		for (auto it = _UserMap.begin(); it != _UserMap.end(); ++it) {
 			SmUser* user = it->second;
-			v.emplace_back(user->Socket()->weak_from_this());
+			if (user->Socket())
+				v.emplace_back(user->Socket()->weak_from_this());
 		}
 	}
 

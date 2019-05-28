@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "SmCategory.h"
 #include "SmSymbol.h"
+#include "SmSymbolManager.h"
 
 SmCategory::SmCategory()
 {
@@ -9,16 +10,16 @@ SmCategory::SmCategory()
 
 SmCategory::~SmCategory()
 {
-	for (auto it = _SymbolList.begin(); it != _SymbolList.end(); ++it) {
-		delete* it;
-	}
+	
 }
 
 SmSymbol* SmCategory::AddSymbol(std::string symCode)
 {
+	SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
 	SmSymbol* sym = new SmSymbol();
 	sym->SymbolCode(symCode);
-	_SymbolList.emplace_back(sym);
+	_SymbolList.push_back(sym);
+	symMgr->AddSymbol(sym);
 	return sym;
 }
 

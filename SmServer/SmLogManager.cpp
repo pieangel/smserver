@@ -28,7 +28,6 @@ void SmLogManager::InitLog()
 
 	// 오늘날짜 디렉토리 이름을 만든다.
 	dirName.append(VtStringUtil::getTimeStr());
-	fs::exists(dirName);
 	if (!fs::exists(dirName)) { // 디렉토리가 존재하지 않을 경우
 						   // 오늘 날짜로 디렉토리 생성
 		fs::create_directory(dirName);

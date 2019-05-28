@@ -52,8 +52,12 @@ private:
 	Bosma::Scheduler* _Scheduler = nullptr;
 	void ScheduleTest();
 	void InitHdClient();
+	void RegisterProduct();
+	void ClearAllResource();
 public:
 	afx_msg void OnShowWindow(BOOL bShow, UINT nStatus);
+	afx_msg void OnClose();
+	afx_msg void OnServerStartschedule();
 };
 
 

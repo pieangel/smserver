@@ -18,6 +18,7 @@ class SmUserManager : public TemplateSingleton<SmUserManager>
 public:
 	SmUserManager();
 	~SmUserManager();
+	SmUser* FindUserBySocket(SmWebsocketSession* socket);
 	SmUser* AddUser(std::string id, SmWebsocketSession* socket);
 	SmUser* AddUser(std::string id, std::string pwd, SmWebsocketSession* socket);
 	void DeleteUser(std::string id);

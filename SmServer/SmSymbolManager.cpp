@@ -9,6 +9,9 @@ SmSymbolManager::SmSymbolManager()
 
 SmSymbolManager::~SmSymbolManager()
 {
+	for (auto it = _SymbolMap.begin(); it != _SymbolMap.end(); ++it) {
+		delete it->second;
+	}
 }
 
 void SmSymbolManager::AddSymbol(SmSymbol* sym)

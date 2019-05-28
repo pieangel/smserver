@@ -1,6 +1,11 @@
 #include "SmSessionManager.h"
 #include "SmWebSocketSession.h"
 #include "SmUserManager.h"
+#include "SmRealtimeSymbolServiceManager.h"
+#include "SmSymbolManager.h"
+#include "SmSymbol.h"
+#include "SmUser.h"
+
 SmSessionManager::
 SmSessionManager(std::string doc_root)
 	: doc_root_(std::move(doc_root))
@@ -13,6 +18,7 @@ join(SmWebsocketSession* session)
 {
 	std::lock_guard<std::mutex> lock(mutex_);
 	sessions_.insert(session);
+	AddUser("angelpie", "orion1", session);
 }
 
 void
@@ -21,6 +27,10 @@ leave(SmWebsocketSession* session)
 {
 	std::lock_guard<std::mutex> lock(mutex_);
 	SmUserManager* userMgr = SmUserManager::GetInstance();
+	SmUser* user = userMgr->FindUserBySocket(session);
+	if (user) {
+		DeleteUser(user->Id());
+	}
 	userMgr->DeleteUser(session);
 	sessions_.erase(session);
 }
@@ -51,4 +61,21 @@ send(std::string message)
 			sp->send(ss);
 		}
 
+}
+
+void SmSessionManager::AddUser(std::string id, std::string pwd, SmWebsocketSession* sess)
+{
+	SmUserManager* userMgr = SmUserManager::GetInstance();
+	SmUser* user = userMgr->AddUser(id, pwd, sess);
+	SmRealtimeSymbolServiceManager* rtlSymSvcMgr = SmRealtimeSymbolServiceManager::GetInstance();
+	SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
+	SmSymbol* sym = symMgr->FindSymbol("CLN19");
+	rtlSymSvcMgr->Symbol(sym);
+	rtlSymSvcMgr->Register(user);
+}
+
+void SmSessionManager::DeleteUser(std::string id)
+{
+	SmRealtimeSymbolServiceManager* rtlSymSvcMgr = SmRealtimeSymbolServiceManager::GetInstance();
+	rtlSymSvcMgr->Unregister(id);
 }

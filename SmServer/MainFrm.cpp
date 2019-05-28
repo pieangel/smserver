@@ -18,13 +18,22 @@
 #include <sstream>
 #include <ctime>
 #include <iostream>
-#include "SmConfigManager.h"
 #include "Scheduler/Scheduler.h"
-#include "SmHdClient.h"
 #include "Xml/pugixml.hpp"
-#include "SmSymbolManager.h"
-#include "SmUserManager.h"
 #include "Json/json.hpp"
+
+#include "SmHdClient.h"
+#include "SmRealtimeRegisterManager.h"
+#include "SmConfigManager.h"
+#include "SmLogManager.h"
+#include "SmMarketManager.h"
+#include "SmMessageManager.h"
+#include "SmRealtimeSymbolServiceManager.h"
+#include "SmSymbolManager.h"
+#include "SmSymbolReader.h"
+#include "SmUserManager.h"
+#include "SmScheduler.h"
+
 using namespace std;
 
 #ifdef _DEBUG
@@ -41,6 +50,8 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_UPDATE_COMMAND_UI_RANGE(ID_VIEW_APPLOOK_WIN_2000, ID_VIEW_APPLOOK_WINDOWS_7, &CMainFrame::OnUpdateApplicationLook)
 	ON_COMMAND(ID_SERVER_START, &CMainFrame::OnServerStart)
 	ON_WM_SHOWWINDOW()
+	ON_WM_CLOSE()
+	ON_COMMAND(ID_SERVER_STARTSCHEDULE, &CMainFrame::OnServerStartschedule)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -62,6 +73,9 @@ CMainFrame::~CMainFrame()
 {
 	if (_Scheduler) {
 		delete _Scheduler;
+	}
+	if (_ChartServer) {
+		delete _ChartServer;
 	}
 }
 
@@ -198,11 +212,13 @@ void CMainFrame::OnUpdateApplicationLook(CCmdUI* pCmdUI)
 
 void CMainFrame::OnServerStart()
 {
+	SmScheduler* timer = SmScheduler::GetInstance();
+	timer->StartSymbolService();
+	
 	// TODO: Add your command handler code here
 	_ChartServer = new SmChartServer();
-	_ChartServer->Start();
 	//ScheduleTest();
-	//ReadSymbols();
+	
 	//InitHdClient();
 }
 
@@ -345,7 +361,7 @@ void CMainFrame::ScheduleTest()
 	std::chrono::system_clock::time_point tp =_Scheduler->at("2019-05-27 02:36:16", onevent, 1);
 	std::chrono::system_clock::time_point tp2 = _Scheduler->at("2019-05-27 02:36:16", onevent, 2);
 
-	Functor* ff = new Functor();
+	//Functor* ff = new Functor();
 	//_Scheduler->at("2017-04-19 12:31:15", ff->(1,1));
 }
 
@@ -354,6 +370,39 @@ void CMainFrame::InitHdClient()
 	SmUserManager* userMgr = SmUserManager::GetInstance();
 	std::string message = _T("send broadcasting message!");
 	userMgr->SendBroadcastMessage(message);
+}
+
+void CMainFrame::RegisterProduct()
+{
+	SmRealtimeRegisterManager* realRegMgr = SmRealtimeRegisterManager::GetInstance();
+	realRegMgr->RegisterProduct("CLN19");
+}
+
+/*
+#include "SmHdClient.h"
+#include "SmRealtimeRegisterManager.h"
+#include "SmConfigManager.h"
+#include "SmLogManager.h"
+#include "SmMarketManager.h"
+#include "SmMessageManager.h"
+#include "SmRealtimeSymbolServiceManager.h"
+#include "SmSymbolManager.h"
+#include "SmSymbolReader.h"
+#include "SmUserManager.h"
+*/
+void CMainFrame::ClearAllResource()
+{
+	SmScheduler::DestroyInstance();
+	SmRealtimeRegisterManager::DestroyInstance();
+	SmHdClient::DestroyInstance();
+	SmConfigManager::DestroyInstance();
+	SmLogManager::DestroyInstance();
+	SmMarketManager::DestroyInstance();
+	SmMessageManager::DestroyInstance();
+	SmRealtimeSymbolServiceManager::DestroyInstance();
+	SmSymbolManager::DestroyInstance();
+	SmSymbolReader::DestroyInstance();
+	SmUserManager::DestroyInstance();
 }
 
 void CMainFrame::ReadSymbols()
@@ -370,12 +419,6 @@ void CMainFrame::ReadSymbols()
 
 	mrktMgr->ReadSymbolsFromFile();
 
-
-
-	SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
-
-	int i = 0;
-	i = i + 1;
 }
 
 
@@ -406,4 +449,24 @@ void CMainFrame::OnShowWindow(BOOL bShow, UINT nStatus)
 	if (loginResult < 0) {
 		AfxMessageBox(_T("Login Error!"));
 	}
+
+	hdClient->DownloadMasterFiles("futures");
+}
+
+
+void CMainFrame::OnClose()
+{
+	ClearAllResource();
+
+	CFrameWnd::OnClose();
+}
+
+
+void CMainFrame::OnServerStartschedule()
+{
+	ReadSymbols();
+	RegisterProduct();
+
+	SmScheduler* timer = SmScheduler::GetInstance();
+	timer->StartSymbolService();
 }

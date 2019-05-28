@@ -9,6 +9,7 @@ private:
 	std::string _Cert;
 	SmWebsocketSession* _Socket = nullptr;
 public:
+	void Reset();
 	std::string Id() const { return _Id; }
 	void Id(std::string val) { _Id = val; }
 	std::string Password() const { return _Password; }

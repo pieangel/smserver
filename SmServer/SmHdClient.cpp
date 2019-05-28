@@ -42,12 +42,17 @@ void SmHdClient::GetChartData(SmChartDataRequest req)
 	_HdCtrl->GetChartData(req);
 }
 
-void SmHdClient::OnRcvdAbroadHoga(CString& strKey, LONG& nRealType)
+void SmHdClient::OnRcvdAbroadHoga(SmSymbol* sym)
 {
-
+	
 }
 
-void SmHdClient::OnRcvdAbroadSise(CString& strKey, LONG& nRealType)
+void SmHdClient::OnRcvdAbroadSise(SmSymbol* sym)
 {
+	
+}
 
+void SmHdClient::DownloadMasterFiles(std::string param)
+{
+	_HdCtrl->DownloadMasterFiles(param);
 }

@@ -9,6 +9,8 @@
 #include "Util/VtStringUtil.h"
 #include "SmHdClient.h"
 #include <ctime>
+#include "SmSymbol.h"
+#include "SmSymbolManager.h"
 
 // VtHdCtrl dialog
 
@@ -204,6 +206,111 @@ void SmHdCtrl::GetChartData(SmChartDataRequest req)
 
 }
 
+void SmHdCtrl::DownloadMasterFiles(std::string param)
+{
+	m_CommAgent.CommReqMakeCod(param.c_str(), 0);
+}
+
+void SmHdCtrl::OnRcvdAbroadHoga(CString& strKey, LONG& nRealType)
+{
+	SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
+	CString strSymCode = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "종목코드");
+	SmSymbol* sym = symMgr->FindSymbol((LPCTSTR)strSymCode.Trim());
+	if (!sym)
+		return;
+	CString strHogaTime = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "호가시간");
+
+	HdHoga hoga;
+	hoga.Items[0].strBuyHoga = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매수호가1");
+	hoga.Items[0].strSellHoga = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매도호가1");
+	hoga.Items[0].strBuyHogaQty = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매수호가수량1");
+	hoga.Items[0].strSellHogaQty = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매도호가수량1");
+	hoga.Items[0].strBuyHogaCnt = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매수호가건수1");
+	hoga.Items[0].strSellHogaCnt = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매도호가건수1");
+
+	hoga.Items[1].strBuyHoga = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매수호가2");
+	hoga.Items[1].strSellHoga = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매도호가2");
+	hoga.Items[1].strBuyHogaQty = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매수호가수량2");
+	hoga.Items[1].strSellHogaQty = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매도호가수량2");
+	hoga.Items[1].strBuyHogaCnt = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매수호가건수2");
+	hoga.Items[1].strSellHogaCnt = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매도호가건수2");
+
+	hoga.Items[2].strBuyHoga = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매수호가3");
+	hoga.Items[2].strSellHoga = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매도호가3");
+	hoga.Items[2].strBuyHogaQty = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매수호가수량3");
+	hoga.Items[2].strSellHogaQty = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매도호가수량3");
+	hoga.Items[2].strBuyHogaCnt = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매수호가건수3");
+	hoga.Items[2].strSellHogaCnt = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매도호가건수3");
+
+	hoga.Items[3].strBuyHoga = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매수호가4");
+	hoga.Items[3].strSellHoga = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매도호가4");
+	hoga.Items[3].strBuyHogaQty = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매수호가수량4");
+	hoga.Items[3].strSellHogaQty = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매도호가수량4");
+	hoga.Items[3].strBuyHogaCnt = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매수호가건수4");
+	hoga.Items[3].strSellHogaCnt = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매도호가건수4");
+
+	hoga.Items[4].strBuyHoga = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매수호가5");
+	hoga.Items[4].strSellHoga = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매도호가5");
+	hoga.Items[4].strBuyHogaQty = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매수호가수량5");
+	hoga.Items[4].strSellHogaQty = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매도호가수량5");
+	hoga.Items[4].strBuyHogaCnt = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매수호가건수5");
+	hoga.Items[4].strSellHogaCnt = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매도호가건수5");
+
+	CString strTotBuyQty = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "종목코드");
+	CString strTotSellQty = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "호가시간");
+	CString strTotBuyCnt = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "종목코드");
+	CString strTotSellCnt = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "호가시간");
+	CString strDomDate = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "국내일자");
+	CString strDomTime = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "국내시간");
+
+	for (int i = 0; i < 5; i++) {
+		sym->Hoga.Ary[i].BuyPrice = _ttoi(hoga.Items[i].strBuyHoga);
+		sym->Hoga.Ary[i].BuyCnt = _ttoi(hoga.Items[i].strBuyHogaCnt);
+		sym->Hoga.Ary[i].BuyQty = _ttoi(hoga.Items[i].strBuyHogaQty);
+		sym->Hoga.Ary[i].SellPrice = _ttoi(hoga.Items[i].strSellHoga);
+		sym->Hoga.Ary[i].SellCnt = _ttoi(hoga.Items[i].strSellHogaCnt);
+		sym->Hoga.Ary[i].SellQty = _ttoi(hoga.Items[i].strSellHogaQty);
+	}
+
+	sym->Hoga.DomesticDate = strDomDate;
+	sym->Hoga.DomesticTime = strDomTime;
+	sym->Hoga.Time = strHogaTime;
+	sym->Hoga.TotBuyCnt = _ttoi(strTotBuyCnt);
+	sym->Hoga.TotBuyQty = _ttoi(strTotBuyQty);
+	sym->Hoga.TotSellCnt = _ttoi(strTotSellCnt);
+	sym->Hoga.TotSellQty = _ttoi(strTotSellQty);
+
+	//TRACE(sym->Hoga.Time.c_str());
+}
+
+void SmHdCtrl::OnRcvdAbroadSise(CString& strKey, LONG& nRealType)
+{
+	CString strSymCode = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "종목코드");
+	CString strTime = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "체결시간");
+	CString strPrev = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "직전대비구분");
+	CString strSignToPreDay = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "전일대비구분");
+	CString strToPreDay = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "전일대비");
+	CString strRatioToPreDay = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "전일대비등락율");
+	CString strClose = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "체결가");
+	CString strOpen = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "시가");
+	CString strHigh = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "고가");
+	CString strLow = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "저가");
+	CString strVolume = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "체결량");
+	CString strSign = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "체결구분");
+	SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
+	SmSymbol* sym = symMgr->FindSymbol((LPCTSTR)strSymCode.Trim());
+	if (!sym)
+		return;
+	sym->Quote.Close = _ttoi(strClose);
+	sym->Quote.Open = _ttoi(strOpen);
+	sym->Quote.High = _ttoi(strHigh);
+	sym->Quote.Low = _ttoi(strLow);
+	sym->Quote.Time = strTime;
+	sym->Quote.GapFromPreDay = _ttoi(strToPreDay);
+	sym->Quote.RatioToPreday = strRatioToPreDay.Trim();
+	sym->Quote.RatioToPredaySign = strSignToPreDay;
+}
+
 BEGIN_MESSAGE_MAP(SmHdCtrl, CDialogEx)
 END_MESSAGE_MAP()
 
@@ -229,10 +336,10 @@ void SmHdCtrl::OnGetBroadData(CString strKey, LONG nRealType)
 	switch (nRealType)
 	{
 	case 76: // hoga
-		_Client->OnRcvdAbroadHoga(strKey, nRealType);
+		OnRcvdAbroadHoga(strKey, nRealType);
 		break;
 	case 82: // sise
-		_Client->OnRcvdAbroadSise(strKey, nRealType);
+		OnRcvdAbroadSise(strKey, nRealType);
 		break;
 	default:
 		break;

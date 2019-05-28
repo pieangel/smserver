@@ -33,4 +33,8 @@ public:
 	void join(SmWebsocketSession* session);
 	void leave(SmWebsocketSession* session);
 	void send(std::string message);
+
+private:
+	void AddUser(std::string id, std::string pwd, SmWebsocketSession* sess);
+	void DeleteUser(std::string id);
 };

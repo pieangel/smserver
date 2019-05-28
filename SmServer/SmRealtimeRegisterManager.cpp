@@ -1,5 +1,6 @@
 #include "SmRealtimeRegisterManager.h"
 #include "SmUser.h"
+#include "SmHdClient.h"
 SmRealtimeRegisterManager::SmRealtimeRegisterManager()
 {
 
@@ -7,20 +8,15 @@ SmRealtimeRegisterManager::SmRealtimeRegisterManager()
 
 SmRealtimeRegisterManager::~SmRealtimeRegisterManager()
 {
-
-}
-
-void SmRealtimeRegisterManager::AddUser(SmUser* user)
-{
-	if (!user)
-		return;
-	_UserMap[user->Id()] = user;
-}
-
-void SmRealtimeRegisterManager::RemoveUser(std::string user_id)
-{
-	auto it = _UserMap.find(user_id);
-	if (it != _UserMap.end()) {
-		_UserMap.erase(it);
+	SmHdClient* client = SmHdClient::GetInstance();
+	for (auto it = _RegisteredProduct.begin(); it != _RegisteredProduct.end(); ++it) {
+		client->UnregisterProduct(*it);
 	}
+}
+
+void SmRealtimeRegisterManager::RegisterProduct(std::string symCode)
+{
+	SmHdClient* client = SmHdClient::GetInstance();
+	client->RegisterProduct(symCode);
+	_RegisteredProduct.insert(symCode);
 }

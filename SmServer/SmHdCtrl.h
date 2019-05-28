@@ -4,6 +4,18 @@
 #include "SmChartDefine.h"
 // VtHdCtrl dialog
 class SmHdClient;
+struct HdHogaItem {
+	CString strBuyHoga;
+	CString strSellHoga;
+	CString strBuyHogaQty;
+	CString strSellHogaQty;
+	CString strBuyHogaCnt;
+	CString strSellHogaCnt;
+};
+
+struct HdHoga {
+	HdHogaItem Items[5];
+};
 class SmHdCtrl : public CDialogEx
 {
 	DECLARE_DYNAMIC(SmHdCtrl)
@@ -43,4 +55,8 @@ public:
 	void RegisterProduct(std::string symCode);
 	void UnregisterProduct(std::string symCode);
 	void GetChartData(SmChartDataRequest req);
+	void DownloadMasterFiles(std::string param);
+private:
+	void OnRcvdAbroadHoga(CString& strKey, LONG& nRealType);
+	void OnRcvdAbroadSise(CString& strKey, LONG& nRealType);
 };

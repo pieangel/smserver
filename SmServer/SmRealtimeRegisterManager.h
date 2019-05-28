@@ -1,15 +1,16 @@
 #pragma once
 #include <map>
 #include <string>
+#include <set>
+#include "Global/TemplateSingleton.h"
 class SmUser;
-class SmRealtimeRegisterManager
+class SmRealtimeRegisterManager : public TemplateSingleton<SmRealtimeRegisterManager>
 {
 public:
 	SmRealtimeRegisterManager();
 	~SmRealtimeRegisterManager();
-	void AddUser(SmUser* user);
-	void RemoveUser(std::string user_id);
+	void RegisterProduct(std::string symCode);
 private:
-	std::map<std::string, SmUser*> _UserMap;
+	std::set<std::string> _RegisteredProduct;
 };
 

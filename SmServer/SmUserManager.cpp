@@ -14,6 +14,18 @@ SmUserManager::~SmUserManager()
 	}
 }
 
+SmUser* SmUserManager::FindUserBySocket(SmWebsocketSession* socket)
+{
+	if (!socket)
+		return nullptr;
+	auto it = _SocketToUserMap.find(socket);
+	if (it != _SocketToUserMap.end()) {
+		return it->second;
+	}
+
+	return nullptr;
+}
+
 SmUser* SmUserManager::AddUser(std::string id, SmWebsocketSession* socket)
 {
 	std::lock_guard<std::mutex> lock(_mutex);
@@ -52,6 +64,8 @@ void SmUserManager::DeleteUser(std::string id)
 
 	auto it = _UserMap.find(id);
 	if (it != _UserMap.end()) {
+		SmUser* user = it->second;
+		user->Reset();
 		delete it->second;
 	}
 }
@@ -66,8 +80,11 @@ void SmUserManager::DeleteUser(SmWebsocketSession* socket)
 	auto it = _SocketToUserMap.find(socket);
 	if (it != _SocketToUserMap.end()) {
 		SmUser* user = it->second;
-		RemoveUser(user->Id());
+		std::string user_id = user->Id();
+		user->Reset();
+		RemoveUser(user_id);
 		_SocketToUserMap.erase(it);
+		delete user;
 	}
 }
 

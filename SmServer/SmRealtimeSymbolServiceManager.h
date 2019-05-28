@@ -4,9 +4,10 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include "Global/TemplateSingleton.h"
 class SmSymbol;
 class SmUser;
-class SmRealtimeSymbolServiceManager
+class SmRealtimeSymbolServiceManager : public TemplateSingleton<SmRealtimeSymbolServiceManager>
 {
 private:
 	std::mutex _mutex;

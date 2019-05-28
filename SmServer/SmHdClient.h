@@ -2,7 +2,9 @@
 #include "Global/TemplateSingleton.h"
 #include <string>
 #include "SmChartDefine.h"
+#include <atlstr.h>
 class SmHdCtrl;
+class SmSymbol;
 class SmHdClient : public TemplateSingleton<SmHdClient>
 {
 public:
@@ -12,8 +14,9 @@ public:
 	void RegisterProduct(std::string symCode);
 	void UnregisterProduct(std::string symCode);
 	void GetChartData(SmChartDataRequest req);
-	void OnRcvdAbroadHoga(CString& strKey, LONG& nRealType);
-	void OnRcvdAbroadSise(CString& strKey, LONG& nRealType);
+	void OnRcvdAbroadHoga(SmSymbol* sym);
+	void OnRcvdAbroadSise(SmSymbol* sym);
+	void DownloadMasterFiles(std::string param);
 private:
 	SmHdCtrl* _HdCtrl = nullptr;
 };

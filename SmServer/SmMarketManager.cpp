@@ -27,7 +27,7 @@ void SmMarketManager::ReadSymbolsFromFile()
 	std::string configPath = appPath;
 	configPath.append(_T("\\Config\\Config.xml"));
 	std::string dataPath = appPath;
-	dataPath.append(_T("\\Data\\"));
+	dataPath.append(_T("\\mst\\"));
 	pugi::xml_document doc;
 
 	pugi::xml_parse_result result = doc.load_file(configPath.c_str());
