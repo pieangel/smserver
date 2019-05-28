@@ -213,7 +213,7 @@ void CMainFrame::OnUpdateApplicationLook(CCmdUI* pCmdUI)
 void CMainFrame::OnServerStart()
 {
 	SmScheduler* timer = SmScheduler::GetInstance();
-	timer->StartSymbolService();
+	timer->RepeatSymbolService();
 	
 	// TODO: Add your command handler code here
 	_ChartServer = new SmChartServer();
@@ -468,5 +468,5 @@ void CMainFrame::OnServerStartschedule()
 	RegisterProduct();
 
 	SmScheduler* timer = SmScheduler::GetInstance();
-	timer->StartSymbolService();
+	timer->RepeatSymbolService();
 }

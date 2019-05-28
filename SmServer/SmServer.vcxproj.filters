@@ -214,9 +214,11 @@
     <ClInclude Include="SmChartDefine.h">
       <Filter>Chart</Filter>
     </ClInclude>
-    <ClInclude Include="SmScheduler.h" />
     <ClInclude Include="SmRealtimeRegisterManager.h">
       <Filter>Symbol</Filter>
+    </ClInclude>
+    <ClInclude Include="SmScheduler.h">
+      <Filter>Scheduler</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -316,9 +318,11 @@
     <ClCompile Include="SmRealtimeSymbolServiceManager.cpp">
       <Filter>Service</Filter>
     </ClCompile>
-    <ClCompile Include="SmScheduler.cpp" />
     <ClCompile Include="SmRealtimeRegisterManager.cpp">
       <Filter>Symbol</Filter>
+    </ClCompile>
+    <ClCompile Include="SmScheduler.cpp">
+      <Filter>Scheduler</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

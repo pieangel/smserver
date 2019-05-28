@@ -9,7 +9,7 @@ class SmScheduler : public TemplateSingleton<SmScheduler>
 public:
 	SmScheduler();
 	~SmScheduler();
-	void StartSymbolService();
+	void RepeatSymbolService();
 private:
 	Bosma::Scheduler* _Scheduler = nullptr;
 	void SendRealtimeSymbol();
