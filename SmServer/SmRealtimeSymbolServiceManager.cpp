@@ -1,6 +1,78 @@
 #include "SmRealtimeSymbolServiceManager.h"
 #include "SmUser.h"
 #include "SmWebsocketSession.h"
+#include "SmSymbolManager.h"
+#include "SmUserManager.h"
+void SmRealtimeSymbolServiceManager::RegisterSymbol(std::string user_id, std::string symCode)
+{
+	
+}
+
+void SmRealtimeSymbolServiceManager::RegisterSymbol(SmUser* user, SmSymbol* sym)
+{
+	if (!user || !sym)
+		return;
+	{
+		std::lock_guard<std::mutex> lock(_mutex);
+
+		auto it = _ServiceMap.find(sym);
+		if (it != _ServiceMap.end()) {
+			SmUserMap& userMap = it->second;
+			userMap[user] = user;
+		}
+		else {
+			SmUserMap userMap;
+			userMap[user] = user;
+			_ServiceMap[sym] = userMap;
+		}
+	}
+}
+
+void SmRealtimeSymbolServiceManager::UnregisterSymbol(std::string user_id, std::string symCode)
+{
+	
+}
+
+void SmRealtimeSymbolServiceManager::UnregisterSymbol(SmUser* user, SmSymbol* sym)
+{
+	if (!user || !sym)
+		return;
+	{
+		std::lock_guard<std::mutex> lock(_mutex);
+
+		auto it = _ServiceMap.find(sym);
+		if (it != _ServiceMap.end()) {
+			SmUserMap& userMap = it->second;
+			auto itu = userMap.find(user);
+			if (itu != userMap.end()) {
+				userMap.erase(itu);
+			}
+		}
+	}
+}
+
+void SmRealtimeSymbolServiceManager::UnregisterAllSymbol(std::string user_id)
+{
+	
+}
+
+void SmRealtimeSymbolServiceManager::UnregisterAllSymbol(SmUser* user)
+{
+	if (!user)
+		return;
+	{
+		std::lock_guard<std::mutex> lock(_mutex);
+
+		for (auto it = _ServiceMap.begin(); it != _ServiceMap.end(); ++it) {
+			SmUserMap& userMap = it->second;
+			auto itu = userMap.find(user);
+			if (itu != userMap.end()) {
+				userMap.erase(itu);
+			}
+		}
+	}
+}
+
 void SmRealtimeSymbolServiceManager::Register(SmUser* user)
 {
 	if (!user)
@@ -40,6 +112,44 @@ void SmRealtimeSymbolServiceManager::SendInfo()
 
 	// For each session in our local list, try to acquire a strong
    // pointer. If successful, then send the message on that session.
+	for (auto const& wp : v)
+		if (auto sp = wp.lock())
+			sp->send(ss);
+}
+
+void SmRealtimeSymbolServiceManager::BroadcastSise()
+{
+	for (auto it = _ServiceMap.begin(); it != _ServiceMap.end(); ++it) {
+		SendSise(it->first, it->second);
+	}
+}
+
+void SmRealtimeSymbolServiceManager::BroadcastHoga()
+{
+
+}
+
+void SmRealtimeSymbolServiceManager::SendSise(SmSymbol* sym, SmUserMap& userMap)
+{
+	if (!sym || userMap.size() == 0)
+		return;
+	std::string message = "test message";
+	// Put the message in a shared pointer so we can re-use it for each client
+	auto const ss = boost::make_shared<std::string const>(std::move(message));
+
+	std::vector<std::weak_ptr<SmWebsocketSession>> v;
+	{
+		std::lock_guard<std::mutex> lock(_mutex);
+		v.reserve(userMap.size());
+		for (auto it = userMap.begin(); it != userMap.end(); ++it) {
+			SmUser* user = it->second;
+			if (user->Socket())
+				v.emplace_back(user->Socket()->weak_from_this());
+		}
+	}
+
+	// For each session in our local list, try to acquire a strong
+	// pointer. If successful, then send the message on that session.
 	for (auto const& wp : v)
 		if (auto sp = wp.lock())
 			sp->send(ss);
