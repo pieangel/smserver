@@ -55,6 +55,16 @@ void SmWebsocketSession::on_accept(beast::error_code ec)
 	do_read();
 }
 
+void SmWebsocketSession::do_read()
+{
+	// Read a message into our buffer
+	ws_.async_read(
+		buffer_,
+		beast::bind_front_handler(
+			&SmWebsocketSession::on_read,
+			shared_from_this()));
+}
+
 void SmWebsocketSession::on_read(beast::error_code ec, std::size_t bytes_transferred)
 {
 	boost::ignore_unused(bytes_transferred);
@@ -74,4 +84,23 @@ void SmWebsocketSession::on_read(beast::error_code ec, std::size_t bytes_transfe
 	buffer_.consume(buffer_.size());
 
 	do_read();
+}
+
+void SmWebsocketSession::on_write(beast::error_code ec, std::size_t bytes_transferred)
+{
+	boost::ignore_unused(bytes_transferred);
+
+	if (ec)
+		return SmCommon::fail(ec, "write");
+
+	// Remove the string from the queue
+	queue_.erase(queue_.begin());
+
+	// Send the next message if any
+	if (!queue_.empty())
+		ws_.async_write(
+			net::buffer(*queue_.front()),
+			beast::bind_front_handler(
+				&SmWebsocketSession::on_write,
+				shared_from_this()));
 }

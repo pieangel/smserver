@@ -8,6 +8,7 @@ private:
 	std::string _Password;
 	std::string _Cert;
 	SmWebsocketSession* _Socket = nullptr;
+	bool _Connected = false;
 public:
 	void Reset();
 	std::string Id() const { return _Id; }
@@ -18,5 +19,7 @@ public:
 	void Cert(std::string val) { _Cert = val; }
 	SmWebsocketSession* Socket() const { return _Socket; }
 	void Socket(SmWebsocketSession* val) { _Socket = val; }
+	bool Connected() const { return _Connected; }
+	void Connected(bool val) { _Connected = val; }
 };
 

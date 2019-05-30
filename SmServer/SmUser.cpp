@@ -4,4 +4,5 @@
 void SmUser::Reset()
 {
 	_Socket = nullptr;
+	_Connected = false;
 }

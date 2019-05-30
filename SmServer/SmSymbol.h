@@ -15,51 +15,51 @@ struct	SmQuote
 	/// <summary>
 	/// 고가
 	/// </summary>
-	int High;
+	int High = 0;
 	/// <summary>
 	/// 저가
 	/// </summary>
-	int Low;
+	int Low = 0;
 	/// <summary>
 	/// 종가
 	/// </summary>
-	int Close;
+	int Close = 0;
 	/// <summary>
 	/// 시가
 	/// </summary>
-	int Open;
+	int Open = 0;
 	/// <summary>
 	/// 전일종가
 	/// </summary>
-	int PreClose;
+	int PreClose = 0;
 	/// <summary>
 	/// 예상가
 	/// </summary>
-	int Expected;
+	int Expected = 0;
 	/// <summary>
 	/// 전일고가
 	/// </summary>
-	int PreDayHigh;
+	int PreDayHigh = 0;
 	/// <summary>
 	/// 전일저가
 	/// </summary>
-	int PreDayLow;
+	int PreDayLow = 0;
 	/// <summary>
 	/// 전일시가
 	/// </summary>
-	int PreDayOpen;
+	int PreDayOpen = 0;
 	/// <summary>
 	/// 전일대비구분 : + (상승), -(하락)
 	/// </summary>
-	std::string RatioToPredaySign;
+	std::string RatioToPredaySign = "+";
 	/// <summary>
 	/// 전일대비 상승값
 	/// </summary>
-	int GapFromPreDay;
+	int GapFromPreDay = 0;
 	/// <summary>
 	/// 전일대비등락율
 	/// </summary>
-	std::string RatioToPreday;
+	std::string RatioToPreday = "0.0";
 	/// <summary>
 	/// 시세호가큐
 	/// </summary>
@@ -75,15 +75,15 @@ struct SmHoga
 	/// <summary>
 	/// 시간 - 해외선물은 해외시간
 	/// </summary>
-	std::string	Time;
+	std::string	Time = "";
 	/// <summary>
 	/// 국내날짜
 	/// </summary>
-	std::string DomesticDate;
+	std::string DomesticDate = "";
 	/// <summary>
 	/// 국내 시간
 	/// </summary>
-	std::string DomesticTime;
+	std::string DomesticTime = "";
 	/// <summary>
 	/// 호가 아이템
 	/// </summary>
@@ -92,45 +92,45 @@ struct SmHoga
 		/// <summary>
 		/// 매수호가건수
 		/// </summary>
-		int	BuyCnt;
+		int	BuyCnt = 0;
 		/// <summary>
 		/// 매수 호가
 		/// </summary>
-		int	BuyPrice;
+		int	BuyPrice = 0;
 		/// <summary>
 		/// 매수호가수량
 		/// </summary>
-		int	BuyQty; 
+		int	BuyQty = 0; 
 		/// <summary>
 		/// 매도호가건수
 		/// </summary>
-		int	SellCnt;
+		int	SellCnt = 0;
 		/// <summary>
 		/// 매도호가
 		/// </summary>
-		int	SellPrice;
+		int	SellPrice = 0;
 		/// <summary>
 		/// 매도호가수량
 		/// </summary>
-		int	SellQty;
+		int	SellQty = 0;
 	}	Ary[5];
 
 	/// <summary>
 	/// 매도총호가수량
 	/// </summary>
-	int	TotSellQty;
+	int	TotSellQty = 0;
 	/// <summary>
 	/// 매수총호가수량
 	/// </summary>
-	int	TotBuyQty;
+	int	TotBuyQty = 0;
 	/// <summary>
 	/// 매도총호가건수
 	/// </summary>
-	int	TotSellCnt;
+	int	TotSellCnt = 0;
 	/// <summary>
 	/// 매수총호가건수
 	/// </summary>
-	int	TotBuyCnt;
+	int	TotBuyCnt = 0;
 
 };
 
@@ -147,6 +147,8 @@ public:
 	void NameEn(std::string val) { _NameEn = val; }
 	SmQuote Quote;
 	SmHoga  Hoga;
+	std::string GetQuoteByJson();
+	std::string GetHogaByJson();
 private:
 	/// <summary>
 	/// 종목 코드 - 종목을 구분하는 키가 된다.

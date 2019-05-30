@@ -34,6 +34,7 @@ SmUser* SmUserManager::AddUser(std::string id, SmWebsocketSession* socket)
 
 	SmUser* user = new SmUser();
 	user->Id(id);
+	user->Socket(socket);
 	_UserMap[id] = user;
 	_SocketToUserMap[socket] = user;
 	return user;
@@ -58,36 +59,6 @@ SmUser* SmUserManager::AddUser(std::string id, std::string pwd, SmWebsocketSessi
 	return user;
 }
 
-void SmUserManager::DeleteUser(std::string id)
-{
-	std::lock_guard<std::mutex> lock(_mutex);
-
-	auto it = _UserMap.find(id);
-	if (it != _UserMap.end()) {
-		SmUser* user = it->second;
-		user->Reset();
-		delete it->second;
-	}
-}
-
-void SmUserManager::DeleteUser(SmWebsocketSession* socket)
-{
-	std::lock_guard<std::mutex> lock(_mutex);
-
-	if (!socket)
-		return;
-
-	auto it = _SocketToUserMap.find(socket);
-	if (it != _SocketToUserMap.end()) {
-		SmUser* user = it->second;
-		std::string user_id = user->Id();
-		user->Reset();
-		RemoveUser(user_id);
-		_SocketToUserMap.erase(it);
-		delete user;
-	}
-}
-
 void SmUserManager::RemoveUser(std::string id)
 {
 	auto it = _UserMap.find(id);
@@ -110,7 +81,8 @@ void SmUserManager::SendBroadcastMessage(std::string message)
 		v.reserve(_UserMap.size());
 		for (auto it = _UserMap.begin(); it != _UserMap.end(); ++it) {
 			SmUser* user = it->second;
-			v.emplace_back(user->Socket()->weak_from_this());
+			if (user->Connected())
+				v.emplace_back(user->Socket()->weak_from_this());
 		}
 	}
 
@@ -130,4 +102,14 @@ SmUser* SmUserManager::FindUser(std::string id)
 	}
 
 	return nullptr;
+}
+
+void SmUserManager::ResetUserBySocket(SmWebsocketSession* socket)
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+
+	auto it = _SocketToUserMap.find(socket);
+	if (it != _SocketToUserMap.end()) {
+		it->second->Reset();
+	}
 }

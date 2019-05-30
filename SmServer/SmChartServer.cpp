@@ -8,10 +8,7 @@
 
 void SmChartServer::ThreadMain()
 {
-	while (stop_thread)
-	{
-		Start();
-	}
+	Start();
 }
 
 void SmChartServer::Init()

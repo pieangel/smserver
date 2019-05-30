@@ -33,6 +33,7 @@
 #include "SmSymbolReader.h"
 #include "SmUserManager.h"
 #include "SmScheduler.h"
+#include "SmSymbol.h"
 
 using namespace std;
 
@@ -212,14 +213,16 @@ void CMainFrame::OnUpdateApplicationLook(CCmdUI* pCmdUI)
 
 void CMainFrame::OnServerStart()
 {
-	SmScheduler* timer = SmScheduler::GetInstance();
-	timer->RepeatSymbolService();
-	
 	// TODO: Add your command handler code here
 	_ChartServer = new SmChartServer();
+
 	//ScheduleTest();
 	
 	//InitHdClient();
+
+	SmScheduler* timer = SmScheduler::GetInstance();
+	timer->RepeatSymbolService();
+
 }
 
 void CMainFrame::DbTest()
@@ -367,9 +370,7 @@ void CMainFrame::ScheduleTest()
 
 void CMainFrame::InitHdClient()
 {
-	SmUserManager* userMgr = SmUserManager::GetInstance();
-	std::string message = _T("send broadcasting message!");
-	userMgr->SendBroadcastMessage(message);
+
 }
 
 void CMainFrame::RegisterProduct()

@@ -18,7 +18,6 @@ join(SmWebsocketSession* session)
 {
 	std::lock_guard<std::mutex> lock(mutex_);
 	sessions_.insert(session);
-	AddUser("angelpie", "orion1", session);
 }
 
 void
@@ -27,11 +26,7 @@ leave(SmWebsocketSession* session)
 {
 	std::lock_guard<std::mutex> lock(mutex_);
 	SmUserManager* userMgr = SmUserManager::GetInstance();
-	SmUser* user = userMgr->FindUserBySocket(session);
-	if (user) {
-		DeleteUser(user->Id());
-	}
-	userMgr->DeleteUser(session);
+	userMgr->ResetUserBySocket(session);
 	sessions_.erase(session);
 }
 

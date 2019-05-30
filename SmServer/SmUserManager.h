@@ -21,10 +21,9 @@ public:
 	SmUser* FindUserBySocket(SmWebsocketSession* socket);
 	SmUser* AddUser(std::string id, SmWebsocketSession* socket);
 	SmUser* AddUser(std::string id, std::string pwd, SmWebsocketSession* socket);
-	void DeleteUser(std::string id);
-	void DeleteUser(SmWebsocketSession* socket);
 	void SendBroadcastMessage(std::string message);
 	SmUser* FindUser(std::string id);
+	void ResetUserBySocket(SmWebsocketSession* socket);
 private:
 	void RemoveUser(std::string id);
 };

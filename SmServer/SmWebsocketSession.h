@@ -32,8 +32,7 @@ public:
 
 	// Start the asynchronous accept operation
 	template<class Body, class Allocator>
-	void
-		do_accept(http::request<Body, http::basic_fields<Allocator>> req)
+	void do_accept(http::request<Body, http::basic_fields<Allocator>> req)
 	{
 		// Set suggested timeout settings for the websocket
 		ws_.set_option(
@@ -61,26 +60,24 @@ private:
 	void on_send(boost::shared_ptr<std::string const> const& ss);
 	void on_accept(beast::error_code ec);
 
-	void
-		do_read()
-	{
+	void do_read();
+	/*{
 		// Read a message into our buffer
 		ws_.async_read(
 			buffer_,
 			beast::bind_front_handler(
 				&SmWebsocketSession::on_read,
 				shared_from_this()));
-	}
+	}*/
 
-	void
-		on_read(
+	void on_read(
 			beast::error_code ec,
 			std::size_t bytes_transferred);
 
-	void
-		on_write(
-			beast::error_code ec,
-			std::size_t bytes_transferred)
+	void on_write(
+		beast::error_code ec,
+		std::size_t bytes_transferred);
+	/*
 	{
 		boost::ignore_unused(bytes_transferred);
 
@@ -98,4 +95,5 @@ private:
 					&SmWebsocketSession::on_write,
 					shared_from_this()));
 	}
+	*/
 };

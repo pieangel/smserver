@@ -29,9 +29,9 @@ public:
 	void SendInfo();
 	SmSymbol* Symbol() const { return _Symbol; }
 	void Symbol(SmSymbol* val) { _Symbol = val; }
-private:
 	void BroadcastSise();
 	void BroadcastHoga();
+private:
 	void SendSise(SmSymbol* sym, SmUserMap& userMap);
 };
 

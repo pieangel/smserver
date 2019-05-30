@@ -7,14 +7,12 @@ public:
 	void Init();
 	void Start();
 
-	SmChartServer() : the_thread(&SmChartServer::ThreadMain, this) {}
+	SmChartServer() : _server_thread(&SmChartServer::ThreadMain, this) {}
 	~SmChartServer() {
-		stop_thread = true;
-		the_thread.join();
+		_server_thread.join();
 	}
 private:
-	std::thread the_thread;
-	bool stop_thread = false; // Super simple thread stopping.
+	std::thread _server_thread;
 	void ThreadMain();
 };
 
