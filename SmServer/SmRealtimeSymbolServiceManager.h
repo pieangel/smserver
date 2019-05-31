@@ -20,9 +20,6 @@ public:
 	void UnregisterSymbol(std::string user_id, std::string symCode);
 	void UnregisterAllSymbol(std::string user_id);
 
-	void RegisterSymbol(SmUser* user, SmSymbol* sym);
-	void UnregisterSymbol(SmUser* user, SmSymbol* sym);
-	void UnregisterAllSymbol(SmUser* user);
 
 	void Register(SmUser* user);
 	void Unregister(std::string user_id);
@@ -32,6 +29,10 @@ public:
 	void BroadcastSise();
 	void BroadcastHoga();
 private:
+	void RegisterSymbol(SmUser* user, SmSymbol* sym);
+	void UnregisterSymbol(SmUser* user, SmSymbol* sym);
+	void UnregisterAllSymbol(SmUser* user);
+
 	void SendSise(SmSymbol* sym, SmUserMap& userMap);
 };
 

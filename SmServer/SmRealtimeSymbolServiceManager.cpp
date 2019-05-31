@@ -3,9 +3,16 @@
 #include "SmWebsocketSession.h"
 #include "SmSymbolManager.h"
 #include "SmUserManager.h"
+#include "SmSymbol.h"
 void SmRealtimeSymbolServiceManager::RegisterSymbol(std::string user_id, std::string symCode)
 {
-	
+	SmUserManager* userMgr = SmUserManager::GetInstance();
+	SmUser* user = userMgr->FindUser(user_id);
+	SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
+	SmSymbol* sym = symMgr->FindSymbol(symCode);
+	if (!user || !sym)
+		return;
+	RegisterSymbol(user, sym);
 }
 
 void SmRealtimeSymbolServiceManager::RegisterSymbol(SmUser* user, SmSymbol* sym)
@@ -30,7 +37,13 @@ void SmRealtimeSymbolServiceManager::RegisterSymbol(SmUser* user, SmSymbol* sym)
 
 void SmRealtimeSymbolServiceManager::UnregisterSymbol(std::string user_id, std::string symCode)
 {
-	
+	SmUserManager* userMgr = SmUserManager::GetInstance();
+	SmUser* user = userMgr->FindUser(user_id);
+	SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
+	SmSymbol* sym = symMgr->FindSymbol(symCode);
+	if (!user || !sym)
+		return;
+	UnregisterSymbol(user, sym);
 }
 
 void SmRealtimeSymbolServiceManager::UnregisterSymbol(SmUser* user, SmSymbol* sym)
@@ -53,7 +66,11 @@ void SmRealtimeSymbolServiceManager::UnregisterSymbol(SmUser* user, SmSymbol* sy
 
 void SmRealtimeSymbolServiceManager::UnregisterAllSymbol(std::string user_id)
 {
-	
+	SmUserManager* userMgr = SmUserManager::GetInstance();
+	SmUser* user = userMgr->FindUser(user_id);
+	if (!user)
+		return;
+	UnregisterAllSymbol(user);
 }
 
 void SmRealtimeSymbolServiceManager::UnregisterAllSymbol(SmUser* user)
@@ -133,7 +150,7 @@ void SmRealtimeSymbolServiceManager::SendSise(SmSymbol* sym, SmUserMap& userMap)
 {
 	if (!sym || userMap.size() == 0)
 		return;
-	std::string message = "test message";
+	std::string message = sym->GetQuoteByJson();
 	// Put the message in a shared pointer so we can re-use it for each client
 	auto const ss = boost::make_shared<std::string const>(std::move(message));
 
@@ -143,7 +160,7 @@ void SmRealtimeSymbolServiceManager::SendSise(SmSymbol* sym, SmUserMap& userMap)
 		v.reserve(userMap.size());
 		for (auto it = userMap.begin(); it != userMap.end(); ++it) {
 			SmUser* user = it->second;
-			if (user->Socket())
+			if (user->Connected() && user->Socket())
 				v.emplace_back(user->Socket()->weak_from_this());
 		}
 	}

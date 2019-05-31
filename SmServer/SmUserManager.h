@@ -24,6 +24,7 @@ public:
 	void SendBroadcastMessage(std::string message);
 	SmUser* FindUser(std::string id);
 	void ResetUserBySocket(SmWebsocketSession* socket);
+	void SendResultMessage(std::string user_id, std::string message);
 private:
 	void RemoveUser(std::string id);
 };
