@@ -1,6 +1,7 @@
 #pragma once
 #include "Global/TemplateSingleton.h"
 #include <string>
+#include "Json/json.hpp"
 class SmWebsocketSession;
 class SmMessageManager : public TemplateSingleton<SmMessageManager>
 {
@@ -11,9 +12,9 @@ public:
 	void OnMessage(std::string message, SmWebsocketSession* socket);
 private:
 	void ParseMessage(std::string message, SmWebsocketSession* socket);
-	void OnLogin(std::string message, SmWebsocketSession* socket);
 	void SendResult(std::string user_id, int result_code, std::string result_msg);
-	void OnRegisterSymbol(std::string message);
-	void OnRegisterSymbolCycle(std::string message);
+	void OnLogin(nlohmann::json& obj, SmWebsocketSession* socket);
+	void OnRegisterSymbol(nlohmann::json& obj, SmWebsocketSession* socket);
+	void OnRegisterSymbolCycle(nlohmann::json& obj, SmWebsocketSession* socket);
 };
 

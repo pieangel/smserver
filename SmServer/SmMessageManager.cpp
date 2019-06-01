@@ -36,13 +36,13 @@ void SmMessageManager::ParseMessage(std::string message, SmWebsocketSession* soc
 		switch (req_id)
 		{
 		case 1:
-			OnLogin(message, socket);
+			OnLogin(json_object, socket);
 			break;
 		case  2:
-			OnRegisterSymbol(message);
+			OnRegisterSymbol(json_object, socket);
 			break;
 		case 3:
-			OnRegisterSymbolCycle(message);
+			OnRegisterSymbolCycle(json_object, socket);
 			break;
 		default:
 			break;
@@ -53,11 +53,11 @@ void SmMessageManager::ParseMessage(std::string message, SmWebsocketSession* soc
 	}
 }
 
-void SmMessageManager::OnLogin(std::string message, SmWebsocketSession* socket)
+
+void SmMessageManager::OnLogin(nlohmann::json& obj, SmWebsocketSession* socket)
 {
 	try {
-		auto rcvd_json = json::parse(message);
-		auto user_info = rcvd_json["user_info"];
+		auto user_info = obj["user_info"];
 		std::string id = user_info["id"];
 		std::string pwd = user_info["pwd"];
 		SmUserManager* userMgr = SmUserManager::GetInstance();
@@ -79,12 +79,12 @@ void SmMessageManager::SendResult(std::string user_id, int result_code, std::str
 	userMgr->SendResultMessage(user_id, res.dump(4));
 }
 
-void SmMessageManager::OnRegisterSymbol(std::string message)
+
+void SmMessageManager::OnRegisterSymbol(nlohmann::json& obj, SmWebsocketSession* socket)
 {
 	try {
-		auto rcvd_json = json::parse(message);
-		std::string id = rcvd_json["user_id"];
-		std::string symCode = rcvd_json["symbol_code"];
+		std::string id = obj["user_id"];
+		std::string symCode = obj["symbol_code"];
 		SmRealtimeSymbolServiceManager* rtlSymMgr = SmRealtimeSymbolServiceManager::GetInstance();
 		rtlSymMgr->RegisterSymbol(id, symCode);
 
@@ -95,11 +95,13 @@ void SmMessageManager::OnRegisterSymbol(std::string message)
 	}
 }
 
-void SmMessageManager::OnRegisterSymbolCycle(std::string message)
+void SmMessageManager::OnRegisterSymbolCycle(nlohmann::json& obj, SmWebsocketSession* socket)
 {
 	try {
-		auto rcvd_json = json::parse(message);
-		std::string id = rcvd_json["id"];
+		std::string id = obj["id"];
+		std::string symCode = obj["symbol_code"];
+		std::string chart_type = obj["chart_type"];
+		std::string cycle = obj["cycle"];
 		SendResult(id, 0, "success!");
 	}
 	catch (std::exception e) {

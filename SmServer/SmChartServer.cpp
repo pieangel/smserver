@@ -17,7 +17,8 @@ void SmChartServer::Init()
 
 void SmChartServer::Start()
 {
-	std::string addr = "192.168.0.38";
+	//std::string addr = "192.168.0.38";
+	std::string addr = "192.168.1.9";
 	std::string por = "9991";
 	std::string path = "C:\\Server\\";
 	std::string thread_count = "5";
