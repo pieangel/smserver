@@ -234,6 +234,7 @@
     <ClInclude Include="SmServer.h" />
     <ClInclude Include="SmServerDoc.h" />
     <ClInclude Include="SmServerView.h" />
+    <ClInclude Include="SmServiceDefine.h" />
     <ClInclude Include="SmSessionManager.h" />
     <ClInclude Include="SmSymbol.h" />
     <ClInclude Include="SmSymbolManager.h" />

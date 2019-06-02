@@ -220,6 +220,9 @@
     <ClInclude Include="SmScheduler.h">
       <Filter>Scheduler</Filter>
     </ClInclude>
+    <ClInclude Include="SmServiceDefine.h">
+      <Filter>Service</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SmChartServer.cpp">
