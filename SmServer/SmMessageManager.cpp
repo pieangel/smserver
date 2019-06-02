@@ -62,7 +62,21 @@ void SmMessageManager::OnLogin(nlohmann::json& obj, SmWebsocketSession* socket)
 		std::string pwd = user_info["pwd"];
 		SmUserManager* userMgr = SmUserManager::GetInstance();
 		userMgr->AddUser(id, pwd, socket);
-		SendResult(id, 0, "success!");
+		SendResult(id, 0, "login success!");
+	}
+	catch (std::exception e) {
+		std::string error = e.what();
+	}
+}
+
+void SmMessageManager::OnLogout(nlohmann::json& obj, SmWebsocketSession* socket)
+{
+	try {
+		auto user_info = obj["user_info"];
+		std::string id = user_info["id"];
+		SmUserManager* userMgr = SmUserManager::GetInstance();
+		userMgr->Logout(id);
+		SendResult(id, 0, "logout success!");
 	}
 	catch (std::exception e) {
 		std::string error = e.what();
@@ -88,7 +102,22 @@ void SmMessageManager::OnRegisterSymbol(nlohmann::json& obj, SmWebsocketSession*
 		SmRealtimeSymbolServiceManager* rtlSymMgr = SmRealtimeSymbolServiceManager::GetInstance();
 		rtlSymMgr->RegisterSymbol(id, symCode);
 
-		SendResult(id, 0, "success!");
+		SendResult(id, 0, "register symbol success!");
+	}
+	catch (std::exception e) {
+		std::string error = e.what();
+	}
+}
+
+void SmMessageManager::OnUnregisterSymbol(nlohmann::json& obj, SmWebsocketSession* socket)
+{
+	try {
+		std::string id = obj["user_id"];
+		std::string symCode = obj["symbol_code"];
+		SmRealtimeSymbolServiceManager* rtlSymMgr = SmRealtimeSymbolServiceManager::GetInstance();
+		rtlSymMgr->UnregisterSymbol(id, symCode);
+
+		SendResult(id, 0, "register symbol success!");
 	}
 	catch (std::exception e) {
 		std::string error = e.what();
@@ -102,7 +131,21 @@ void SmMessageManager::OnRegisterSymbolCycle(nlohmann::json& obj, SmWebsocketSes
 		std::string symCode = obj["symbol_code"];
 		std::string chart_type = obj["chart_type"];
 		std::string cycle = obj["cycle"];
-		SendResult(id, 0, "success!");
+		SendResult(id, 0, "register symbol cycle success!");
+	}
+	catch (std::exception e) {
+		std::string error = e.what();
+	}
+}
+
+void SmMessageManager::OnUnregisterSymbolCycle(nlohmann::json& obj, SmWebsocketSession* socket)
+{
+	try {
+		std::string id = obj["id"];
+		std::string symCode = obj["symbol_code"];
+		std::string chart_type = obj["chart_type"];
+		std::string cycle = obj["cycle"];
+		SendResult(id, 0, "register symbol cycle success!");
 	}
 	catch (std::exception e) {
 		std::string error = e.what();

@@ -1,6 +1,7 @@
 #include "SmUserManager.h"
 #include "SmUser.h"
 #include "SmWebsocketSession.h"
+#include "SmRealtimeSymbolServiceManager.h"
 SmUserManager::SmUserManager()
 {
 
@@ -10,7 +11,9 @@ SmUserManager::~SmUserManager()
 {
 	std::lock_guard<std::mutex> lock(_mutex);
 	for (auto it = _UserMap.begin(); it != _UserMap.end(); ++it) {
-		delete it->second;
+		SmUser* user = it->second;
+		ClearAllService(user);
+		delete user;
 	}
 }
 
@@ -32,9 +35,13 @@ SmUser* SmUserManager::AddUser(std::string id, SmWebsocketSession* socket)
 	if (!socket)
 		return nullptr;
 
-	SmUser* user = new SmUser();
+	SmUser* user = FindUser(id);
+	if (!user) {
+		user = new SmUser();
+	}
 	user->Id(id);
 	user->Socket(socket);
+	user->Connected(true);
 	_UserMap[id] = user;
 	_SocketToUserMap[socket] = user;
 	return user;
@@ -47,10 +54,9 @@ SmUser* SmUserManager::AddUser(std::string id, std::string pwd, SmWebsocketSessi
 	if (!socket)
 		return nullptr;
 	SmUser* user = FindUser(id);
-	if (user)
-		return user;
-
-	user = new SmUser();
+	if (!user) {
+		user = new SmUser();
+	}
 	user->Id(id);
 	user->Password(pwd);
 	user->Socket(socket);
@@ -66,6 +72,15 @@ void SmUserManager::RemoveUser(std::string id)
 	if (it != _UserMap.end()) {
 		_UserMap.erase(it);
 	}
+}
+
+void SmUserManager::ClearAllService(SmUser* user)
+{
+	if (!user)
+		return;
+
+	SmRealtimeSymbolServiceManager* rtlSymSvcMgr = SmRealtimeSymbolServiceManager::GetInstance();
+	rtlSymSvcMgr->UnregisterAllSymbol(user->Id());
 }
 
 void SmUserManager::SendBroadcastMessage(std::string message)
@@ -111,7 +126,9 @@ void SmUserManager::ResetUserBySocket(SmWebsocketSession* socket)
 
 	auto it = _SocketToUserMap.find(socket);
 	if (it != _SocketToUserMap.end()) {
-		it->second->Reset();
+		SmUser* user = it->second;
+		ClearAllService(user);
+		user->Reset();
 	}
 }
 
@@ -140,4 +157,13 @@ void SmUserManager::SendResultMessage(std::string user_id, std::string message)
 	for (auto const& wp : v)
 		if (auto sp = wp.lock())
 			sp->send(ss);
+}
+
+void SmUserManager::Logout(std::string id)
+{
+	SmUser* user = FindUser(id);
+	if (!user)
+		return;
+	if (user->Socket())
+		ResetUserBySocket(user->Socket());
 }

@@ -59,7 +59,7 @@ void SmSymbolReader::ReadMarketFile()
 		std::string enName = line.substr(28, 50);
 		std::string name = line.substr(78, 50);
 		msg.Format(_T("market = %s, ex = %s, pmCode = %s, name = %s, ename = %s\n"), market.c_str(), exchange.c_str(), pmCode.c_str(), name.c_str(), enName.c_str());
-		TRACE(msg);
+		//TRACE(msg);
 	}
 }
 
@@ -90,7 +90,7 @@ void SmSymbolReader::ReadMarketFile(std::string fullPath)
 		cat->Name(enName);
 		cat->NameKr(name);
 		msg.Format(_T("market = %s, ex = %s, pmCode = %s, name = %s, ename = %s\n"), market_type.c_str(), exchange.c_str(), pmCode.c_str(), name.c_str(), enName.c_str());
-		TRACE(msg);
+		//TRACE(msg);
 	}
 }
 
@@ -113,7 +113,7 @@ void SmSymbolReader::ReadPmFile()
 		// 시장 구분을 숫자로 함
 		std::string pmGubun = line.substr(34, 3);
 		msg.Format(_T("market = %s, ex = %s, pmCode = %s, name = %s, ename = %s\n"), market.c_str(), exIndexCode.c_str(), exChangeCode.c_str(), pmCode.c_str(), pmGubun.c_str());
-		TRACE(msg);
+		//TRACE(msg);
 		boost::trim_right(market);
 		boost::trim_right(exIndexCode);
 		boost::trim_right(exChangeCode);
@@ -145,7 +145,7 @@ void SmSymbolReader::ReadPmFile(std::string fullPath)
 		std::string pmCode = line.substr(29, 5);
 		std::string pmGubun = line.substr(34, 3);
 		msg.Format(_T("market = %s, ex = %s, pmCode = %s, name = %s, ename = %s\n"), market.c_str(), exIndexCode.c_str(), exChangeCode.c_str(), pmCode.c_str(), pmGubun.c_str());
-		TRACE(msg);
+		//TRACE(msg);
 
 		boost::trim_right(market);
 		boost::trim_right(exIndexCode);
@@ -288,7 +288,7 @@ void SmSymbolReader::ReadJmFile()
 
 
 		msg.Format(_T("code = %s, name = %s, name_kr = %s\n"), Series.c_str(), SeriesNm.c_str(), SeriesNmKor.c_str());
-		TRACE(msg);
+		//TRACE(msg);
 	}
 }
 
@@ -422,7 +422,7 @@ void SmSymbolReader::ReadJmFile(std::string fullPath)
 		boost::trim_right(SeriesNmKor);
 		boost::trim_right(MrktCd);
 		msg.Format(_T("code = %s, name = %s, name_kr = %s\n"), Series.c_str(), SeriesNm.c_str(), SeriesNmKor.c_str());
-		TRACE(msg);
+		//TRACE(msg);
 
 		SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
 		SmCategory* cat = marketMgr->FindCategory(MrktCd);

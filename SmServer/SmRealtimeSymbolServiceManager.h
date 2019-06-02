@@ -34,5 +34,6 @@ private:
 	void UnregisterAllSymbol(SmUser* user);
 
 	void SendSise(SmSymbol* sym, SmUserMap& userMap);
+	void SendHoga(SmSymbol* sym, SmUserMap& userMap);
 };
 
