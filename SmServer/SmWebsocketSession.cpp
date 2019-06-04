@@ -43,6 +43,11 @@ void SmWebsocketSession::send(boost::shared_ptr<std::string const> const& ss)
 			ss));
 }
 
+void SmWebsocketSession::close_socket()
+{
+	ws_.next_layer().close();
+}
+
 void SmWebsocketSession::on_accept(beast::error_code ec)
 {
 	// Handle the error, if any
@@ -73,8 +78,11 @@ void SmWebsocketSession::on_read(beast::error_code ec, std::size_t bytes_transfe
 	if (ec == websocket::error::closed)
 		return;
 
-	if (ec)
+	if (ec) {
 		SmCommon::fail(ec, "read");
+		session_mgr_->leave(this);
+		return;
+	}
 
 	// Send to all connections
 	//session_mgr_->send(beast::buffers_to_string(buffer_.data()));

@@ -56,6 +56,8 @@ public:
 				shared_from_this()));
 	}
 
+	void close_socket();
+
 private:
 	void on_send(boost::shared_ptr<std::string const> const& ss);
 	void on_accept(beast::error_code ec);

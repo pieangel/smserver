@@ -11,7 +11,7 @@
 #include "SmChartServer.h"
 #include "SmSymbolReader.h"
 #include "SmMarketManager.h"
-#include "Database/influxdb.hpp"
+//#include "Database/influxdb.hpp"
 #include <iostream>
 #include <chrono>
 #include <iomanip>
@@ -34,6 +34,7 @@
 #include "SmUserManager.h"
 #include "SmScheduler.h"
 #include "SmSymbol.h"
+#include "SmChartDefine.h"
 
 using namespace std;
 
@@ -53,6 +54,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_WM_SHOWWINDOW()
 	ON_WM_CLOSE()
 	ON_COMMAND(ID_SERVER_STARTSCHEDULE, &CMainFrame::OnServerStartschedule)
+	ON_COMMAND(ID_SERVER_GETCHARTDATA, &CMainFrame::OnServerGetchartdata)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -227,6 +229,7 @@ void CMainFrame::OnServerStart()
 
 void CMainFrame::DbTest()
 {
+	/*
 	influxdb_cpp::server_info si("127.0.0.1", 8086, "testx", "test", "test");
 	// post_http demo with resp[optional]
 	string resp;
@@ -241,6 +244,7 @@ void CMainFrame::DbTest()
 		.post_http(si, &resp);
 
 
+	double now2 = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
 	auto now = std::chrono::system_clock::now();
 	
@@ -332,7 +336,7 @@ void CMainFrame::DbTest()
 
 	TRACE(resp.c_str());
 
-	
+	*/
 }
 
 void TimeFuction() {
@@ -406,6 +410,18 @@ void CMainFrame::ClearAllResource()
 	SmUserManager::DestroyInstance();
 }
 
+void CMainFrame::GetChartData()
+{
+	SmChartDataRequest req;
+	req.symbolCode = "CLN19";
+	req.chartType = SmChartType::MIN;
+	req.cycle = 1;
+	req.count = 1500;
+	req.next = 0;
+	SmHdClient* client = SmHdClient::GetInstance();
+	client->GetChartData(req);
+}
+
 void CMainFrame::ReadSymbols()
 {
 	SmSymbolReader* symReader = SmSymbolReader::GetInstance();
@@ -439,9 +455,9 @@ void CMainFrame::OnShowWindow(BOOL bShow, UINT nStatus)
 	pugi::xml_node app = doc.first_child();
 	pugi::xml_node login_info = doc.child("application").child("login_info");
 	
-	std::string id = "yjs1974";// login_info.child("id").text().as_string();
-	std::string pwd = "3753yang";// login_info.child("pwd").text().as_string();
-	std::string cert = "#*sm1026jw";// login_info.child("cert").text().as_string();
+	std::string id = login_info.child("id").text().as_string();
+	std::string pwd = login_info.child("pwd").text().as_string();
+	std::string cert = login_info.child("cert").text().as_string();
 
 	int loginResult = hdClient->Login(id, pwd, cert);
 	if (loginResult < 0) {
@@ -467,4 +483,11 @@ void CMainFrame::OnServerStartschedule()
 
 	SmScheduler* timer = SmScheduler::GetInstance();
 	timer->RepeatSymbolService();
+}
+
+
+void CMainFrame::OnServerGetchartdata()
+{
+	GetChartData();
+	//DbTest();
 }

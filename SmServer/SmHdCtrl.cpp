@@ -11,7 +11,9 @@
 #include <ctime>
 #include "SmSymbol.h"
 #include "SmSymbolManager.h"
-
+#include "Database/influxdb.hpp"
+#include "Json/json.hpp"
+using namespace nlohmann;
 // VtHdCtrl dialog
 
 IMPLEMENT_DYNAMIC(SmHdCtrl, CDialogEx)
@@ -311,6 +313,103 @@ void SmHdCtrl::OnRcvdAbroadSise(CString& strKey, LONG& nRealType)
 	sym->Quote.RatioToPredaySign = strSignToPreDay;
 }
 
+void SmHdCtrl::OnRcvdAbroadChartData(CString& sTrCode, LONG& nRqID)
+{
+	int nRepeatCnt = m_CommAgent.CommGetRepeatCnt(sTrCode, -1, "OutRec1");
+	influxdb_cpp::server_info si("127.0.0.1", 8086, "abroad_future", "angelpie", "orion1");
+	//influxdb_cpp::server_info si("127.0.0.1", 8086, "test_x", "test", "test");
+	CString msg;
+
+	// Received the chart data first.
+	auto timeKey = std::make_pair(0, 0);
+	for (int i = 0; i < nRepeatCnt; i++) {
+		CString strDate = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "국내일자");
+		CString strTime = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "국내시간");
+		CString strOpen = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "시가");
+		CString strHigh = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "고가");
+		CString strLow = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "저가");
+		CString strClose = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "종가");
+		CString strVol = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "체결량");
+		
+		std::string date_time = strDate + strTime;
+		std::time_t utc = VtStringUtil::GetUTCTimestamp(date_time);
+
+		msg.Format(_T("utc = %ld, date = %s, t = %s, o = %s, h = %s, l = %s, c = %s, v = %s\n"), utc, strDate, strTime, strOpen, strHigh, strLow, strClose, strVol);
+		TRACE(msg);
+
+		// post_http demo with resp[optional]
+// 		std::string resp;
+// 		int ret = influxdb_cpp::builder()
+// 			.meas("CLN19")
+// 			.tag("chart_type", "min")
+// 			.tag("cycle", "1")
+// 			.field("h", _ttoi(strHigh))
+// 			.field("l", _ttoi(strLow))
+// 			.field("o", _ttoi(strOpen))
+// 			.field("c", _ttoi(strClose))
+// 			.field("v", _ttoi(strVol))
+// 			.timestamp(utc * std::pow(10, 9))
+// 			.post_http(si, &resp);
+	}
+
+	std::string resp;
+	influxdb_cpp::query(resp, "select * from CLN19", si);
+	
+	try
+	{
+		auto json_object = json::parse(resp);
+		auto a = json_object["results"][0]["series"][0]["values"];
+		for (size_t i = 0; i < a.size(); i++) {
+			auto val = a[i];
+			std::string time = val[0];
+			int h = 0, l = 0, o = 0, c = 0, v = 0;
+			h = val[1];
+			l = val[4];
+			o = val[5];
+			c = val[6];
+			v = val[7];
+
+			
+			msg.Format("time = %s, h = %d, l = %d, o = %d, c = %d, v = %d \n", time.c_str(), h, l, o, c, v);
+			TRACE(msg);
+		}
+	}
+	catch (const std::exception& e)
+	{
+		std::string error = e.what();
+	}
+	
+	// 	for (size_t i = 0; i < a.size(); ++i) {
+	// 		JSON::Array& name = a[i].a();
+	// 		int h, l, o, c, v;
+	// 		std::string time = name[0];
+	// 		h = name[1];
+	// 		l = name[2];
+	// 		o = name[3];
+	// 		c = name[4];
+	// 		v = name[5];
+	// 		CString msg;
+	// 		msg.Format(_T("time = %s, h=%d, l=%d, o=%d, c=%d, v=%d\n"), time.c_str(), h, l, o, c, v);
+	// 		TRACE(msg);
+	// 	}
+	// 	v.read(resp);
+	// 	JSON::Array& a = v["results"][0]["series"][0]["values"].a();
+	// 	for (size_t i = 0; i < a.size(); ++i) {
+	// 		JSON::Array& name = a[i].a();
+	// 		int h, l, o, c, v;
+	// 		std::string time = name[0];
+	// 		h = name[1];
+	// 		l = name[2];
+	// 		o = name[3];
+	// 		c = name[4];
+	// 		v = name[5];
+	// 		CString msg;
+	// 		msg.Format(_T("time = %s, h=%d, l=%d, o=%d, c=%d, v=%d\n"), time.c_str(), h, l, o, c, v);
+	// 		TRACE(msg);
+	// 	}
+
+}
+
 BEGIN_MESSAGE_MAP(SmHdCtrl, CDialogEx)
 END_MESSAGE_MAP()
 
@@ -326,7 +425,9 @@ END_EVENTSINK_MAP()
 
 void SmHdCtrl::OnDataRecv(CString sTrCode, LONG nRqID)
 {
-	int i = 0;
+	if (sTrCode == DefAbChartData) {
+		OnRcvdAbroadChartData(sTrCode, nRqID);
+	}
 }
 
 void SmHdCtrl::OnGetBroadData(CString strKey, LONG nRealType)

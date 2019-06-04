@@ -3,6 +3,7 @@
 #include "SmUserManager.h"
 #include "Json/json.hpp"
 #include "SmRealtimeSymbolServiceManager.h"
+#include "SmSessionManager.h"
 using namespace nlohmann;
 SmMessageManager::SmMessageManager()
 {
@@ -27,11 +28,15 @@ void SmMessageManager::OnMessage(std::string message, SmWebsocketSession* socket
 
 void SmMessageManager::ParseMessage(std::string message, SmWebsocketSession* socket)
 {
-	if (!socket || message.length() == 0)
+	if (!socket) return;
+	if (socket && message.length() == 0) {
+		
 		return;
+	}
 
-	auto json_object = json::parse(message);
 	try {
+		auto json_object = json::parse(message);
+
 		int req_id = json_object["req_id"];
 		switch (req_id)
 		{

@@ -23,3 +23,4 @@ struct SmChartDataRequest
 	int seq;
 	bool domestic;
 };
+

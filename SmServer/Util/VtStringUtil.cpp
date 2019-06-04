@@ -100,3 +100,34 @@ std::string VtStringUtil::PadRight(double input, char padding, int len, int deci
 	return out.str();
 }
 
+std::time_t VtStringUtil::GetUTCTimestamp(std::string datetime_string)
+{
+	time_t rawtime;
+	struct tm* timeinfo;
+
+	int year = std::stoi(datetime_string.substr(0, 4));
+	int month = std::stoi(datetime_string.substr(4,2));
+	int day = std::stoi(datetime_string.substr(6, 2));
+	int hour = std::stoi(datetime_string.substr(8, 2));
+	int min = std::stoi(datetime_string.substr(10, 2));
+	int sec = std::stoi(datetime_string.substr(12, 2));
+
+	/* get current timeinfo: */
+	time(&rawtime); //or: rawtime = time(0);
+	/* convert to struct: */
+	timeinfo = localtime(&rawtime);
+
+	/* now modify the timeinfo to the given date: */
+	timeinfo->tm_year = year - 1900;
+	timeinfo->tm_mon = month - 1;    //months since January - [0,11]
+	timeinfo->tm_mday = day;          //day of the month - [1,31] 
+	timeinfo->tm_hour = hour;         //hours since midnight - [0,23]
+	timeinfo->tm_min = min;          //minutes after the hour - [0,59]
+	timeinfo->tm_sec = sec;          //seconds after the minute - [0,59]
+
+	/* call mktime: create unix time stamp from timeinfo struct */
+	std::time_t date = mktime(timeinfo);
+
+	return date;
+}
+

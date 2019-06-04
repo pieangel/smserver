@@ -5,6 +5,7 @@
 #include <mutex>
 #include <string>
 #include <unordered_set>
+#include "Global/TemplateSingleton.h"
 
 // Forward declaration
 class SmWebsocketSession;

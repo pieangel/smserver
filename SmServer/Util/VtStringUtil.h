@@ -2,6 +2,8 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <time.h>
+#include <ctime>
 
 class VtStringUtil
 {
@@ -17,5 +19,6 @@ public:
 	static std::string PadRight(int input, char padding, int len);
 	static std::string PadLeft(std::string input, char padding, int len);
 	static std::string PadRight(std::string input, char padding, int len);
+	static std::time_t GetUTCTimestamp(std::string datetime_string);
 };
 

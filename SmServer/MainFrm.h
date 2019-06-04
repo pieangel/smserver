@@ -54,10 +54,12 @@ private:
 	void InitHdClient();
 	void RegisterProduct();
 	void ClearAllResource();
+	void GetChartData();
 public:
 	afx_msg void OnShowWindow(BOOL bShow, UINT nStatus);
 	afx_msg void OnClose();
 	afx_msg void OnServerStartschedule();
+	afx_msg void OnServerGetchartdata();
 };
 
 
