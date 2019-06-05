@@ -11,7 +11,8 @@
 #include <ctime>
 #include "SmSymbol.h"
 #include "SmSymbolManager.h"
-#include "Database/influxdb.hpp"
+#include "SmTimeSeriesDBManager.h"
+#include "SmTimeSeriesCollector.h"
 #include "Json/json.hpp"
 using namespace nlohmann;
 // VtHdCtrl dialog
@@ -205,7 +206,7 @@ void SmHdCtrl::GetChartData(SmChartDataRequest req)
 	CString sReqFidInput = "000001002003004005006007008009010011012013014015";
 	//CString strNextKey = m_CommAgent.CommGetNextKey(nRqID, "");
 	int nRqID = m_CommAgent.CommFIDRqData(sTrCode, sInput, sReqFidInput, sInput.GetLength(), strNextKey);
-
+	_ChartDataReqMap[nRqID] = req;
 }
 
 void SmHdCtrl::DownloadMasterFiles(std::string param)
@@ -316,12 +317,16 @@ void SmHdCtrl::OnRcvdAbroadSise(CString& strKey, LONG& nRealType)
 void SmHdCtrl::OnRcvdAbroadChartData(CString& sTrCode, LONG& nRqID)
 {
 	int nRepeatCnt = m_CommAgent.CommGetRepeatCnt(sTrCode, -1, "OutRec1");
-	influxdb_cpp::server_info si("127.0.0.1", 8086, "abroad_future", "angelpie", "orion1");
+	//influxdb_cpp::server_info si("127.0.0.1", 8086, "abroad_future", "angelpie", "orion1");
 	//influxdb_cpp::server_info si("127.0.0.1", 8086, "test_x", "test", "test");
 	CString msg;
 
+	auto it = _ChartDataReqMap.find(nRqID);
+	if (it == _ChartDataReqMap.end())
+		return;
+	SmChartDataRequest req = it->second;
+	SmTimeSeriesCollector* tsCol = SmTimeSeriesCollector::GetInstance();
 	// Received the chart data first.
-	auto timeKey = std::make_pair(0, 0);
 	for (int i = 0; i < nRepeatCnt; i++) {
 		CString strDate = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "국내일자");
 		CString strTime = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "국내시간");
@@ -330,84 +335,33 @@ void SmHdCtrl::OnRcvdAbroadChartData(CString& sTrCode, LONG& nRqID)
 		CString strLow = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "저가");
 		CString strClose = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "종가");
 		CString strVol = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "체결량");
-		
-		std::string date_time = strDate + strTime;
-		std::time_t utc = VtStringUtil::GetUTCTimestamp(date_time);
 
-		msg.Format(_T("utc = %ld, date = %s, t = %s, o = %s, h = %s, l = %s, c = %s, v = %s\n"), utc, strDate, strTime, strOpen, strHigh, strLow, strClose, strVol);
+		if (strDate.GetLength() == 0)
+			continue;
+		
+		msg.Format(_T("date = %s, t = %s, o = %s, h = %s, l = %s, c = %s, v = %s\n"), strDate, strTime, strOpen, strHigh, strLow, strClose, strVol);
 		TRACE(msg);
 
-		// post_http demo with resp[optional]
-// 		std::string resp;
-// 		int ret = influxdb_cpp::builder()
-// 			.meas("CLN19")
-// 			.tag("chart_type", "min")
-// 			.tag("cycle", "1")
-// 			.field("h", _ttoi(strHigh))
-// 			.field("l", _ttoi(strLow))
-// 			.field("o", _ttoi(strOpen))
-// 			.field("c", _ttoi(strClose))
-// 			.field("v", _ttoi(strVol))
-// 			.timestamp(utc * std::pow(10, 9))
-// 			.post_http(si, &resp);
+		SmChartDataItem data;
+		data.symbolCode = req.symbolCode;
+		data.chartType = req.chartType;
+		data.cycle = req.cycle;
+		data.date = strDate;
+		data.time = strTime;
+		data.h = _ttoi(strHigh);
+		data.l = _ttoi(strLow);
+		data.o = _ttoi(strOpen);
+		data.c = _ttoi(strClose);
+		data.v = _ttoi(strVol);
+
+		// 차트 데이터 항목 도착을 알린다.
+		tsCol->OnChartDataItem(std::move(data));
 	}
 
-	std::string resp;
-	influxdb_cpp::query(resp, "select * from CLN19", si);
-	
-	try
-	{
-		auto json_object = json::parse(resp);
-		auto a = json_object["results"][0]["series"][0]["values"];
-		for (size_t i = 0; i < a.size(); i++) {
-			auto val = a[i];
-			std::string time = val[0];
-			int h = 0, l = 0, o = 0, c = 0, v = 0;
-			h = val[1];
-			l = val[4];
-			o = val[5];
-			c = val[6];
-			v = val[7];
-
-			
-			msg.Format("time = %s, h = %d, l = %d, o = %d, c = %d, v = %d \n", time.c_str(), h, l, o, c, v);
-			TRACE(msg);
-		}
-	}
-	catch (const std::exception& e)
-	{
-		std::string error = e.what();
-	}
-	
-	// 	for (size_t i = 0; i < a.size(); ++i) {
-	// 		JSON::Array& name = a[i].a();
-	// 		int h, l, o, c, v;
-	// 		std::string time = name[0];
-	// 		h = name[1];
-	// 		l = name[2];
-	// 		o = name[3];
-	// 		c = name[4];
-	// 		v = name[5];
-	// 		CString msg;
-	// 		msg.Format(_T("time = %s, h=%d, l=%d, o=%d, c=%d, v=%d\n"), time.c_str(), h, l, o, c, v);
-	// 		TRACE(msg);
-	// 	}
-	// 	v.read(resp);
-	// 	JSON::Array& a = v["results"][0]["series"][0]["values"].a();
-	// 	for (size_t i = 0; i < a.size(); ++i) {
-	// 		JSON::Array& name = a[i].a();
-	// 		int h, l, o, c, v;
-	// 		std::string time = name[0];
-	// 		h = name[1];
-	// 		l = name[2];
-	// 		o = name[3];
-	// 		c = name[4];
-	// 		v = name[5];
-	// 		CString msg;
-	// 		msg.Format(_T("time = %s, h=%d, l=%d, o=%d, c=%d, v=%d\n"), time.c_str(), h, l, o, c, v);
-	// 		TRACE(msg);
-	// 	}
-
+	// 차트 데이터 수신 완료를 알릴다.
+	tsCol->OnCompleteChartData(std::move(req));
+	// 차트 데이터 수신 요청 목록에서 제거한다.
+	_ChartDataReqMap.erase(it);
 }
 
 BEGIN_MESSAGE_MAP(SmHdCtrl, CDialogEx)
@@ -454,5 +408,7 @@ void SmHdCtrl::OnGetMsg(CString strCode, CString strMsg)
 
 void SmHdCtrl::OnGetMsgWithRqId(int nRqId, CString strCode, CString strMsg)
 {
-	int i = 0;
+	CString msg;
+	msg.Format(_T("req_id = %d, hd_server_code = %s, hd_server_msg = %s\n"), nRqId, strCode, strMsg);
+	TRACE(msg);
 }

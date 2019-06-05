@@ -24,6 +24,10 @@ public:
 	std::string MarketCode() const { return _MarketCode; }
 	void MarketCode(std::string val) { _MarketCode = val; }
 	SmSymbol* AddSymbol(std::string symCode);
+	std::vector<SmSymbol*>& GetSymbolList() {
+		return _SymbolList;
+	}
+	SmSymbol* GetRecentMonthSymbol();
 private:
 	// 품목코드
 	std::string _Code;

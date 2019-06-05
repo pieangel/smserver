@@ -60,6 +60,7 @@ public:
 	afx_msg void OnClose();
 	afx_msg void OnServerStartschedule();
 	afx_msg void OnServerGetchartdata();
+	afx_msg void OnServerCollectchartdata();
 };
 
 

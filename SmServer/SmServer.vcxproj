@@ -221,6 +221,8 @@
     <ClInclude Include="SmChartServer.h" />
     <ClInclude Include="SmCommon.h" />
     <ClInclude Include="SmConfigManager.h" />
+    <ClInclude Include="SmTimeSeriesCollector.h" />
+    <ClInclude Include="SmTimeSeriesDBManager.h" />
     <ClInclude Include="SmHdClient.h" />
     <ClInclude Include="SmHttpSession.h" />
     <ClInclude Include="SmListener.h" />
@@ -243,6 +245,7 @@
     <ClInclude Include="SmUserManager.h" />
     <ClInclude Include="SmWebsocketSession.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="Timer\cpptime.h" />
     <ClInclude Include="Util\VtStringUtil.h" />
     <ClInclude Include="SmHdCtrl.h" />
     <ClInclude Include="Xml\pugiconfig.hpp" />
@@ -280,6 +283,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="SmConfigManager.cpp" />
+    <ClCompile Include="SmTimeSeriesCollector.cpp" />
+    <ClCompile Include="SmTimeSeriesDBManager.cpp" />
     <ClCompile Include="SmHdClient.cpp" />
     <ClCompile Include="SmHttpSession.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>

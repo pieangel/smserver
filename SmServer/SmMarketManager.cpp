@@ -78,6 +78,22 @@ SmCategory* SmMarketManager::FindCategory(std::string cat_code)
 	return nullptr;
 }
 
+std::vector<SmSymbol*> SmMarketManager::GetRecentMonthSymbolList()
+{
+	std::vector<SmSymbol*> symvec;
+	for (auto it = _MarketList.begin(); it != _MarketList.end(); ++it) {
+		SmMarket* mrkt = *it;
+		auto cat_vec = mrkt->GetCategoryList();
+		for (auto itc = cat_vec.begin(); itc != cat_vec.end(); ++itc) {
+			SmSymbol* sym = (*itc)->GetRecentMonthSymbol();
+			if (sym)
+				symvec.push_back(sym);
+		}
+	}
+
+	return symvec;
+}
+
 SmMarket* SmMarketManager::FindMarket(std::string mrkt_name)
 {
 	for (auto it = _MarketList.begin(); it != _MarketList.end(); ++it) {

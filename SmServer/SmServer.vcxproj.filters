@@ -56,6 +56,9 @@
     <Filter Include="Service">
       <UniqueIdentifier>{1f071981-78f2-4d82-bb20-ac0e47ef9f4d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Timer">
+      <UniqueIdentifier>{0bcf1e07-719b-41bd-a709-209dff0fea5b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SmChartServer.h">
@@ -223,6 +226,15 @@
     <ClInclude Include="SmServiceDefine.h">
       <Filter>Service</Filter>
     </ClInclude>
+    <ClInclude Include="SmTimeSeriesDBManager.h">
+      <Filter>Database</Filter>
+    </ClInclude>
+    <ClInclude Include="SmTimeSeriesCollector.h">
+      <Filter>Service</Filter>
+    </ClInclude>
+    <ClInclude Include="Timer\cpptime.h">
+      <Filter>Timer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SmChartServer.cpp">
@@ -326,6 +338,12 @@
     </ClCompile>
     <ClCompile Include="SmScheduler.cpp">
       <Filter>Scheduler</Filter>
+    </ClCompile>
+    <ClCompile Include="SmTimeSeriesDBManager.cpp">
+      <Filter>Database</Filter>
+    </ClCompile>
+    <ClCompile Include="SmTimeSeriesCollector.cpp">
+      <Filter>Service</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

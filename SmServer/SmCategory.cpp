@@ -23,3 +23,10 @@ SmSymbol* SmCategory::AddSymbol(std::string symCode)
 	return sym;
 }
 
+SmSymbol* SmCategory::GetRecentMonthSymbol()
+{
+	if (_SymbolList.size() == 0)
+		return nullptr;
+	return _SymbolList[0];
+}
+

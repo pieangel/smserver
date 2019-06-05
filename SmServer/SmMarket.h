@@ -16,6 +16,9 @@ public:
 	/// <returns></returns>
 	SmCategory* AddCategory(std::string code);
 	SmCategory* FindCategory(std::string code);
+	std::vector<SmCategory*>& GetCategoryList() {
+		return _CategoryList;
+	}
 private:
 	std::string _Name;
 	std::vector<SmCategory*> _CategoryList;

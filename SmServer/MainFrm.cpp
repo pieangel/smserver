@@ -35,6 +35,8 @@
 #include "SmScheduler.h"
 #include "SmSymbol.h"
 #include "SmChartDefine.h"
+#include "SmTimeSeriesDBManager.h"
+#include "SmTimeSeriesCollector.h"
 
 using namespace std;
 
@@ -55,6 +57,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_WM_CLOSE()
 	ON_COMMAND(ID_SERVER_STARTSCHEDULE, &CMainFrame::OnServerStartschedule)
 	ON_COMMAND(ID_SERVER_GETCHARTDATA, &CMainFrame::OnServerGetchartdata)
+	ON_COMMAND(ID_SERVER_COLLECTCHARTDATA, &CMainFrame::OnServerCollectchartdata)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -397,6 +400,9 @@ void CMainFrame::RegisterProduct()
 */
 void CMainFrame::ClearAllResource()
 {
+	SmTimeSeriesCollector::DestroyInstance();
+	SmTimeSeriesDBManager::DestroyInstance();
+	SmUserManager::DestroyInstance();
 	SmScheduler::DestroyInstance();
 	SmRealtimeRegisterManager::DestroyInstance();
 	SmHdClient::DestroyInstance();
@@ -407,7 +413,6 @@ void CMainFrame::ClearAllResource()
 	SmRealtimeSymbolServiceManager::DestroyInstance();
 	SmSymbolManager::DestroyInstance();
 	SmSymbolReader::DestroyInstance();
-	SmUserManager::DestroyInstance();
 }
 
 void CMainFrame::GetChartData()
@@ -418,8 +423,11 @@ void CMainFrame::GetChartData()
 	req.cycle = 1;
 	req.count = 1500;
 	req.next = 0;
-	SmHdClient* client = SmHdClient::GetInstance();
-	client->GetChartData(req);
+	//SmHdClient* client = SmHdClient::GetInstance();
+	//client->GetChartData(req);
+	SmTimeSeriesCollector* dataCltr = SmTimeSeriesCollector::GetInstance();
+	dataCltr->GetChartFromDatabase(std::move(req));
+	//dataCltr->GetChartData(std::move(req));
 }
 
 void CMainFrame::ReadSymbols()
@@ -490,4 +498,11 @@ void CMainFrame::OnServerGetchartdata()
 {
 	GetChartData();
 	//DbTest();
+}
+
+
+void CMainFrame::OnServerCollectchartdata()
+{
+	SmTimeSeriesCollector* clt = SmTimeSeriesCollector::GetInstance();
+	clt->StartCollectData();
 }

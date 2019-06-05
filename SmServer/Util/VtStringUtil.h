@@ -20,5 +20,7 @@ public:
 	static std::string PadLeft(std::string input, char padding, int len);
 	static std::string PadRight(std::string input, char padding, int len);
 	static std::time_t GetUTCTimestamp(std::string datetime_string);
+	static std::string GetLocalTime(std::string utc_time_format);
+	static std::time_t getEpochTime(const std::wstring& dateTime);
 };
 

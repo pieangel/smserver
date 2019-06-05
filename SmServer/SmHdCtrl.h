@@ -1,6 +1,7 @@
 #pragma once
 #include "HDCtrl/hdfcommagent.h"
 #include <string>
+#include <map>
 #include "SmChartDefine.h"
 
 #pragma once
@@ -131,4 +132,10 @@ private:
 	void OnRcvdAbroadHoga(CString& strKey, LONG& nRealType);
 	void OnRcvdAbroadSise(CString& strKey, LONG& nRealType);
 	void OnRcvdAbroadChartData(CString& sTrCode, LONG& nRqID);
+	/// <summary>
+	/// 차트 데이터 요청 맵 
+	/// 키 : 요청 번호
+	/// 값 : 요청 데이터 고유 키 값
+	/// </summary>
+	std::map<int, SmChartDataRequest> _ChartDataReqMap;
 };

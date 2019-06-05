@@ -5,6 +5,7 @@
 #include <vector>
 class SmMarket;
 class SmCategory;
+class SmSymbol;
 class SmMarketManager : public TemplateSingleton<SmMarketManager>
 {
 public:
@@ -21,6 +22,7 @@ public:
 	SmMarket* FindMarket(std::string mrkt_name);
 	void AddCategoryMarket(std::string cat_code, std::string mrkt_name);
 	SmCategory* FindCategory(std::string cat_code);
+	std::vector<SmSymbol*> GetRecentMonthSymbolList();
 private:
 	std::vector<SmMarket*> _MarketList;
 	/// 품목이 속한 시장 이름 대응 표
