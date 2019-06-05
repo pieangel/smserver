@@ -29,18 +29,13 @@ void SmChartServer::Start()
 	pugi::xml_node server_info = doc.child("application").child("server_info");
 
 	std::string addr = server_info.child("ip").text().as_string();
-	std::string por = server_info.child("port").text().as_string();
-	std::string path = server_info.child("root_path").text().as_string();
+	std::string port = server_info.child("port").text().as_string();
+	std::string root_path = server_info.child("root_path").text().as_string();
 	std::string thread_count = server_info.child("thread_count").text().as_string();
 
-	//std::string addr = "192.168.0.38";
-	//std::string addr = "192.168.1.9";
-	//std::string por = "9991";
-	//std::string path = "C:\\Server\\";
-	//std::string thread_count = "5";
 	auto const address = net::ip::make_address(addr.c_str());
-	auto const port = static_cast<unsigned short>(std::atoi(por.c_str()));
-	auto const doc_root = path;
+	auto const server_port = static_cast<unsigned short>(std::atoi(port.c_str()));
+	auto const doc_root = root_path;
 	auto const threads = std::max<int>(1, std::atoi(thread_count.c_str()));
 
 	// The io_context is required for all I/O
@@ -49,7 +44,7 @@ void SmChartServer::Start()
 	// Create and launch a listening port
 	std::make_shared<SmListener>(
 		ioc,
-		tcp::endpoint{ address, port },
+		tcp::endpoint{ address, server_port },
 		std::make_shared<SmSessionManager>(doc_root))->run();
 
 	// Capture SIGINT and SIGTERM to perform a clean shutdown
