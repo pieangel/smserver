@@ -5,6 +5,8 @@
 #include "SmHttpSession.h"
 #include "SmSessionManager.h"
 #include <string>
+#include "SmConfigManager.h"
+#include "Xml/pugixml.hpp"
 
 void SmChartServer::ThreadMain()
 {
@@ -17,11 +19,25 @@ void SmChartServer::Init()
 
 void SmChartServer::Start()
 {
-	std::string addr = "192.168.0.38";
+	SmConfigManager* configMgr = SmConfigManager::GetInstance();
+	std::string appPath = configMgr->GetApplicationPath();
+	std::string configPath = appPath;
+	configPath.append("\\Config\\Config.xml");
+	pugi::xml_document doc;
+	pugi::xml_parse_result result = doc.load_file(configPath.c_str());
+	pugi::xml_node app = doc.first_child();
+	pugi::xml_node server_info = doc.child("application").child("server_info");
+
+	std::string addr = server_info.child("ip").text().as_string();
+	std::string por = server_info.child("port").text().as_string();
+	std::string path = server_info.child("root_path").text().as_string();
+	std::string thread_count = server_info.child("thread_count").text().as_string();
+
+	//std::string addr = "192.168.0.38";
 	//std::string addr = "192.168.1.9";
-	std::string por = "9991";
-	std::string path = "C:\\Server\\";
-	std::string thread_count = "5";
+	//std::string por = "9991";
+	//std::string path = "C:\\Server\\";
+	//std::string thread_count = "5";
 	auto const address = net::ip::make_address(addr.c_str());
 	auto const port = static_cast<unsigned short>(std::atoi(por.c_str()));
 	auto const doc_root = path;
