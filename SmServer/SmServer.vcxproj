@@ -216,11 +216,20 @@
     <ClInclude Include="Scheduler\InterruptableSleep.h" />
     <ClInclude Include="Scheduler\Scheduler.h" />
     <ClInclude Include="ServerDefine.h" />
+    <ClInclude Include="SmAccount.h" />
+    <ClInclude Include="SmAccountManager.h" />
     <ClInclude Include="SmCategory.h" />
     <ClInclude Include="SmChartDefine.h" />
     <ClInclude Include="SmChartServer.h" />
     <ClInclude Include="SmCommon.h" />
     <ClInclude Include="SmConfigManager.h" />
+    <ClInclude Include="SmOrder.h" />
+    <ClInclude Include="SmOrderDefine.h" />
+    <ClInclude Include="SmOrderManager.h" />
+    <ClInclude Include="SmAccountOrderManager.h" />
+    <ClInclude Include="SmOrderNumberGenerator.h" />
+    <ClInclude Include="SmPosition.h" />
+    <ClInclude Include="SmSymbolOrderManager.h" />
     <ClInclude Include="SmTimeSeriesCollector.h" />
     <ClInclude Include="SmTimeSeriesDBManager.h" />
     <ClInclude Include="SmHdClient.h" />
@@ -241,6 +250,7 @@
     <ClInclude Include="SmSymbol.h" />
     <ClInclude Include="SmSymbolManager.h" />
     <ClInclude Include="SmSymbolReader.h" />
+    <ClInclude Include="SmTotalOrderManager.h" />
     <ClInclude Include="SmUser.h" />
     <ClInclude Include="SmUserManager.h" />
     <ClInclude Include="SmWebsocketSession.h" />
@@ -273,6 +283,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="SmAccount.cpp" />
+    <ClCompile Include="SmAccountManager.cpp" />
     <ClCompile Include="SmCategory.cpp" />
     <ClCompile Include="SmChartServer.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
@@ -283,6 +295,12 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="SmConfigManager.cpp" />
+    <ClCompile Include="SmOrderManager.cpp" />
+    <ClCompile Include="SmAccountOrderManager.cpp" />
+    <ClCompile Include="SmOrderNumberGenerator.cpp" />
+    <ClCompile Include="SmSymbolOrderManager.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="SmTimeSeriesCollector.cpp" />
     <ClCompile Include="SmTimeSeriesDBManager.cpp" />
     <ClCompile Include="SmHdClient.cpp" />
@@ -325,6 +343,7 @@
     <ClCompile Include="SmSymbolReader.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="SmTotalOrderManager.cpp" />
     <ClCompile Include="SmUser.cpp" />
     <ClCompile Include="SmUserManager.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>

@@ -59,6 +59,15 @@
     <Filter Include="Timer">
       <UniqueIdentifier>{0bcf1e07-719b-41bd-a709-209dff0fea5b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Order">
+      <UniqueIdentifier>{a9092abd-545e-4f4b-930f-6af0bb8a29e7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Account">
+      <UniqueIdentifier>{ee9825a8-3fad-449c-8ff5-feffa574567d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Position">
+      <UniqueIdentifier>{a9aef806-d7cc-4ea9-a609-52bf9ac9e3ae}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SmChartServer.h">
@@ -235,6 +244,36 @@
     <ClInclude Include="Timer\cpptime.h">
       <Filter>Timer</Filter>
     </ClInclude>
+    <ClInclude Include="SmOrder.h">
+      <Filter>Order</Filter>
+    </ClInclude>
+    <ClInclude Include="SmOrderDefine.h">
+      <Filter>Order</Filter>
+    </ClInclude>
+    <ClInclude Include="SmAccount.h">
+      <Filter>Account</Filter>
+    </ClInclude>
+    <ClInclude Include="SmAccountManager.h">
+      <Filter>Account</Filter>
+    </ClInclude>
+    <ClInclude Include="SmSymbolOrderManager.h">
+      <Filter>Order</Filter>
+    </ClInclude>
+    <ClInclude Include="SmOrderManager.h">
+      <Filter>Order</Filter>
+    </ClInclude>
+    <ClInclude Include="SmOrderNumberGenerator.h">
+      <Filter>Order</Filter>
+    </ClInclude>
+    <ClInclude Include="SmTotalOrderManager.h">
+      <Filter>Order</Filter>
+    </ClInclude>
+    <ClInclude Include="SmPosition.h">
+      <Filter>Position</Filter>
+    </ClInclude>
+    <ClInclude Include="SmAccountOrderManager.h">
+      <Filter>Order</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SmChartServer.cpp">
@@ -344,6 +383,27 @@
     </ClCompile>
     <ClCompile Include="SmTimeSeriesCollector.cpp">
       <Filter>Service</Filter>
+    </ClCompile>
+    <ClCompile Include="SmAccount.cpp">
+      <Filter>Account</Filter>
+    </ClCompile>
+    <ClCompile Include="SmAccountManager.cpp">
+      <Filter>Account</Filter>
+    </ClCompile>
+    <ClCompile Include="SmSymbolOrderManager.cpp">
+      <Filter>Order</Filter>
+    </ClCompile>
+    <ClCompile Include="SmOrderManager.cpp">
+      <Filter>Order</Filter>
+    </ClCompile>
+    <ClCompile Include="SmOrderNumberGenerator.cpp">
+      <Filter>Order</Filter>
+    </ClCompile>
+    <ClCompile Include="SmTotalOrderManager.cpp">
+      <Filter>Order</Filter>
+    </ClCompile>
+    <ClCompile Include="SmAccountOrderManager.cpp">
+      <Filter>Order</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

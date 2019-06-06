@@ -14,10 +14,13 @@ private:
 	void ParseMessage(std::string message, SmWebsocketSession* socket);
 	void SendResult(std::string user_id, int result_code, std::string result_msg);
 	void OnLogin(nlohmann::json& obj, SmWebsocketSession* socket);
-	void OnLogout(nlohmann::json& obj, SmWebsocketSession* socket);
-	void OnRegisterSymbol(nlohmann::json& obj, SmWebsocketSession* socket);
-	void OnUnregisterSymbol(nlohmann::json& obj, SmWebsocketSession* socket);
-	void OnRegisterSymbolCycle(nlohmann::json& obj, SmWebsocketSession* socket);
-	void OnUnregisterSymbolCycle(nlohmann::json& obj, SmWebsocketSession* socket);
+	void OnLogout(nlohmann::json& obj);
+	void OnRegisterSymbol(nlohmann::json& obj);
+	void OnUnregisterSymbol(nlohmann::json& obj);
+	void OnRegisterSymbolCycle(nlohmann::json& obj);
+	void OnUnregisterSymbolCycle(nlohmann::json& obj);
+	void OnOrderNew(nlohmann::json& obj);
+	void OnOrderModify(nlohmann::json& obj);
+	void OnOrderCancel(nlohmann::json& obj);
 };
 

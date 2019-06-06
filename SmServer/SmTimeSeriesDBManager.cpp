@@ -59,6 +59,6 @@ void SmTimeSeriesDBManager::OnChartDataItem(SmChartDataItem&& data_item)
 		.field("o", data_item.o)
 		.field("c", data_item.c)
 		.field("v", data_item.v)
-		.timestamp(utc * std::pow(10, 9))
+		.timestamp(utc * 1000000000)
 		.post_http(*_ServerInfo, &resp);
 }

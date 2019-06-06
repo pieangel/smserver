@@ -4,6 +4,9 @@
 #include "Json/json.hpp"
 #include "SmRealtimeSymbolServiceManager.h"
 #include "SmSessionManager.h"
+#include "SmServiceDefine.h"
+#include "SmOrderDefine.h"
+#include "SmTotalOrderManager.h"
 using namespace nlohmann;
 SmMessageManager::SmMessageManager()
 {
@@ -38,16 +41,29 @@ void SmMessageManager::ParseMessage(std::string message, SmWebsocketSession* soc
 		auto json_object = json::parse(message);
 
 		int req_id = json_object["req_id"];
-		switch (req_id)
+		SmService sm_protocol = [](int id) {
+			return (SmService)id;
+		}(req_id);
+
+		switch (sm_protocol)
 		{
-		case 1:
+		case SmService::req_login:
 			OnLogin(json_object, socket);
 			break;
-		case  2:
-			OnRegisterSymbol(json_object, socket);
+		case  SmService::req_register_symbol:
+			OnRegisterSymbol(json_object);
 			break;
-		case 3:
-			OnRegisterSymbolCycle(json_object, socket);
+		case SmService::req_register_symbol_cycle:
+			OnRegisterSymbolCycle(json_object);
+			break;
+		case SmService::req_order_new:
+			OnOrderNew(json_object);
+			break;
+		case SmService::req_order_modify:
+			OnOrderModify(json_object);
+			break;
+		case SmService::req_order_cancel:
+			OnOrderCancel(json_object);
 			break;
 		default:
 			break;
@@ -74,7 +90,7 @@ void SmMessageManager::OnLogin(nlohmann::json& obj, SmWebsocketSession* socket)
 	}
 }
 
-void SmMessageManager::OnLogout(nlohmann::json& obj, SmWebsocketSession* socket)
+void SmMessageManager::OnLogout(nlohmann::json& obj)
 {
 	try {
 		auto user_info = obj["user_info"];
@@ -99,7 +115,7 @@ void SmMessageManager::SendResult(std::string user_id, int result_code, std::str
 }
 
 
-void SmMessageManager::OnRegisterSymbol(nlohmann::json& obj, SmWebsocketSession* socket)
+void SmMessageManager::OnRegisterSymbol(nlohmann::json& obj)
 {
 	try {
 		std::string id = obj["user_id"];
@@ -114,7 +130,7 @@ void SmMessageManager::OnRegisterSymbol(nlohmann::json& obj, SmWebsocketSession*
 	}
 }
 
-void SmMessageManager::OnUnregisterSymbol(nlohmann::json& obj, SmWebsocketSession* socket)
+void SmMessageManager::OnUnregisterSymbol(nlohmann::json& obj)
 {
 	try {
 		std::string id = obj["user_id"];
@@ -129,7 +145,7 @@ void SmMessageManager::OnUnregisterSymbol(nlohmann::json& obj, SmWebsocketSessio
 	}
 }
 
-void SmMessageManager::OnRegisterSymbolCycle(nlohmann::json& obj, SmWebsocketSession* socket)
+void SmMessageManager::OnRegisterSymbolCycle(nlohmann::json& obj)
 {
 	try {
 		std::string id = obj["id"];
@@ -143,7 +159,7 @@ void SmMessageManager::OnRegisterSymbolCycle(nlohmann::json& obj, SmWebsocketSes
 	}
 }
 
-void SmMessageManager::OnUnregisterSymbolCycle(nlohmann::json& obj, SmWebsocketSession* socket)
+void SmMessageManager::OnUnregisterSymbolCycle(nlohmann::json& obj)
 {
 	try {
 		std::string id = obj["id"];
@@ -155,4 +171,25 @@ void SmMessageManager::OnUnregisterSymbolCycle(nlohmann::json& obj, SmWebsocketS
 	catch (std::exception e) {
 		std::string error = e.what();
 	}
+}
+
+void SmMessageManager::OnOrderNew(nlohmann::json& obj)
+{
+	SmOrderRequest req;
+	SmTotalOrderManager* totOrderMgr = SmTotalOrderManager::GetInstance();
+	totOrderMgr->OnOrder(std::move(req));
+}
+
+void SmMessageManager::OnOrderModify(nlohmann::json& obj)
+{
+	SmOrderRequest req;
+	SmTotalOrderManager* totOrderMgr = SmTotalOrderManager::GetInstance();
+	totOrderMgr->OnOrder(std::move(req));
+}
+
+void SmMessageManager::OnOrderCancel(nlohmann::json& obj)
+{
+	SmOrderRequest req;
+	SmTotalOrderManager* totOrderMgr = SmTotalOrderManager::GetInstance();
+	totOrderMgr->OnOrder(std::move(req));
 }

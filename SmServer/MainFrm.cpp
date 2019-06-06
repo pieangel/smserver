@@ -37,6 +37,7 @@
 #include "SmChartDefine.h"
 #include "SmTimeSeriesDBManager.h"
 #include "SmTimeSeriesCollector.h"
+#include "SmTotalOrderManager.h"
 
 using namespace std;
 
@@ -400,6 +401,7 @@ void CMainFrame::RegisterProduct()
 */
 void CMainFrame::ClearAllResource()
 {
+	SmTotalOrderManager::DestroyInstance();
 	SmTimeSeriesCollector::DestroyInstance();
 	SmTimeSeriesDBManager::DestroyInstance();
 	SmUserManager::DestroyInstance();
