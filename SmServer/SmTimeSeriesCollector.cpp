@@ -9,6 +9,7 @@
 #include <ctime>
 #include "SmTimeSeriesDBManager.h"
 #include "Util/VtStringUtil.h"
+#include "SmUserManager.h"
 using namespace nlohmann;
 
 
@@ -102,10 +103,11 @@ void SmTimeSeriesCollector::GetChartFromDatabase(SmChartDataRequest&& data_req)
 	{
 		auto json_object = json::parse(resp);
 		auto a = json_object["results"][0]["series"][0]["values"];
-		int split_size = 120;
+		int split_size = 20;
 		int cur_count = 0;
 		int start_index = 0;
 		int end_index = 0;
+		SmUserManager* userMgr = SmUserManager::GetInstance();
 		for (size_t i = 0; i < a.size(); i++) {
 			auto val = a[i];
 			std::string time = val[0];
@@ -122,6 +124,31 @@ void SmTimeSeriesCollector::GetChartFromDatabase(SmChartDataRequest&& data_req)
 				end_index = i;
 				msg.Format(_T("total_count = %d, cur_count = %d, index = %d, si = %d, ei = %d, date_time = %s, lc = %s, h = %d, l = %d, o = %d, c = %d\n"), a.size(), cur_count, i, start_index, end_index,  time.c_str(), local_time.c_str(), h, l, o, c);
 				TRACE(msg);
+				json send_object;
+				send_object["result"] = 0;
+				send_object["symbol_code"] = data_req.symbolCode;
+				send_object["chart_type"] = (int)data_req.chartType;
+				send_object["cycle"] = data_req.cycle;
+				send_object["total_count"] = a.size();
+				send_object["cur_count"] = cur_count;
+				send_object["start_index"] = start_index;
+				send_object["end_index"] = end_index;
+				for (int di = start_index, ci = 0; di <= end_index; ++di, ++ci) {
+					auto data = a[di];
+					send_object["data"][ci] = {
+						{ "date_time",  VtStringUtil::GetLocalTime(data[0]) },
+						{ "high", data[1] },
+						{ "low",  data[4] },
+						{ "open",  data[5] },
+						{ "close",  data[6] },
+						{ "volume",  data[7] }
+					};
+				}
+
+				std::string content = send_object.dump(4);
+
+				userMgr->SendResultMessage(data_req.user_id, content);
+
 				start_index = i + 1;
 				cur_count = 0;
 			}
@@ -129,6 +156,29 @@ void SmTimeSeriesCollector::GetChartFromDatabase(SmChartDataRequest&& data_req)
 				if (i == a.size()) {
 					msg.Format(_T("total_count = %d, cur_count = %d, index = %d, si = %d, ei = %d,  date_time = %s, lc = %s, h = %d, l = %d, o = %d, c = %d\n"), a.size(), cur_count, i, start_index, end_index, time.c_str(), local_time.c_str(), h, l, o, c);
 					TRACE(msg);
+
+					json send_object;
+					send_object["result"] = 0;
+					send_object["symbol_code"] = data_req.symbolCode;
+					send_object["chart_type"] = (int)data_req.chartType;
+					send_object["cycle"] = data_req.cycle;
+					send_object["total_count"] = a.size();
+					send_object["cur_count"] = cur_count;
+					send_object["start_index"] = start_index;
+					send_object["end_index"] = end_index;
+					for (int di = start_index, ci = 0; di <= end_index; ++di, ++ci) {
+						auto data = a[di];
+						send_object["data"][ci] = {
+							{ "date_time",  VtStringUtil::GetLocalTime(data[0]) },
+							{ "high", data[1] },
+							{ "low",  data[4] },
+							{ "open",  data[5] },
+							{ "close",  data[6] },
+							{ "volume",  data[7] }
+						};
+					}
+
+					userMgr->SendResultMessage(data_req.user_id, send_object.dump(4));
 				}
 			}
 		}
