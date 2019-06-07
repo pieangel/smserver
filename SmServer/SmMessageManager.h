@@ -22,5 +22,6 @@ private:
 	void OnOrderNew(nlohmann::json& obj);
 	void OnOrderModify(nlohmann::json& obj);
 	void OnOrderCancel(nlohmann::json& obj);
+	void OnReqChartData(nlohmann::json& obj);
 };
 

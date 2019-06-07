@@ -58,6 +58,8 @@ void SmTimeSeriesCollector::OnCompleteChartData(SmChartDataRequest&& data_req)
 	query_string.append("\"");
 	std::string resp = dbMgr->ExecQuery(query_string);
 	CString msg;
+	msg.Format(_T("resp length = %d"), resp.length());
+	TRACE(msg);
 	try
 	{
 		auto json_object = json::parse(resp);
@@ -94,11 +96,16 @@ void SmTimeSeriesCollector::GetChartFromDatabase(SmChartDataRequest&& data_req)
 	query_string.append("where time >= '2019-06-05T07:12:00Z'");
 	std::string resp = dbMgr->ExecQuery(query_string);
 	CString msg;
-
+	msg.Format("resp len = %d", resp.length());
+	TRACE(msg);
 	try
 	{
 		auto json_object = json::parse(resp);
 		auto a = json_object["results"][0]["series"][0]["values"];
+		int split_size = 120;
+		int cur_count = 0;
+		int start_index = 0;
+		int end_index = 0;
 		for (size_t i = 0; i < a.size(); i++) {
 			auto val = a[i];
 			std::string time = val[0];
@@ -110,9 +117,20 @@ void SmTimeSeriesCollector::GetChartFromDatabase(SmChartDataRequest&& data_req)
 			//v = val[7];
 
 			std::string local_time = VtStringUtil::GetLocalTime(time);
-
-			msg.Format(_T("index = %d, date_time = %s, lc = %s, h = %d, l = %d, o = %d, c = %d\n"), i, time.c_str(), local_time.c_str(), h, l, o, c);
-			TRACE(msg);
+			cur_count++;
+			if (cur_count % split_size == 0) {
+				end_index = i;
+				msg.Format(_T("total_count = %d, cur_count = %d, index = %d, si = %d, ei = %d, date_time = %s, lc = %s, h = %d, l = %d, o = %d, c = %d\n"), a.size(), cur_count, i, start_index, end_index,  time.c_str(), local_time.c_str(), h, l, o, c);
+				TRACE(msg);
+				start_index = i + 1;
+				cur_count = 0;
+			}
+			else {
+				if (i == a.size()) {
+					msg.Format(_T("total_count = %d, cur_count = %d, index = %d, si = %d, ei = %d,  date_time = %s, lc = %s, h = %d, l = %d, o = %d, c = %d\n"), a.size(), cur_count, i, start_index, end_index, time.c_str(), local_time.c_str(), h, l, o, c);
+					TRACE(msg);
+				}
+			}
 		}
 	}
 	catch (const std::exception& e)

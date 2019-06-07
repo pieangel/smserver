@@ -1,5 +1,5 @@
 #pragma once
-enum class SmService {
+enum class SmProtocol {
 	req_none = 0,
 	req_login,
 	res_login,
@@ -18,5 +18,7 @@ enum class SmService {
 	req_order_cancel,
 	res_order_cancel,
 	res_order_accepted,
-	res_order_filled
+	res_order_filled,
+	req_chart_data,
+	res_chart_data
 };

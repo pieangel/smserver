@@ -13,6 +13,7 @@ enum class SmChartType
 
 struct SmChartDataRequest
 {
+	std::string user_id;
 	std::string symbolCode;
 	SmChartType chartType;
 	int cycle = 0;

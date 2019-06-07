@@ -14,7 +14,7 @@ namespace ip = boost::asio::ip;
 SmTimeSeriesDBManager::SmTimeSeriesDBManager()
 {
 	std::vector<std::string> addr_vec = GetIPAddress("angelpie.ddns.net");
-	_Ip = addr_vec[3];
+	_Ip = addr_vec[0];
 	_Port = 8086;
 	_DatabaseName = "abroad_future";
 	_Id = "angelpie";
@@ -84,15 +84,15 @@ std::vector<std::string> SmTimeSeriesDBManager::GetIPAddress(std::string host_na
 	boost::asio::io_service io_service;
 	ip::tcp::resolver resolver(io_service);
 
-	std::string h = ip::host_name();
+	std::string h = host_name;
 	std::cout << "Host name is " << h << '\n';
 	std::cout << "IP addresses are: \n";
 	std::stringstream ss;
 	std::vector<std::string> addr_vec;
-	std::for_each(resolver.resolve({ h, "" }), {}, [&host_name, &ss, &addr_vec](const auto& re) {
+	std::for_each(resolver.resolve({ h, "" }), {}, [ &ss, &addr_vec](const auto& re) {
 		ss << re.endpoint().address();
-		host_name = ss.str();
-		addr_vec.push_back(host_name);
+		std::string addr = ss.str();
+		addr_vec.push_back(addr);
 		ss.str("");
 		});
 	return addr_vec;

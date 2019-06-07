@@ -430,8 +430,8 @@ void CMainFrame::GetChartData()
 	//SmHdClient* client = SmHdClient::GetInstance();
 	//client->GetChartData(req);
 	SmTimeSeriesCollector* dataCltr = SmTimeSeriesCollector::GetInstance();
-	dataCltr->GetChartFromDatabase(std::move(req));
-	//dataCltr->GetChartData(std::move(req));
+	//dataCltr->GetChartFromDatabase(std::move(req));
+	dataCltr->GetChartData(std::move(req));
 }
 
 void CMainFrame::ReadSymbols()
@@ -500,8 +500,8 @@ void CMainFrame::OnServerStartschedule()
 
 void CMainFrame::OnServerGetchartdata()
 {
-	//GetChartData();
-	DbTest();
+	GetChartData();
+	//DbTest();
 }
 
 

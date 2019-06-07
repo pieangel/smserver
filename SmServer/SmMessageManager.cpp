@@ -7,6 +7,8 @@
 #include "SmServiceDefine.h"
 #include "SmOrderDefine.h"
 #include "SmTotalOrderManager.h"
+#include "SmChartDefine.h"
+#include "SmTimeSeriesCollector.h"
 using namespace nlohmann;
 SmMessageManager::SmMessageManager()
 {
@@ -41,29 +43,32 @@ void SmMessageManager::ParseMessage(std::string message, SmWebsocketSession* soc
 		auto json_object = json::parse(message);
 
 		int req_id = json_object["req_id"];
-		SmService sm_protocol = [](int id) {
-			return (SmService)id;
+		SmProtocol sm_protocol = [](int id) {
+			return (SmProtocol)id;
 		}(req_id);
 
 		switch (sm_protocol)
 		{
-		case SmService::req_login:
+		case SmProtocol::req_login:
 			OnLogin(json_object, socket);
 			break;
-		case  SmService::req_register_symbol:
+		case  SmProtocol::req_register_symbol:
 			OnRegisterSymbol(json_object);
 			break;
-		case SmService::req_register_symbol_cycle:
+		case SmProtocol::req_register_symbol_cycle:
 			OnRegisterSymbolCycle(json_object);
 			break;
-		case SmService::req_order_new:
+		case SmProtocol::req_order_new:
 			OnOrderNew(json_object);
 			break;
-		case SmService::req_order_modify:
+		case SmProtocol::req_order_modify:
 			OnOrderModify(json_object);
 			break;
-		case SmService::req_order_cancel:
+		case SmProtocol::req_order_cancel:
 			OnOrderCancel(json_object);
+			break;
+		case SmProtocol::req_chart_data:
+			OnReqChartData(json_object);
 			break;
 		default:
 			break;
@@ -192,4 +197,30 @@ void SmMessageManager::OnOrderCancel(nlohmann::json& obj)
 	SmOrderRequest req;
 	SmTotalOrderManager* totOrderMgr = SmTotalOrderManager::GetInstance();
 	totOrderMgr->OnOrder(std::move(req));
+}
+
+void SmMessageManager::OnReqChartData(nlohmann::json& obj)
+{
+	try {
+		std::string id = obj["user_id"];
+		std::string symCode = obj["symbol_code"];
+		std::string chart_type = obj["chart_type"];
+		std::string cycle = obj["cycle"];
+		std::string count = obj["count"];
+		SmChartDataRequest req;
+		req.user_id = id;
+		req.symbolCode = symCode;
+		req.chartType = (SmChartType)std::stoi(chart_type);
+		req.cycle = std::stoi(cycle);
+		req.count = std::stoi(count);
+		req.next = 0;
+		SmTimeSeriesCollector* dataCltr = SmTimeSeriesCollector::GetInstance();
+		dataCltr->GetChartFromDatabase(std::move(req));
+		//dataCltr->GetChartData(std::move(req));
+
+		SendResult(id, 0, "request chart data success!");
+	}
+	catch (std::exception e) {
+		std::string error = e.what();
+	}
 }
