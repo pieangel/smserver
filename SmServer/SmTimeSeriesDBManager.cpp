@@ -3,10 +3,18 @@
 #include "Database/influxdb.hpp"
 #include <ctime>
 #include "Util/VtStringUtil.h"
+#include <cstring> //memset
+#include <sstream>
+#include <iostream>
+#include <algorithm>
+#include <boost/asio.hpp>
+
+namespace ip = boost::asio::ip;
 
 SmTimeSeriesDBManager::SmTimeSeriesDBManager()
 {
-	_Ip = "127.0.0.1";
+	std::vector<std::string> addr_vec = GetIPAddress("angelpie.ddns.net");
+	_Ip = addr_vec[3];
 	_Port = 8086;
 	_DatabaseName = "abroad_future";
 	_Id = "angelpie";
@@ -61,4 +69,31 @@ void SmTimeSeriesDBManager::OnChartDataItem(SmChartDataItem&& data_item)
 		.field("v", data_item.v)
 		.timestamp(utc * 1000000000)
 		.post_http(*_ServerInfo, &resp);
+}
+
+void SmTimeSeriesDBManager::CreateDataBase(std::string db_name)
+{
+	std::string resp;
+	if (!_ServerInfo)
+		return;
+	influxdb_cpp::create_db(resp, db_name, *_ServerInfo);
+}
+
+std::vector<std::string> SmTimeSeriesDBManager::GetIPAddress(std::string host_name)
+{
+	boost::asio::io_service io_service;
+	ip::tcp::resolver resolver(io_service);
+
+	std::string h = ip::host_name();
+	std::cout << "Host name is " << h << '\n';
+	std::cout << "IP addresses are: \n";
+	std::stringstream ss;
+	std::vector<std::string> addr_vec;
+	std::for_each(resolver.resolve({ h, "" }), {}, [&host_name, &ss, &addr_vec](const auto& re) {
+		ss << re.endpoint().address();
+		host_name = ss.str();
+		addr_vec.push_back(host_name);
+		ss.str("");
+		});
+	return addr_vec;
 }

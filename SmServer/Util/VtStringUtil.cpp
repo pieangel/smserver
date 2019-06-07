@@ -104,13 +104,19 @@ std::time_t VtStringUtil::GetUTCTimestamp(std::string datetime_string)
 {
 	time_t rawtime;
 	struct tm* timeinfo;
-
+	
 	int year = std::stoi(datetime_string.substr(0, 4));
 	int month = std::stoi(datetime_string.substr(4,2));
 	int day = std::stoi(datetime_string.substr(6, 2));
-	int hour = std::stoi(datetime_string.substr(8, 2));
-	int min = std::stoi(datetime_string.substr(10, 2));
-	int sec = std::stoi(datetime_string.substr(12, 2));
+	int hour = 0;
+	int min = 0;
+	int sec = 0;
+	if (datetime_string.length() > 8) {
+		hour = std::stoi(datetime_string.substr(8, 2));
+		min = std::stoi(datetime_string.substr(10, 2));
+		sec = std::stoi(datetime_string.substr(12, 2));
+	}
+	
 
 	/* get current timeinfo: */
 	time(&rawtime); //or: rawtime = time(0);

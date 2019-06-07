@@ -1,6 +1,7 @@
 #pragma once
 #include "Global/TemplateSingleton.h"
 #include <string>
+#include <vector>
 #include "SmChartDefine.h"
 namespace influxdb_cpp
 {
@@ -25,6 +26,8 @@ public:
 	std::string ExecQuery(std::string query_string);
 	influxdb_cpp::server_info* ServerInfo() const { return _ServerInfo; }
 	void OnChartDataItem(SmChartDataItem&& data_item);
+	void CreateDataBase(std::string db_name);
+	std::vector<std::string> GetIPAddress(std::string host_name);
 private:
 	std::string _Id;
 	std::string _Password;

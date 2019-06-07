@@ -233,6 +233,8 @@ void CMainFrame::OnServerStart()
 
 void CMainFrame::DbTest()
 {
+	SmTimeSeriesDBManager* dbMgr = SmTimeSeriesDBManager::GetInstance();
+	dbMgr->CreateDataBase("abroad_future");
 	/*
 	influxdb_cpp::server_info si("127.0.0.1", 8086, "testx", "test", "test");
 	// post_http demo with resp[optional]
@@ -498,8 +500,8 @@ void CMainFrame::OnServerStartschedule()
 
 void CMainFrame::OnServerGetchartdata()
 {
-	GetChartData();
-	//DbTest();
+	//GetChartData();
+	DbTest();
 }
 
 
