@@ -2,6 +2,9 @@
 #include "SmUser.h"
 #include "SmWebsocketSession.h"
 #include "SmRealtimeSymbolServiceManager.h"
+#include "SmTimeSeriesDBManager.h"
+#include "Json/json.hpp"
+using namespace nlohmann;
 SmUserManager::SmUserManager()
 {
 
@@ -63,7 +66,38 @@ SmUser* SmUserManager::AddUser(std::string id, std::string pwd, SmWebsocketSessi
 	user->Connected(true);
 	_UserMap[id] = user;
 	_SocketToUserMap[socket] = user;
+	AddUserToDatabase(id, pwd);
 	return user;
+}
+
+std::string SmUserManager::CheckUserInfo(std::string id, std::string pwd, SmWebsocketSession* socket)
+{
+	std::string result_msg = "";
+	if (!IsExistUser(id)) {
+		AddUser(id, pwd, socket);
+		result_msg = "Login success!";
+		return result_msg;
+	}
+	SmTimeSeriesDBManager* dbMgr = SmTimeSeriesDBManager::GetInstance();
+	std::pair<std::string, std::string> id_pwd = dbMgr->GetUserInfo(id);
+	if (id_pwd.first.compare(id) != 0) {
+		result_msg = "ID error!";
+		return result_msg;
+	}
+	if (id_pwd.second.compare(pwd) != 0) {
+		result_msg = "Password error!";
+		return result_msg;
+	}
+
+	AddUser(id, pwd, socket);
+	result_msg = "Login success!";
+	return result_msg;
+}
+
+void SmUserManager::AddUserToDatabase(std::string id, std::string pwd)
+{
+	SmTimeSeriesDBManager* dbMgr = SmTimeSeriesDBManager::GetInstance();
+	dbMgr->AddUserToDatabase(id, pwd);
 }
 
 void SmUserManager::RemoveUser(std::string id)
@@ -166,4 +200,28 @@ void SmUserManager::Logout(std::string id)
 		return;
 	if (user->Socket())
 		ResetUserBySocket(user->Socket());
+}
+
+bool SmUserManager::IsExistUser(std::string id)
+{
+	SmTimeSeriesDBManager* dbMgr = SmTimeSeriesDBManager::GetInstance();
+	std::string query_string = "select \"id\", \"pwd\" from \"user_info\" where  \"id\" = \'" + id + "\'";
+
+	std::string resp = dbMgr->ExecQuery(query_string);
+
+	std::string result = resp;
+
+	auto json_object = json::parse(resp);
+	auto values = json_object["results"][0]["series"];
+	if (values.is_null()) {
+		return false;
+	}
+
+	values = json_object["results"][0]["series"][0]["values"];
+	std::string str_id = values[0][1];
+	
+	if (str_id.compare(id) == 0)
+		return true;
+	else
+		return false;
 }

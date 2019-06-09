@@ -59,6 +59,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_COMMAND(ID_SERVER_STARTSCHEDULE, &CMainFrame::OnServerStartschedule)
 	ON_COMMAND(ID_SERVER_GETCHARTDATA, &CMainFrame::OnServerGetchartdata)
 	ON_COMMAND(ID_SERVER_COLLECTCHARTDATA, &CMainFrame::OnServerCollectchartdata)
+	ON_COMMAND(ID_SERVER_USERTEST, &CMainFrame::OnServerUsertest)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -431,7 +432,9 @@ void CMainFrame::GetChartData()
 	//client->GetChartData(req);
 	SmTimeSeriesCollector* dataCltr = SmTimeSeriesCollector::GetInstance();
 	//dataCltr->GetChartFromDatabase(std::move(req));
-	dataCltr->GetChartData(std::move(req));
+	//dataCltr->GetChartData(std::move(req));
+	SmTimeSeriesDBManager* dbMgr = SmTimeSeriesDBManager::GetInstance();
+	dbMgr->GetChartData();
 }
 
 void CMainFrame::ReadSymbols()
@@ -455,7 +458,6 @@ void CMainFrame::OnShowWindow(BOOL bShow, UINT nStatus)
 {
 	CFrameWnd::OnShowWindow(bShow, nStatus);
 
-	SmHdClient* hdClient = SmHdClient::GetInstance();
 
 	SmSymbolReader* symReader = SmSymbolReader::GetInstance();
 	SmConfigManager* configMgr = SmConfigManager::GetInstance();
@@ -471,6 +473,7 @@ void CMainFrame::OnShowWindow(BOOL bShow, UINT nStatus)
 	std::string pwd = login_info.child("pwd").text().as_string();
 	std::string cert = login_info.child("cert").text().as_string();
 
+	SmHdClient* hdClient = SmHdClient::GetInstance();
 	int loginResult = hdClient->Login(id, pwd, cert);
 	if (loginResult < 0) {
 		AfxMessageBox(_T("Login Error!"));
@@ -509,4 +512,11 @@ void CMainFrame::OnServerCollectchartdata()
 {
 	SmTimeSeriesCollector* clt = SmTimeSeriesCollector::GetInstance();
 	clt->StartCollectData();
+}
+
+
+void CMainFrame::OnServerUsertest()
+{
+	SmTimeSeriesDBManager* timeDBMgr = SmTimeSeriesDBManager::GetInstance();
+	timeDBMgr->UserTest();
 }

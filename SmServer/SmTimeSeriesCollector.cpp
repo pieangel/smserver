@@ -53,10 +53,18 @@ void SmTimeSeriesCollector::OnChartDataItem(SmChartDataItem&& data_item)
 void SmTimeSeriesCollector::OnCompleteChartData(SmChartDataRequest&& data_req)
 {
 	SmTimeSeriesDBManager* dbMgr = SmTimeSeriesDBManager::GetInstance();
-	std::string query_string;// = "show series on abroad_future";
-	query_string.append("select * from \"");
-	query_string.append(data_req.GetDataKey());
-	query_string.append("\"");
+	std::string query_string;
+	std::string str_cycle = std::to_string(data_req.cycle);
+	std::string str_chart_type = std::to_string((int)data_req.chartType);
+	query_string.append("SELECT * FROM \" ");
+	query_string.append("chart_data");
+	query_string.append("\" WHERE \"symbol_code\" = \'");
+	query_string.append(data_req.symbolCode);
+	query_string.append("\' AND \"chart_type\" = \'");
+	query_string.append(str_chart_type);
+	query_string.append("\' AND \"cycle\" = \'");
+	query_string.append(str_cycle);
+	query_string.append("\'");
 	std::string resp = dbMgr->ExecQuery(query_string);
 	CString msg;
 	msg.Format(_T("resp length = %d"), resp.length());

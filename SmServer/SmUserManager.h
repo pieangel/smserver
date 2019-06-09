@@ -21,12 +21,15 @@ public:
 	SmUser* FindUserBySocket(SmWebsocketSession* socket);
 	SmUser* AddUser(std::string id, SmWebsocketSession* socket);
 	SmUser* AddUser(std::string id, std::string pwd, SmWebsocketSession* socket);
+	std::string CheckUserInfo(std::string id, std::string pwd, SmWebsocketSession* socket);
 	void SendBroadcastMessage(std::string message);
 	SmUser* FindUser(std::string id);
 	void ResetUserBySocket(SmWebsocketSession* socket);
 	void SendResultMessage(std::string user_id, std::string message);
 	void Logout(std::string id);
+	bool IsExistUser(std::string id);
 private:
+	void AddUserToDatabase(std::string id, std::string pwd);
 	void RemoveUser(std::string id);
 	void ClearAllService(SmUser* user);
 };

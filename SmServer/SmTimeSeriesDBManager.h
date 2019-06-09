@@ -28,6 +28,10 @@ public:
 	void OnChartDataItem(SmChartDataItem&& data_item);
 	void CreateDataBase(std::string db_name);
 	std::vector<std::string> GetIPAddress(std::string host_name);
+	void UserTest();
+	void AddUserToDatabase(std::string id, std::string pwd);
+	std::pair<std::string, std::string> GetUserInfo(std::string id);
+	void GetChartData();
 private:
 	std::string _Id;
 	std::string _Password;

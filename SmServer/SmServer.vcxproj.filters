@@ -62,11 +62,11 @@
     <Filter Include="Order">
       <UniqueIdentifier>{a9092abd-545e-4f4b-930f-6af0bb8a29e7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Account">
-      <UniqueIdentifier>{ee9825a8-3fad-449c-8ff5-feffa574567d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Position">
       <UniqueIdentifier>{a9aef806-d7cc-4ea9-a609-52bf9ac9e3ae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Config\Account">
+      <UniqueIdentifier>{ee9825a8-3fad-449c-8ff5-feffa574567d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -251,10 +251,10 @@
       <Filter>Order</Filter>
     </ClInclude>
     <ClInclude Include="SmAccount.h">
-      <Filter>Account</Filter>
+      <Filter>Config\Account</Filter>
     </ClInclude>
     <ClInclude Include="SmAccountManager.h">
-      <Filter>Account</Filter>
+      <Filter>Config\Account</Filter>
     </ClInclude>
     <ClInclude Include="SmSymbolOrderManager.h">
       <Filter>Order</Filter>
@@ -385,10 +385,10 @@
       <Filter>Service</Filter>
     </ClCompile>
     <ClCompile Include="SmAccount.cpp">
-      <Filter>Account</Filter>
+      <Filter>Config\Account</Filter>
     </ClCompile>
     <ClCompile Include="SmAccountManager.cpp">
-      <Filter>Account</Filter>
+      <Filter>Config\Account</Filter>
     </ClCompile>
     <ClCompile Include="SmSymbolOrderManager.cpp">
       <Filter>Order</Filter>

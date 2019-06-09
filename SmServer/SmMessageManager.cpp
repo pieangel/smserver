@@ -87,8 +87,8 @@ void SmMessageManager::OnLogin(nlohmann::json& obj, SmWebsocketSession* socket)
 		std::string id = user_info["id"];
 		std::string pwd = user_info["pwd"];
 		SmUserManager* userMgr = SmUserManager::GetInstance();
-		userMgr->AddUser(id, pwd, socket);
-		SendResult(id, 0, "login success!");
+		std::string result = userMgr->CheckUserInfo(id, pwd, socket);
+		SendResult(id, 0, result);
 	}
 	catch (std::exception e) {
 		std::string error = e.what();
