@@ -14,6 +14,8 @@
 #include "SmTimeSeriesDBManager.h"
 #include "SmTimeSeriesCollector.h"
 #include "Json/json.hpp"
+#include "SmQuoteDefine.h"
+#include "SmHogaDefine.h"
 using namespace nlohmann;
 // VtHdCtrl dialog
 
@@ -259,31 +261,38 @@ void SmHdCtrl::OnRcvdAbroadHoga(CString& strKey, LONG& nRealType)
 	hoga.Items[4].strBuyHogaCnt = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매수호가건수5");
 	hoga.Items[4].strSellHogaCnt = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매도호가건수5");
 
-	CString strTotBuyQty = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "종목코드");
-	CString strTotSellQty = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "호가시간");
-	CString strTotBuyCnt = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "종목코드");
-	CString strTotSellCnt = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "호가시간");
+	CString strTotBuyQty = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매수총호가수량");
+	CString strTotSellQty = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매도총호가수량");
+	CString strTotBuyCnt = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매수총호가건수");
+	CString strTotSellCnt = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매도총호가건수");
 	CString strDomDate = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "국내일자");
 	CString strDomTime = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "국내시간");
-
+	SmHoga hoga_data;
 	for (int i = 0; i < 5; i++) {
-		sym->Hoga.Ary[i].BuyPrice = _ttoi(hoga.Items[i].strBuyHoga);
-		sym->Hoga.Ary[i].BuyCnt = _ttoi(hoga.Items[i].strBuyHogaCnt);
-		sym->Hoga.Ary[i].BuyQty = _ttoi(hoga.Items[i].strBuyHogaQty);
-		sym->Hoga.Ary[i].SellPrice = _ttoi(hoga.Items[i].strSellHoga);
-		sym->Hoga.Ary[i].SellCnt = _ttoi(hoga.Items[i].strSellHogaCnt);
-		sym->Hoga.Ary[i].SellQty = _ttoi(hoga.Items[i].strSellHogaQty);
+		hoga_data.Ary[i].BuyPrice = sym->Hoga.Ary[i].BuyPrice = _ttoi(hoga.Items[i].strBuyHoga);
+		hoga_data.Ary[i].BuyCnt = sym->Hoga.Ary[i].BuyCnt = _ttoi(hoga.Items[i].strBuyHogaCnt);
+		hoga_data.Ary[i].BuyQty = sym->Hoga.Ary[i].BuyQty = _ttoi(hoga.Items[i].strBuyHogaQty);
+		hoga_data.Ary[i].SellPrice = sym->Hoga.Ary[i].SellPrice = _ttoi(hoga.Items[i].strSellHoga);
+		hoga_data.Ary[i].SellCnt = sym->Hoga.Ary[i].SellCnt = _ttoi(hoga.Items[i].strSellHogaCnt);
+		hoga_data.Ary[i].SellQty = sym->Hoga.Ary[i].SellQty = _ttoi(hoga.Items[i].strSellHogaQty);
 	}
 
-	sym->Hoga.DomesticDate = strDomDate;
-	sym->Hoga.DomesticTime = strDomTime;
-	sym->Hoga.Time = strHogaTime;
-	sym->Hoga.TotBuyCnt = _ttoi(strTotBuyCnt);
-	sym->Hoga.TotBuyQty = _ttoi(strTotBuyQty);
-	sym->Hoga.TotSellCnt = _ttoi(strTotSellCnt);
-	sym->Hoga.TotSellQty = _ttoi(strTotSellQty);
+	hoga_data.DomesticDate = sym->Hoga.DomesticDate = strDomDate;
+	hoga_data.DomesticTime =  sym->Hoga.DomesticTime = strDomTime;
+	hoga_data.Time = sym->Hoga.Time = strHogaTime;
+	hoga_data.TotBuyCnt = sym->Hoga.TotBuyCnt = _ttoi(strTotBuyCnt);
+	hoga_data.TotBuyQty = sym->Hoga.TotBuyQty = _ttoi(strTotBuyQty);
+	hoga_data.TotSellCnt = sym->Hoga.TotSellCnt = _ttoi(strTotSellCnt);
+	hoga_data.TotSellQty = sym->Hoga.TotSellQty = _ttoi(strTotSellQty);
 
 	//TRACE(sym->Hoga.Time.c_str());
+
+	SmTimeSeriesDBManager* dbMgr = SmTimeSeriesDBManager::GetInstance();
+	dbMgr->SaveHogaItem(std::move(hoga_data));
+
+	CString msg;
+	msg.Format(_T("hoga :: time = %s, tot_buy_cnt = %d\n"), sym->Hoga.SymbolCode.c_str(), sym->Hoga.TotBuyCnt);
+	TRACE(msg);
 }
 
 void SmHdCtrl::OnRcvdAbroadSise(CString& strKey, LONG& nRealType)
@@ -300,6 +309,25 @@ void SmHdCtrl::OnRcvdAbroadSise(CString& strKey, LONG& nRealType)
 	CString strLow = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "저가");
 	CString strVolume = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "체결량");
 	CString strSign = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "체결구분");
+
+	SmQuote quoteItem;
+	quoteItem.SymbolCode = strSymCode;
+	quoteItem.OriginTime = strTime;
+	quoteItem.SignToPreDay = strSignToPreDay;
+	quoteItem.GapFromPreDay = _ttoi(strToPreDay);
+	quoteItem.RatioToPreday = strRatioToPreDay;
+	quoteItem.Close = _ttoi(strClose);
+	quoteItem.Open = _ttoi(strOpen);
+	quoteItem.High = _ttoi(strHigh);
+	quoteItem.Low = _ttoi(strLow);
+	quoteItem.Volume= _ttoi(strVolume);
+	quoteItem.Sign = strSign;
+
+
+	SmTimeSeriesDBManager* dbMgr = SmTimeSeriesDBManager::GetInstance();
+	dbMgr->SaveQuoteItem(std::move(quoteItem));
+
+
 	SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
 	SmSymbol* sym = symMgr->FindSymbol((LPCTSTR)strSymCode.Trim());
 	if (!sym)
@@ -308,10 +336,14 @@ void SmHdCtrl::OnRcvdAbroadSise(CString& strKey, LONG& nRealType)
 	sym->Quote.Open = _ttoi(strOpen);
 	sym->Quote.High = _ttoi(strHigh);
 	sym->Quote.Low = _ttoi(strLow);
-	sym->Quote.Time = strTime;
+	sym->Quote.OriginTime = strTime;
 	sym->Quote.GapFromPreDay = _ttoi(strToPreDay);
 	sym->Quote.RatioToPreday = strRatioToPreDay.Trim();
-	sym->Quote.RatioToPredaySign = strSignToPreDay;
+	sym->Quote.SignToPreDay = strSignToPreDay;
+
+	CString msg;
+	msg.Format(_T("time = %s, h=%s, l=%s, o=%s, c=%s, v=%s, ratio = %s\n"), strTime, strHigh, strLow, strOpen, strClose, strVolume, strRatioToPreDay);
+	TRACE(msg);
 }
 
 void SmHdCtrl::OnRcvdAbroadChartData(CString& sTrCode, LONG& nRqID)

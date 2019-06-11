@@ -11,7 +11,6 @@ public:
 	void CollectRecentMonthSymbolChartData();
 	void OnChartDataItem(SmChartDataItem&& data_item);
 	void OnCompleteChartData(SmChartDataRequest&& data_req);
-	void GetChartFromDatabase(SmChartDataRequest&& data_req);
 	void StartCollectData();
 	void GetChartData(SmChartDataRequest&& data_req);
 private:

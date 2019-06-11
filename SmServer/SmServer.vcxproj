@@ -92,7 +92,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;_WINSOCK_DEPRECATED_NO_WARNINGS;_DEBUG;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_WINSOCK_DEPRECATED_NO_WARNINGS;_DEBUG;_CRT_SECURE_NO_WARNINGS;_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>C:\Project\json-develop\json-develop\single_include;C:\Project\boost_1_70_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -219,16 +219,20 @@
     <ClInclude Include="SmAccount.h" />
     <ClInclude Include="SmAccountManager.h" />
     <ClInclude Include="SmCategory.h" />
+    <ClInclude Include="SmChartData.h" />
+    <ClInclude Include="SmChartDataManager.h" />
     <ClInclude Include="SmChartDefine.h" />
     <ClInclude Include="SmChartServer.h" />
     <ClInclude Include="SmCommon.h" />
     <ClInclude Include="SmConfigManager.h" />
+    <ClInclude Include="SmHogaDefine.h" />
     <ClInclude Include="SmOrder.h" />
     <ClInclude Include="SmOrderDefine.h" />
     <ClInclude Include="SmOrderManager.h" />
     <ClInclude Include="SmAccountOrderManager.h" />
     <ClInclude Include="SmOrderNumberGenerator.h" />
     <ClInclude Include="SmPosition.h" />
+    <ClInclude Include="SmQuoteDefine.h" />
     <ClInclude Include="SmSymbolOrderManager.h" />
     <ClInclude Include="SmTimeSeriesCollector.h" />
     <ClInclude Include="SmTimeSeriesDBManager.h" />
@@ -250,12 +254,21 @@
     <ClInclude Include="SmSymbol.h" />
     <ClInclude Include="SmSymbolManager.h" />
     <ClInclude Include="SmSymbolReader.h" />
+    <ClInclude Include="SmTimeSeriesServiceManager.h" />
     <ClInclude Include="SmTotalOrderManager.h" />
     <ClInclude Include="SmUser.h" />
     <ClInclude Include="SmUserManager.h" />
     <ClInclude Include="SmWebsocketSession.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="Timer\cpptime.h" />
+    <ClInclude Include="Time\chrono_io.h" />
+    <ClInclude Include="Time\date.h" />
+    <ClInclude Include="Time\islamic.h" />
+    <ClInclude Include="Time\iso_week.h" />
+    <ClInclude Include="Time\julian.h" />
+    <ClInclude Include="Time\ptz.h" />
+    <ClInclude Include="Time\tz.h" />
+    <ClInclude Include="Time\tz_private.h" />
     <ClInclude Include="Util\VtStringUtil.h" />
     <ClInclude Include="SmHdCtrl.h" />
     <ClInclude Include="Xml\pugiconfig.hpp" />
@@ -286,6 +299,8 @@
     <ClCompile Include="SmAccount.cpp" />
     <ClCompile Include="SmAccountManager.cpp" />
     <ClCompile Include="SmCategory.cpp" />
+    <ClCompile Include="SmChartData.cpp" />
+    <ClCompile Include="SmChartDataManager.cpp" />
     <ClCompile Include="SmChartServer.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
@@ -343,6 +358,7 @@
     <ClCompile Include="SmSymbolReader.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="SmTimeSeriesServiceManager.cpp" />
     <ClCompile Include="SmTotalOrderManager.cpp" />
     <ClCompile Include="SmUser.cpp" />
     <ClCompile Include="SmUserManager.cpp">
@@ -352,6 +368,9 @@
     <ClCompile Include="SmWebsocketSession.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Time\tz.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Util\VtStringUtil.cpp" />
     <ClCompile Include="SmHdCtrl.cpp" />

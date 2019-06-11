@@ -10,6 +10,7 @@ class VtStringUtil
 public:
 	VtStringUtil();
 	~VtStringUtil();
+	static std::pair<std::string, std::string> GetCurrentDateTime();
 	static std::string getTimeStr();
 	static bool endsWith(const std::string& s, const std::string& suffix);
 	static std::vector<std::string> split(const std::string& s, const std::string& delimiter, const bool& removeEmptyEntries = false);
@@ -22,5 +23,7 @@ public:
 	static std::time_t GetUTCTimestamp(std::string datetime_string);
 	static std::string GetLocalTime(std::string utc_time_format);
 	static std::time_t getEpochTime(const std::wstring& dateTime);
+	static std::time_t GetEpochTime(const std::string& dateTime);
+	static long long GetCurrentNanoseconds();
 };
 

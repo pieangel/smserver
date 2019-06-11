@@ -16,6 +16,20 @@ VtStringUtil::~VtStringUtil()
 {
 }
 
+std::pair<std::string, std::string> VtStringUtil::GetCurrentDateTime()
+{
+	auto now = std::chrono::system_clock::now();
+	auto in_time_t = std::chrono::system_clock::to_time_t(now);
+
+	std::stringstream ss;
+	ss << std::put_time(std::localtime(&in_time_t), "%Y%m%d");
+	std::string date = ss.str();
+	ss.str(""); 
+	ss << std::put_time(std::localtime(&in_time_t), "%H%M%S");
+	std::string time = ss.str();
+	return std::make_pair(date, time);
+}
+
 std::string VtStringUtil::getTimeStr()
 {
 	auto now = std::chrono::system_clock::now();
@@ -161,5 +175,38 @@ std::time_t VtStringUtil::getEpochTime(const std::wstring& dateTime)
 
 	/* Convert the tm structure to time_t value and return Epoch. */
 	return _mkgmtime(&dt);
+}
+
+std::time_t VtStringUtil::GetEpochTime(const std::string& dateTime)
+{
+	/* Standard UTC Format*/
+	static const std::string dateTimeFormat{ "%Y%m%d%H%M%S" };
+
+	std::istringstream ss{ dateTime };
+	std::tm dt;
+	ss >> std::get_time(&dt, dateTimeFormat.c_str());
+
+	/* Convert the tm structure to time_t value and return Epoch. */
+	return _mkgmtime(&dt);
+}
+
+long long VtStringUtil::GetCurrentNanoseconds()
+{
+	std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+	auto duration = now.time_since_epoch();
+
+	typedef std::chrono::duration<int, std::ratio_multiply<std::chrono::hours::period, std::ratio<8>
+	>::type> Days; /* UTC: +8:00 */
+
+	Days days = std::chrono::duration_cast<Days>(duration);
+	duration -= days;
+	auto hours = std::chrono::duration_cast<std::chrono::hours>(duration);
+	duration -= hours;
+	auto minutes = std::chrono::duration_cast<std::chrono::minutes>(duration);
+	duration -= minutes;
+	auto seconds = std::chrono::duration_cast<std::chrono::seconds>(duration);
+	duration -= seconds;
+	auto tot_nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(duration);
+	return tot_nanoseconds.count();
 }
 

@@ -14,12 +14,13 @@ SmSymbol::~SmSymbol()
 std::string SmSymbol::GetQuoteByJson()
 {
 	json quote;
-	quote["time"] = Quote.Time;
+	quote["symbol_code"] = Quote.SymbolCode;
+	quote["time"] = Quote.OriginTime;
 	quote["high"] = Quote.High;
 	quote["low"] = Quote.Low;
 	quote["open"] = Quote.Open;
 	quote["close"] = Quote.Close;
-	quote["ratio_to_preday_sign"] = Quote.RatioToPredaySign;
+	quote["ratio_to_preday_sign"] = Quote.SignToPreDay;
 	quote["gap_from_preday"] = Quote.GapFromPreDay;
 	quote["ratio_to_preday"] = Quote.RatioToPreday;
 
@@ -29,6 +30,7 @@ std::string SmSymbol::GetQuoteByJson()
 std::string SmSymbol::GetHogaByJson()
 {
 	json hoga;
+	hoga["symbol_code"] = Hoga.SymbolCode;
 	hoga["time"] = Hoga.Time;
 	hoga["domestic_date"] = Hoga.DomesticDate;
 	hoga["domestic_time"] = Hoga.DomesticTime;
@@ -46,7 +48,5 @@ std::string SmSymbol::GetHogaByJson()
 		hoga["hoga_items"][i]["sell_qty"] = Hoga.Ary[i].SellQty;
 	}
 
-	int val = hoga["hoga_items"][0]["buy_price"];
-
-	return hoga.dump(0);
+	return hoga.dump(4);
 }

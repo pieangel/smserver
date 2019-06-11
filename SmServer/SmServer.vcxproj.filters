@@ -62,11 +62,14 @@
     <Filter Include="Order">
       <UniqueIdentifier>{a9092abd-545e-4f4b-930f-6af0bb8a29e7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Account">
+      <UniqueIdentifier>{ee9825a8-3fad-449c-8ff5-feffa574567d}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Position">
       <UniqueIdentifier>{a9aef806-d7cc-4ea9-a609-52bf9ac9e3ae}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Config\Account">
-      <UniqueIdentifier>{ee9825a8-3fad-449c-8ff5-feffa574567d}</UniqueIdentifier>
+    <Filter Include="Time">
+      <UniqueIdentifier>{f889f12f-f153-4a2e-8824-1e4676df6c90}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -238,9 +241,6 @@
     <ClInclude Include="SmTimeSeriesDBManager.h">
       <Filter>Database</Filter>
     </ClInclude>
-    <ClInclude Include="SmTimeSeriesCollector.h">
-      <Filter>Service</Filter>
-    </ClInclude>
     <ClInclude Include="Timer\cpptime.h">
       <Filter>Timer</Filter>
     </ClInclude>
@@ -251,10 +251,10 @@
       <Filter>Order</Filter>
     </ClInclude>
     <ClInclude Include="SmAccount.h">
-      <Filter>Config\Account</Filter>
+      <Filter>Account</Filter>
     </ClInclude>
     <ClInclude Include="SmAccountManager.h">
-      <Filter>Config\Account</Filter>
+      <Filter>Account</Filter>
     </ClInclude>
     <ClInclude Include="SmSymbolOrderManager.h">
       <Filter>Order</Filter>
@@ -273,6 +273,48 @@
     </ClInclude>
     <ClInclude Include="SmAccountOrderManager.h">
       <Filter>Order</Filter>
+    </ClInclude>
+    <ClInclude Include="SmChartData.h">
+      <Filter>Chart</Filter>
+    </ClInclude>
+    <ClInclude Include="SmChartDataManager.h">
+      <Filter>Chart</Filter>
+    </ClInclude>
+    <ClInclude Include="Time\chrono_io.h">
+      <Filter>Time</Filter>
+    </ClInclude>
+    <ClInclude Include="Time\date.h">
+      <Filter>Time</Filter>
+    </ClInclude>
+    <ClInclude Include="Time\islamic.h">
+      <Filter>Time</Filter>
+    </ClInclude>
+    <ClInclude Include="Time\iso_week.h">
+      <Filter>Time</Filter>
+    </ClInclude>
+    <ClInclude Include="Time\julian.h">
+      <Filter>Time</Filter>
+    </ClInclude>
+    <ClInclude Include="Time\ptz.h">
+      <Filter>Time</Filter>
+    </ClInclude>
+    <ClInclude Include="Time\tz.h">
+      <Filter>Time</Filter>
+    </ClInclude>
+    <ClInclude Include="Time\tz_private.h">
+      <Filter>Time</Filter>
+    </ClInclude>
+    <ClInclude Include="SmQuoteDefine.h">
+      <Filter>Symbol</Filter>
+    </ClInclude>
+    <ClInclude Include="SmHogaDefine.h">
+      <Filter>Symbol</Filter>
+    </ClInclude>
+    <ClInclude Include="SmTimeSeriesServiceManager.h">
+      <Filter>Service</Filter>
+    </ClInclude>
+    <ClInclude Include="SmTimeSeriesCollector.h">
+      <Filter>Chart</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -381,14 +423,11 @@
     <ClCompile Include="SmTimeSeriesDBManager.cpp">
       <Filter>Database</Filter>
     </ClCompile>
-    <ClCompile Include="SmTimeSeriesCollector.cpp">
-      <Filter>Service</Filter>
-    </ClCompile>
     <ClCompile Include="SmAccount.cpp">
-      <Filter>Config\Account</Filter>
+      <Filter>Account</Filter>
     </ClCompile>
     <ClCompile Include="SmAccountManager.cpp">
-      <Filter>Config\Account</Filter>
+      <Filter>Account</Filter>
     </ClCompile>
     <ClCompile Include="SmSymbolOrderManager.cpp">
       <Filter>Order</Filter>
@@ -404,6 +443,21 @@
     </ClCompile>
     <ClCompile Include="SmAccountOrderManager.cpp">
       <Filter>Order</Filter>
+    </ClCompile>
+    <ClCompile Include="SmChartData.cpp">
+      <Filter>Chart</Filter>
+    </ClCompile>
+    <ClCompile Include="SmChartDataManager.cpp">
+      <Filter>Chart</Filter>
+    </ClCompile>
+    <ClCompile Include="Time\tz.cpp">
+      <Filter>Time</Filter>
+    </ClCompile>
+    <ClCompile Include="SmTimeSeriesServiceManager.cpp">
+      <Filter>Service</Filter>
+    </ClCompile>
+    <ClCompile Include="SmTimeSeriesCollector.cpp">
+      <Filter>Chart</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

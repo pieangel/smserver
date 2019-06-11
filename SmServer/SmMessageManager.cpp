@@ -9,6 +9,7 @@
 #include "SmTotalOrderManager.h"
 #include "SmChartDefine.h"
 #include "SmTimeSeriesCollector.h"
+#include "SmTimeSeriesServiceManager.h"
 using namespace nlohmann;
 SmMessageManager::SmMessageManager()
 {
@@ -87,8 +88,10 @@ void SmMessageManager::OnLogin(nlohmann::json& obj, SmWebsocketSession* socket)
 		std::string id = user_info["id"];
 		std::string pwd = user_info["pwd"];
 		SmUserManager* userMgr = SmUserManager::GetInstance();
-		std::string result = userMgr->CheckUserInfo(id, pwd, socket);
-		SendResult(id, 0, result);
+		//std::string result = userMgr->CheckUserInfo(id, pwd, socket);
+		//SendResult(id, 0, result);
+		userMgr->AddUser(id, pwd, socket);
+		SendResult(id, 0, "Login Success!");
 	}
 	catch (std::exception e) {
 		std::string error = e.what();
@@ -214,10 +217,8 @@ void SmMessageManager::OnReqChartData(nlohmann::json& obj)
 		req.cycle = std::stoi(cycle);
 		req.count = std::stoi(count);
 		req.next = 0;
-		SmTimeSeriesCollector* dataCltr = SmTimeSeriesCollector::GetInstance();
-		dataCltr->GetChartFromDatabase(std::move(req));
-		//dataCltr->GetChartData(std::move(req));
-
+		SmTimeSeriesServiceManager* timeSvcMgr = SmTimeSeriesServiceManager::GetInstance();
+		timeSvcMgr->OnChartDataRequest(std::move(req));
 		SendResult(id, 0, "request chart data success!");
 	}
 	catch (std::exception e) {

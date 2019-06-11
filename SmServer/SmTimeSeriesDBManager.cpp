@@ -222,3 +222,149 @@ void SmTimeSeriesDBManager::GetChartData()
 		std::string error = e.what();
 	}
 }
+
+void SmTimeSeriesDBManager::SaveQuoteItem(SmQuote&& qitem)
+{
+	auto cur_date_time = VtStringUtil::GetCurrentDateTime();
+	std::string date_time = cur_date_time.first + cur_date_time.second;
+	std::time_t utc = VtStringUtil::GetUTCTimestamp(date_time);
+	long long nanos = VtStringUtil::GetCurrentNanoseconds();
+	std::string  meas = qitem.SymbolCode + "_quote";
+	std::string resp;
+	int ret = influxdb_cpp::builder()
+		.meas(meas)
+		.tag("symbol_code", qitem.SymbolCode)
+		.field("sign_to_preday", qitem.SignToPreDay)
+		.field("to_preday", qitem.GapFromPreDay)
+		.field("ratio_to_preday", qitem.RatioToPreday)
+		.field("sign", qitem.Sign)
+		.field("origin_time", qitem.OriginTime)
+		.field("h", qitem.High)
+		.field("l", qitem.Low)
+		.field("o", qitem.Open)
+		.field("c", qitem.Close)
+		.field("v", qitem.Volume)
+		.timestamp(utc * 1000000000 + nanos)
+		.post_http(*_ServerInfo, &resp);
+}
+
+/*
+struct SmHoga
+{
+	std::string SymbolCode;
+	/// <summary>
+	/// 시간 - 해외선물은 해외시간
+	/// </summary>
+	std::string	Time = "";
+	/// <summary>
+	/// 국내날짜
+	/// </summary>
+	std::string DomesticDate = "";
+	/// <summary>
+	/// 국내 시간
+	/// </summary>
+	std::string DomesticTime = "";
+	/// <summary>
+	/// 매도총호가수량
+	/// </summary>
+	int	TotSellQty = 0;
+	/// <summary>
+	/// 매수총호가수량
+	/// </summary>
+	int	TotBuyQty = 0;
+	/// <summary>
+	/// 매도총호가건수
+	/// </summary>
+	int	TotSellCnt = 0;
+	/// <summary>
+	/// 매수총호가건수
+	/// </summary>
+	int	TotBuyCnt = 0;
+	/// <summary>
+	/// 호가 아이템
+	/// </summary>
+	struct	SmHogaItem
+	{
+		/// <summary>
+		/// 매수호가건수
+		/// </summary>
+		int	BuyCnt = 0;
+		/// <summary>
+		/// 매수 호가
+		/// </summary>
+		int	BuyPrice = 0;
+		/// <summary>
+		/// 매수호가수량
+		/// </summary>
+		int	BuyQty = 0;
+		/// <summary>
+		/// 매도호가건수
+		/// </summary>
+		int	SellCnt = 0;
+		/// <summary>
+		/// 매도호가
+		/// </summary>
+		int	SellPrice = 0;
+		/// <summary>
+		/// 매도호가수량
+		/// </summary>
+		int	SellQty = 0;
+	}	Ary[5];
+};
+*/
+
+void SmTimeSeriesDBManager::SaveHogaItem(SmHoga&& qitem)
+{
+	auto cur_date_time = VtStringUtil::GetCurrentDateTime();
+	std::string date_time = cur_date_time.first + cur_date_time.second;
+	std::time_t utc = VtStringUtil::GetUTCTimestamp(date_time);
+	long long nanos = VtStringUtil::GetCurrentNanoseconds();
+	std::string  meas = qitem.SymbolCode + "_hoga";
+	std::string resp;
+	int ret = influxdb_cpp::builder()
+		.meas(qitem.SymbolCode)
+		.tag("symbol_code", qitem.SymbolCode)
+		.field("domestic_date", qitem.DomesticDate)
+		.field("domestic_time", qitem.DomesticTime)
+		.field("server_time", qitem.Time)
+		.field("total_buy_qty", qitem.TotBuyQty)
+		.field("total_buy_cnt", qitem.TotBuyCnt)
+		.field("total_sell_qty", qitem.TotSellQty)
+		.field("total_sell_cnt", qitem.TotSellCnt)
+		.field("buy_hoga_price1", qitem.Ary[0].BuyPrice)
+		.field("buy_hoga_qty1", qitem.Ary[0].BuyQty)
+		.field("buy_hoga_cnt1", qitem.Ary[0].BuyCnt)
+		.field("sell_hoga_price1", qitem.Ary[0].SellPrice)
+		.field("sell_hoga_qty1", qitem.Ary[0].SellQty)
+		.field("sell_hoga_cnt1", qitem.Ary[0].SellCnt)
+
+		.field("buy_hoga_price2", qitem.Ary[1].BuyPrice)
+		.field("buy_hoga_qty2", qitem.Ary[1].BuyQty)
+		.field("buy_hoga_cnt2", qitem.Ary[1].BuyCnt)
+		.field("sell_hoga_price2", qitem.Ary[1].SellPrice)
+		.field("sell_hoga_qty2", qitem.Ary[1].SellQty)
+		.field("sell_hoga_cnt2", qitem.Ary[1].SellCnt)
+
+		.field("buy_hoga_price3", qitem.Ary[2].BuyPrice)
+		.field("buy_hoga_qty3", qitem.Ary[2].BuyQty)
+		.field("buy_hoga_cnt3", qitem.Ary[2].BuyCnt)
+		.field("sell_hoga_price3", qitem.Ary[2].SellPrice)
+		.field("sell_hoga_qty3", qitem.Ary[2].SellQty)
+		.field("sell_hoga_cnt3", qitem.Ary[2].SellCnt)
+
+		.field("buy_hoga_price4", qitem.Ary[3].BuyPrice)
+		.field("buy_hoga_qty4", qitem.Ary[3].BuyQty)
+		.field("buy_hoga_cnt4", qitem.Ary[3].BuyCnt)
+		.field("sell_hoga_price4", qitem.Ary[3].SellPrice)
+		.field("sell_hoga_qty4", qitem.Ary[3].SellQty)
+		.field("sell_hoga_cnt4", qitem.Ary[3].SellCnt)
+
+		.field("buy_hoga_price5", qitem.Ary[4].BuyPrice)
+		.field("buy_hoga_qty5", qitem.Ary[4].BuyQty)
+		.field("buy_hoga_cnt5", qitem.Ary[4].BuyCnt)
+		.field("sell_hoga_price5", qitem.Ary[4].SellPrice)
+		.field("sell_hoga_qty5", qitem.Ary[4].SellQty)
+		.field("sell_hoga_cnt5", qitem.Ary[4].SellCnt)
+		.timestamp(utc * 1000000000 + nanos)
+		.post_http(*_ServerInfo, &resp);
+}

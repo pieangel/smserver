@@ -38,6 +38,7 @@
 #include "SmTimeSeriesDBManager.h"
 #include "SmTimeSeriesCollector.h"
 #include "SmTotalOrderManager.h"
+#include "SmTimeSeriesServiceManager.h"
 
 using namespace std;
 
@@ -390,20 +391,9 @@ void CMainFrame::RegisterProduct()
 	realRegMgr->RegisterProduct("CLN19");
 }
 
-/*
-#include "SmHdClient.h"
-#include "SmRealtimeRegisterManager.h"
-#include "SmConfigManager.h"
-#include "SmLogManager.h"
-#include "SmMarketManager.h"
-#include "SmMessageManager.h"
-#include "SmRealtimeSymbolServiceManager.h"
-#include "SmSymbolManager.h"
-#include "SmSymbolReader.h"
-#include "SmUserManager.h"
-*/
 void CMainFrame::ClearAllResource()
 {
+	SmTimeSeriesServiceManager::DestroyInstance();
 	SmTotalOrderManager::DestroyInstance();
 	SmTimeSeriesCollector::DestroyInstance();
 	SmTimeSeriesDBManager::DestroyInstance();

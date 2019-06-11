@@ -54,3 +54,12 @@ struct SmChartDataItem {
 	}
 };
 
+struct SmSimpleChartDataItem {
+	std::string date_time;
+	int o = 0;
+	int h = 0;
+	int l = 0;
+	int c = 0;
+	int v = 0;
+};
+
