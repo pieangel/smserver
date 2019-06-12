@@ -16,7 +16,9 @@ public:
 private:
 	CppTime::Timer _Timer;
 	CppTime::timer_id _TimerId;
+	CppTime::timer_id _MinTimerId;
 	void OnTimer();
+	void OnEveryMinute();
 	size_t _Index = 0;
 };
 

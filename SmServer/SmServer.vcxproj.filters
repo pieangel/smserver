@@ -316,6 +316,9 @@
     <ClInclude Include="SmTimeSeriesCollector.h">
       <Filter>Chart</Filter>
     </ClInclude>
+    <ClInclude Include="SmUtil.h">
+      <Filter>Util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SmChartServer.cpp">

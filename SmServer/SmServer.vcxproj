@@ -258,6 +258,7 @@
     <ClInclude Include="SmTotalOrderManager.h" />
     <ClInclude Include="SmUser.h" />
     <ClInclude Include="SmUserManager.h" />
+    <ClInclude Include="SmUtil.h" />
     <ClInclude Include="SmWebsocketSession.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="Timer\cpptime.h" />

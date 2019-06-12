@@ -7,6 +7,11 @@
 #include "Json/json.hpp"
 #include <vector>
 #include "SmHdClient.h"
+#include "Log/loguru.hpp"
+#include "SmChartData.h"
+#include "SmUtil.h"
+#include <chrono>
+using namespace std::chrono;
 using namespace nlohmann;
 
 SmTimeSeriesServiceManager::SmTimeSeriesServiceManager()
@@ -16,7 +21,48 @@ SmTimeSeriesServiceManager::SmTimeSeriesServiceManager()
 
 SmTimeSeriesServiceManager::~SmTimeSeriesServiceManager()
 {
+	for (auto it = _CycleDataReqMap.begin(); it != _CycleDataReqMap.end(); ++it) {
+		delete it->second;
+	}
+}
 
+void SmTimeSeriesServiceManager::OnUnregisterCycleDataRequest(SmChartDataRequest&& data_req)
+{
+	// 기존 목록에 요청이 있는지 확인한다.
+	auto it = _CycleDataReqMap.find(data_req.GetDataKey());
+	if (it != _CycleDataReqMap.end()) {
+		return;
+	}
+
+	SmChartData* chart_data = it->second;
+	chart_data->RemoveUser(data_req.user_id);
+	size_t user_count = chart_data->GetUserCount();
+	if (user_count == 0) {
+		// 사용자가 없을 경우에는 타이머를 정지시켜 준다.
+		auto tit = _CycleDataReqTimerMap.find(data_req.GetDataKey());
+		if (tit != _CycleDataReqTimerMap.end()) {
+			auto timer_id = tit->second;
+			_Timer.remove(timer_id);
+			_CycleDataReqTimerMap.erase(tit);
+		}
+		// 차트 객체도 삭제해 준다.
+		delete chart_data;
+		_CycleDataReqMap.erase(it);
+	}
+}
+
+void SmTimeSeriesServiceManager::OnRegisterCycleDataRequest(SmChartDataRequest&& data_req)
+{
+	auto it = _CycleDataReqMap.find(data_req.GetDataKey());
+	// 이미 차트 데이터에 대한 요청이 있는 경우에는 그 차트데이터에 사용자 아이디만 추가한다.
+	if (it != _CycleDataReqMap.end()) {
+		it->second->AddUser(data_req.user_id);
+		return;
+	}
+	// 차트 데이터를 등록해 준다.
+	SmChartData* chart_data = AddCycleDataReq(data_req);
+	// 차트 데이터 타이머 서비스를 등록해 준다.
+	RegisterTimer(chart_data);
 }
 
 void SmTimeSeriesServiceManager::OnChartDataRequest(SmChartDataRequest&& data_req)
@@ -40,17 +86,18 @@ void SmTimeSeriesServiceManager::OnChartDataRequest(SmChartDataRequest&& data_re
 		if (it != json_object.end()) {
 			std::string err_msg = json_object["error"];
 			TRACE(err_msg.c_str());
+			LOG_F(INFO, "Query Error", err_msg);
 			return;
 		}
 		auto series = json_object["results"][0]["series"];
 		if (series.is_null()) {
-			_DataReqMap[data_req.GetDataKey()] = data_req;
+			_HistoryDataReqMap[data_req.GetDataKey()] = data_req;
 			SmHdClient* client = SmHdClient::GetInstance();
 			client->GetChartData(data_req);
 			return;
 		}
 		auto a = json_object["results"][0]["series"][0]["values"];
-		int split_size = 20;
+		int split_size = _SendDataSplitSize;
 		int cur_count = 0;
 		int start_index = 0;
 		int end_index = 0;
@@ -79,6 +126,7 @@ void SmTimeSeriesServiceManager::OnChartDataRequest(SmChartDataRequest&& data_re
 	catch (const std::exception& e)
 	{
 		std::string error = e.what();
+		LOG_F(INFO, "Query Error", error);
 	}
 }
 
@@ -115,4 +163,28 @@ void SmTimeSeriesServiceManager::SendChartData(std::vector<SmSimpleChartDataItem
 	std::string content = send_object.dump(4);
 	SmUserManager* userMgr = SmUserManager::GetInstance();
 	userMgr->SendResultMessage(req.user_id, content);
+}
+
+SmChartData* SmTimeSeriesServiceManager::AddCycleDataReq(SmChartDataRequest data_req)
+{
+	SmChartData* chartData = new SmChartData();
+	chartData->SymbolCode(data_req.symbolCode);
+	chartData->ChartType(data_req.chartType);
+	chartData->Cycle(data_req.cycle);
+	chartData->AddUser(data_req.user_id);
+	_CycleDataReqMap[data_req.GetDataKey()] = chartData;
+
+	return chartData;
+}
+
+void SmTimeSeriesServiceManager::RegisterTimer(SmChartData* chartData)
+{
+	if (!chartData)
+		return;
+	auto curTime = SmUtil::GetLocalTime();
+	int waitTime = 60 - std::get<2>(curTime);
+	// Add to the timer.
+	auto id = _Timer.add(seconds(waitTime), std::bind(&SmChartData::OnTimer, chartData), seconds(chartData->Cycle() * 60));
+	// Add to the request map.
+	_CycleDataReqTimerMap[chartData->GetDataKey()] = id;
 }
