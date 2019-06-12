@@ -25,6 +25,19 @@ void SmChartDataManager::AddChartData(SmChartData* chart_data)
 	}
 }
 
+SmChartData* SmChartDataManager::AddChartData(SmChartDataRequest data_req)
+{
+	SmChartData* chartData = FindChartData(data_req.GetDataKey());
+	if (!chartData) {
+		chartData = new SmChartData();
+		chartData->SymbolCode(data_req.symbolCode);
+		chartData->ChartType(data_req.chartType);
+		chartData->Cycle(data_req.cycle);
+	}
+
+	return chartData;
+}
+
 SmChartData* SmChartDataManager::FindChartData(std::string data_key)
 {
 	auto it = _ChartDataMap.find(data_key);

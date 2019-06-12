@@ -11,6 +11,7 @@
 #include "SmChartData.h"
 #include "SmUtil.h"
 #include <chrono>
+#include "SmChartDataManager.h"
 using namespace std::chrono;
 using namespace nlohmann;
 
@@ -21,9 +22,7 @@ SmTimeSeriesServiceManager::SmTimeSeriesServiceManager()
 
 SmTimeSeriesServiceManager::~SmTimeSeriesServiceManager()
 {
-	for (auto it = _CycleDataReqMap.begin(); it != _CycleDataReqMap.end(); ++it) {
-		delete it->second;
-	}
+
 }
 
 void SmTimeSeriesServiceManager::OnUnregisterCycleDataRequest(SmChartDataRequest&& data_req)
@@ -46,7 +45,6 @@ void SmTimeSeriesServiceManager::OnUnregisterCycleDataRequest(SmChartDataRequest
 			_CycleDataReqTimerMap.erase(tit);
 		}
 		// 차트 객체도 삭제해 준다.
-		delete chart_data;
 		_CycleDataReqMap.erase(it);
 	}
 }
@@ -167,10 +165,8 @@ void SmTimeSeriesServiceManager::SendChartData(std::vector<SmSimpleChartDataItem
 
 SmChartData* SmTimeSeriesServiceManager::AddCycleDataReq(SmChartDataRequest data_req)
 {
-	SmChartData* chartData = new SmChartData();
-	chartData->SymbolCode(data_req.symbolCode);
-	chartData->ChartType(data_req.chartType);
-	chartData->Cycle(data_req.cycle);
+	SmChartDataManager* chrartDataMgr = SmChartDataManager::GetInstance();
+	SmChartData* chartData = chrartDataMgr->AddChartData(data_req);
 	chartData->AddUser(data_req.user_id);
 	_CycleDataReqMap[data_req.GetDataKey()] = chartData;
 

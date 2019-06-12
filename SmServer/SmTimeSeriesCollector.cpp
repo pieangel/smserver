@@ -73,3 +73,8 @@ void SmTimeSeriesCollector::OnTimer()
 {
 	CollectRecentMonthSymbolChartData();
 }
+
+void SmTimeSeriesCollector::OnEveryMinute()
+{
+
+}
