@@ -6,6 +6,7 @@
 #include "SmUserManager.h"
 #include "Json/json.hpp"
 #include <vector>
+#include "SmHdClient.h"
 using namespace nlohmann;
 
 SmTimeSeriesServiceManager::SmTimeSeriesServiceManager()
@@ -22,7 +23,7 @@ void SmTimeSeriesServiceManager::OnChartDataRequest(SmChartDataRequest&& data_re
 {
 	SmTimeSeriesDBManager* dbMgr = SmTimeSeriesDBManager::GetInstance();
 	std::string query_string;// = "show series on abroad_future";
-	query_string.append("SELECT \"c\", \"h\", \"l\", \"o\", \"v\", FROM \"");
+	query_string.append("SELECT \"c\", \"h\", \"l\", \"o\", \"v\" FROM \"");
 	query_string.append(data_req.GetDataKey());
 	query_string.append("\" ");
 	query_string.append("LIMIT ");
@@ -35,6 +36,19 @@ void SmTimeSeriesServiceManager::OnChartDataRequest(SmChartDataRequest&& data_re
 	try
 	{
 		auto json_object = json::parse(resp);
+		auto it = json_object.find("error");
+		if (it != json_object.end()) {
+			std::string err_msg = json_object["error"];
+			TRACE(err_msg.c_str());
+			return;
+		}
+		auto series = json_object["results"][0]["series"];
+		if (series.is_null()) {
+			_DataReqMap[data_req.GetDataKey()] = data_req;
+			SmHdClient* client = SmHdClient::GetInstance();
+			client->GetChartData(data_req);
+			return;
+		}
 		auto a = json_object["results"][0]["series"][0]["values"];
 		int split_size = 20;
 		int cur_count = 0;
@@ -66,6 +80,11 @@ void SmTimeSeriesServiceManager::OnChartDataRequest(SmChartDataRequest&& data_re
 	{
 		std::string error = e.what();
 	}
+}
+
+void SmTimeSeriesServiceManager::OnChartDataReceived(SmChartDataRequest&& data_req)
+{
+	OnChartDataRequest(std::move(data_req));
 }
 
 void SmTimeSeriesServiceManager::SendChartData(std::vector<SmSimpleChartDataItem>& dataVec, SmChartDataRequest req, int totalCount, int startIndex, int endIndex)

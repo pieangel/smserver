@@ -414,17 +414,20 @@ void CMainFrame::GetChartData()
 {
 	SmChartDataRequest req;
 	req.symbolCode = "CLN19";
+	//req.symbolCode = "";
 	req.chartType = SmChartType::MIN;
 	req.cycle = 1;
 	req.count = 1500;
 	req.next = 0;
 	//SmHdClient* client = SmHdClient::GetInstance();
 	//client->GetChartData(req);
-	SmTimeSeriesCollector* dataCltr = SmTimeSeriesCollector::GetInstance();
+	//SmTimeSeriesCollector* dataCltr = SmTimeSeriesCollector::GetInstance();
 	//dataCltr->GetChartFromDatabase(std::move(req));
 	//dataCltr->GetChartData(std::move(req));
-	SmTimeSeriesDBManager* dbMgr = SmTimeSeriesDBManager::GetInstance();
-	dbMgr->GetChartData();
+	//SmTimeSeriesDBManager* dbMgr = SmTimeSeriesDBManager::GetInstance();
+	//dbMgr->GetChartData();
+	SmTimeSeriesServiceManager* tsMgr = SmTimeSeriesServiceManager::GetInstance();
+	tsMgr->OnChartDataRequest(std::move(req));
 }
 
 void CMainFrame::ReadSymbols()
