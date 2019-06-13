@@ -39,6 +39,7 @@
 #include "SmTimeSeriesCollector.h"
 #include "SmTotalOrderManager.h"
 #include "SmTimeSeriesServiceManager.h"
+#include "SmUtil.h"
 
 using namespace std;
 
@@ -61,6 +62,8 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_COMMAND(ID_SERVER_GETCHARTDATA, &CMainFrame::OnServerGetchartdata)
 	ON_COMMAND(ID_SERVER_COLLECTCHARTDATA, &CMainFrame::OnServerCollectchartdata)
 	ON_COMMAND(ID_SERVER_USERTEST, &CMainFrame::OnServerUsertest)
+	ON_COMMAND(ID_SERVER_GETUTCTIME, &CMainFrame::OnServerGetutctime)
+	ON_COMMAND(ID_SERVER_GETMINDATA, &CMainFrame::OnServerGetmindata)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -416,18 +419,18 @@ void CMainFrame::GetChartData()
 	req.symbolCode = "CLN19";
 	//req.symbolCode = "";
 	req.chartType = SmChartType::MIN;
-	req.cycle = 1;
+	req.cycle = 25;
 	req.count = 1500;
 	req.next = 0;
-	//SmHdClient* client = SmHdClient::GetInstance();
-	//client->GetChartData(req);
+	SmHdClient* client = SmHdClient::GetInstance();
+	client->GetChartData(req);
 	//SmTimeSeriesCollector* dataCltr = SmTimeSeriesCollector::GetInstance();
 	//dataCltr->GetChartFromDatabase(std::move(req));
 	//dataCltr->GetChartData(std::move(req));
 	//SmTimeSeriesDBManager* dbMgr = SmTimeSeriesDBManager::GetInstance();
 	//dbMgr->GetChartData();
-	SmTimeSeriesServiceManager* tsMgr = SmTimeSeriesServiceManager::GetInstance();
-	tsMgr->OnChartDataRequest(std::move(req));
+	//SmTimeSeriesServiceManager* tsMgr = SmTimeSeriesServiceManager::GetInstance();
+	//tsMgr->OnChartDataRequest(std::move(req));
 }
 
 void CMainFrame::ReadSymbols()
@@ -512,4 +515,40 @@ void CMainFrame::OnServerUsertest()
 {
 	SmTimeSeriesDBManager* timeDBMgr = SmTimeSeriesDBManager::GetInstance();
 	timeDBMgr->UserTest();
+}
+
+
+void CMainFrame::OnServerGetutctime()
+{
+	std::string format =  SmUtil::GetUTCDateTimeString();
+	std::string f1 = SmUtil::GetUTCDateTimeStringForNowMin();
+	std::string f2 = SmUtil::GetUTCDateTimeStringForPreMin(2);
+	std::string tf = format;
+}
+
+
+void CMainFrame::OnServerGetmindata()
+{
+	SmTimeSeriesDBManager* dbMgr = SmTimeSeriesDBManager::GetInstance();
+	SmMarketManager* mrktMgr = SmMarketManager::GetInstance();
+	std::vector<SmSymbol*> symVec = mrktMgr->GetRecentMonthSymbolList();
+	std::string curTime = SmUtil::GetUTCDateTimeStringForNowMin();
+	std::string prevTime = SmUtil::GetUTCDateTimeStringForPreMin(2);
+	std::string  meas = "CLN19";
+	meas.append("_quote");
+
+	std::string query_string = ""; // "select * from \"chart_data\" where \"symbol_code\" = \'CLN19\' AND \"chart_type\" = \'5\' AND \"cycle\" = \'1\'";
+	std::string str_cycle = std::to_string(1);
+	std::string str_chart_type = std::to_string(5);
+	query_string.append("SELECT FIRST(\"c\"),  LAST(\"c\"), MIN(\"c\"), MAX(\"c\") FROM \"");
+	query_string.append(meas);
+	query_string.append("\" WHERE time >= \'");
+	query_string.append(prevTime);
+	query_string.append("\' AND time <= \'");
+	query_string.append(curTime);
+	query_string.append("\' GROUP BY time(1m) fill(previous)");
+	std::string resp = dbMgr->ExecQuery(query_string);
+	CString msg;
+	msg.Format(_T("resp length = %d"), resp.length());
+	TRACE(msg);
 }

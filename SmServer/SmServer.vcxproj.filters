@@ -462,6 +462,9 @@
     <ClCompile Include="SmTimeSeriesCollector.cpp">
       <Filter>Chart</Filter>
     </ClCompile>
+    <ClCompile Include="SmUtil.cpp">
+      <Filter>Util</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="SmServer.rc">

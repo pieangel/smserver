@@ -13,6 +13,7 @@
 #include "SmTimeSeriesServiceManager.h"
 #include "SmSymbolManager.h"
 #include "SmMarketManager.h"
+#include "SmUtil.h"
 using namespace nlohmann;
 
 
@@ -81,6 +82,9 @@ void SmTimeSeriesCollector::OnEveryMinute()
 	SmTimeSeriesDBManager* dbMgr = SmTimeSeriesDBManager::GetInstance();
 	SmMarketManager* mrktMgr = SmMarketManager::GetInstance();
 	std::vector<SmSymbol*> symVec = mrktMgr->GetRecentMonthSymbolList();
+	std::string curTime = SmUtil::GetUTCDateTimeStringForNowMin();
+	std::string prevTime = SmUtil::GetUTCDateTimeStringForPreMin(2);
+
 	for (auto it = symVec.begin(); it != symVec.end(); ++it) {
 		SmSymbol* sym = *it;
 		std::string  meas = sym->SymbolCode() + "_quote";
@@ -88,15 +92,13 @@ void SmTimeSeriesCollector::OnEveryMinute()
 		std::string query_string = ""; // "select * from \"chart_data\" where \"symbol_code\" = \'CLN19\' AND \"chart_type\" = \'5\' AND \"cycle\" = \'1\'";
 		std::string str_cycle = std::to_string(1);
 		std::string str_chart_type = std::to_string(5);
-		query_string.append("SELECT * FROM \"");
-		query_string.append("chart_data");
-		query_string.append("\" WHERE \"symbol_code\" = \'");
-		query_string.append("CLN19");
-		query_string.append("\' AND \"chart_type\" = \'");
-		query_string.append(str_chart_type);
-		query_string.append("\' AND \"cycle\" = \'");
-		query_string.append(str_cycle);
-		query_string.append("\'");
+		query_string.append("SELECT FIRST(\"c\"),  LAST(\"c\"), MIN(\"c\"), MAX(\"c\") FROM \"");
+		query_string.append(meas);
+		query_string.append("\" WHERE time >= \'");
+		query_string.append(prevTime);
+		query_string.append("\' AND time <= \'");
+		query_string.append(curTime);
+		query_string.append("\' GROUP BY time(1m) fill(previous)");
 		std::string resp = dbMgr->ExecQuery(query_string);
 		CString msg;
 		msg.Format(_T("resp length = %d"), resp.length());

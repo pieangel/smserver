@@ -62,6 +62,8 @@ public:
 	afx_msg void OnServerGetchartdata();
 	afx_msg void OnServerCollectchartdata();
 	afx_msg void OnServerUsertest();
+	afx_msg void OnServerGetutctime();
+	afx_msg void OnServerGetmindata();
 };
 
 

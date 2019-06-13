@@ -311,17 +311,17 @@ void SmHdCtrl::OnRcvdAbroadSise(CString& strKey, LONG& nRealType)
 	CString strSign = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "체결구분");
 
 	SmQuote quoteItem;
-	quoteItem.SymbolCode = strSymCode;
+	quoteItem.SymbolCode = strSymCode.Trim();
 	quoteItem.OriginTime = strTime;
-	quoteItem.SignToPreDay = strSignToPreDay;
+	quoteItem.SignToPreDay = strSignToPreDay.Trim();
 	quoteItem.GapFromPreDay = _ttoi(strToPreDay);
-	quoteItem.RatioToPreday = strRatioToPreDay;
+	quoteItem.RatioToPreday = strRatioToPreDay.Trim();
 	quoteItem.Close = _ttoi(strClose);
 	quoteItem.Open = _ttoi(strOpen);
 	quoteItem.High = _ttoi(strHigh);
 	quoteItem.Low = _ttoi(strLow);
 	quoteItem.Volume= _ttoi(strVolume);
-	quoteItem.Sign = strSign;
+	quoteItem.Sign = strSign.Trim();
 
 
 	SmTimeSeriesDBManager* dbMgr = SmTimeSeriesDBManager::GetInstance();
