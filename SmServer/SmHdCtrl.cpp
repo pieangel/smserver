@@ -292,7 +292,7 @@ void SmHdCtrl::OnRcvdAbroadHoga(CString& strKey, LONG& nRealType)
 
 	CString msg;
 	msg.Format(_T("hoga :: time = %s, tot_buy_cnt = %d\n"), sym->Hoga.SymbolCode.c_str(), sym->Hoga.TotBuyCnt);
-	TRACE(msg);
+	//TRACE(msg);
 }
 
 void SmHdCtrl::OnRcvdAbroadSise(CString& strKey, LONG& nRealType)
@@ -343,7 +343,7 @@ void SmHdCtrl::OnRcvdAbroadSise(CString& strKey, LONG& nRealType)
 
 	CString msg;
 	msg.Format(_T("time = %s, h=%s, l=%s, o=%s, c=%s, v=%s, ratio = %s\n"), strTime, strHigh, strLow, strOpen, strClose, strVolume, strRatioToPreDay);
-	TRACE(msg);
+	//TRACE(msg);
 }
 
 void SmHdCtrl::OnRcvdAbroadChartData(CString& sTrCode, LONG& nRqID)
