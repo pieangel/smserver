@@ -432,7 +432,7 @@ void SmHdCtrl::OnRcvdAbroadChartData(CString& sTrCode, LONG& nRqID)
 	SmChartData* chart_data = nullptr;
 	// 가장 최근것이 가장 먼저 온다. 따라서 가장 과거의 데이터를 먼저 가져온다.
 	// Received the chart data first.
-	for (int i = nRepeatCnt - 1; i >= 0; --i) {
+	for (int i = 0; i < nRepeatCnt; ++i) {
 		CString strDate = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "국내일자");
 		CString strTime = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "국내시간");
 		CString strOpen = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "시가");
@@ -451,8 +451,8 @@ void SmHdCtrl::OnRcvdAbroadChartData(CString& sTrCode, LONG& nRqID)
 		data.symbolCode = req.symbolCode;
 		data.chartType = req.chartType;
 		data.cycle = req.cycle;
-		data.date = strDate;
-		data.time = strTime;
+		data.date = strDate.Trim();
+		data.time = strTime.Trim();
 		data.h = _ttoi(strHigh);
 		data.l = _ttoi(strLow);
 		data.o = _ttoi(strOpen);
@@ -462,7 +462,7 @@ void SmHdCtrl::OnRcvdAbroadChartData(CString& sTrCode, LONG& nRqID)
 		chart_data = chartDataMgr->PushChartData(data);
 
 		// 차트 데이터 항목 도착을 알린다.
-		tsCol->OnChartDataItem(std::move(data));
+		tsCol->OnChartDataItem(data);
 	}
 
 	// 차트 데이터 수신 요청 목록에서 제거한다.

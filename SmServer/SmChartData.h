@@ -10,12 +10,12 @@ private:
 	std::string _SymbolCode;
 	SmChartType _ChartType = SmChartType::MIN;
 	int _Cycle = 0;
-	std::list< SmChartDataItem> _DataItemList;
+	std::list<SmChartDataItem> _DataItemList;
 	// 차트를 요청하는 사용자 아이디 목록
 	std::set<std::string> _UserList;
 	void GetChartDataFromDB();
 	void GetChartDataFromServer();
-	int _DataQueueSize = 4;
+	size_t _DataQueueSize = 4;
 	// 등록된 사용자들에게 차트 정기 데이터를 보내준다.
 	void SendCyclicChartDataToUsers();
 public:

@@ -27,7 +27,7 @@ public:
 	void Port(int val) { _Port = val; }
 	std::string ExecQuery(std::string query_string);
 	influxdb_cpp::server_info* ServerInfo() const { return _ServerInfo; }
-	void OnChartDataItem(SmChartDataItem&& data_item);
+	void OnChartDataItem(SmChartDataItem data_item);
 	void CreateDataBase(std::string db_name);
 	std::vector<std::string> GetIPAddress(std::string host_name);
 	void UserTest();

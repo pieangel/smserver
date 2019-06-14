@@ -33,6 +33,7 @@ SmChartData* SmChartDataManager::AddChartData(SmChartDataRequest data_req)
 		chartData->SymbolCode(data_req.symbolCode);
 		chartData->ChartType(data_req.chartType);
 		chartData->Cycle(data_req.cycle);
+		_ChartDataMap[data_req.GetDataKey()] = chartData;
 	}
 
 	return chartData;
@@ -46,6 +47,7 @@ SmChartData* SmChartDataManager::AddChartData(SmChartDataItem data_item)
 		chartData->SymbolCode(data_item.symbolCode);
 		chartData->ChartType(data_item.chartType);
 		chartData->Cycle(data_item.cycle);
+		_ChartDataMap[data_item.GetDataKey()] = chartData;
 	}
 
 	return chartData;

@@ -48,10 +48,10 @@ void SmTimeSeriesCollector::CollectRecentMonthSymbolChartData()
 	}
 }
 
-void SmTimeSeriesCollector::OnChartDataItem(SmChartDataItem&& data_item)
+void SmTimeSeriesCollector::OnChartDataItem(SmChartDataItem data_item)
 {
 	SmTimeSeriesDBManager* dbMgr = SmTimeSeriesDBManager::GetInstance();
-	dbMgr->OnChartDataItem(std::move(data_item));
+	dbMgr->OnChartDataItem(data_item);
 }
 
 void SmTimeSeriesCollector::OnCompleteChartData(SmChartDataRequest&& data_req)

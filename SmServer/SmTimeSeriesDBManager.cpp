@@ -53,7 +53,7 @@ std::string SmTimeSeriesDBManager::ExecQuery(std::string query_string)
 	return resp;
 }
 
-void SmTimeSeriesDBManager::OnChartDataItem(SmChartDataItem&& data_item)
+void SmTimeSeriesDBManager::OnChartDataItem(SmChartDataItem data_item)
 {
 	std::string date_time = data_item.date + data_item.time;
 	std::time_t utc = VtStringUtil::GetUTCTimestamp(date_time);
