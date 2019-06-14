@@ -61,8 +61,10 @@ void SmTimeSeriesServiceManager::OnRegisterCycleDataRequest(SmChartDataRequest&&
 	}
 	// 차트 데이터를 등록해 준다.
 	SmChartData* chart_data = AddCycleDataReq(data_req);
+	SmHdClient* client = SmHdClient::GetInstance();
+	client->GetChartData(data_req);
 	// 차트 데이터 타이머 서비스를 등록해 준다.
-	RegisterTimer(chart_data);
+	//RegisterTimer(chart_data);
 }
 
 void SmTimeSeriesServiceManager::OnChartDataRequest(SmChartDataRequest&& data_req)

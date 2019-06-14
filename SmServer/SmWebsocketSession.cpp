@@ -3,7 +3,7 @@
 #include "ServerDefine.h"
 #include <iostream>
 #include "SmSessionManager.h"
-#include "SmMessageManager.h"
+#include "SmProtocolManager.h"
 void
 SmWebsocketSession::
 on_send(boost::shared_ptr<std::string const> const& ss)
@@ -86,7 +86,7 @@ void SmWebsocketSession::on_read(beast::error_code ec, std::size_t bytes_transfe
 
 	// Send to all connections
 	//session_mgr_->send(beast::buffers_to_string(buffer_.data()));
-	SmMessageManager* msgMgr = SmMessageManager::GetInstance();
+	SmProtocolManager* msgMgr = SmProtocolManager::GetInstance();
 	msgMgr->OnMessage(beast::buffers_to_string(buffer_.data()), this);
 	// Clear the buffer
 	buffer_.consume(buffer_.size());

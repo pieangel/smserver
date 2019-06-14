@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "SmMessageManager.h"
+#include "SmProtocolManager.h"
 #include "SmUserManager.h"
 #include "Json/json.hpp"
 #include "SmRealtimeSymbolServiceManager.h"
@@ -11,17 +11,17 @@
 #include "SmTimeSeriesCollector.h"
 #include "SmTimeSeriesServiceManager.h"
 using namespace nlohmann;
-SmMessageManager::SmMessageManager()
+SmProtocolManager::SmProtocolManager()
 {
 
 }
 
-SmMessageManager::~SmMessageManager()
+SmProtocolManager::~SmProtocolManager()
 {
 
 }
 
-void SmMessageManager::OnMessage(std::string message, SmWebsocketSession* socket)
+void SmProtocolManager::OnMessage(std::string message, SmWebsocketSession* socket)
 {
 	if (!socket)
 		return;
@@ -32,7 +32,7 @@ void SmMessageManager::OnMessage(std::string message, SmWebsocketSession* socket
 	ParseMessage(message, socket);
 }
 
-void SmMessageManager::ParseMessage(std::string message, SmWebsocketSession* socket)
+void SmProtocolManager::ParseMessage(std::string message, SmWebsocketSession* socket)
 {
 	if (!socket) return;
 	if (socket && message.length() == 0) {
@@ -84,7 +84,7 @@ void SmMessageManager::ParseMessage(std::string message, SmWebsocketSession* soc
 }
 
 
-void SmMessageManager::OnLogin(nlohmann::json& obj, SmWebsocketSession* socket)
+void SmProtocolManager::OnLogin(nlohmann::json& obj, SmWebsocketSession* socket)
 {
 	try {
 		auto user_info = obj["user_info"];
@@ -101,7 +101,7 @@ void SmMessageManager::OnLogin(nlohmann::json& obj, SmWebsocketSession* socket)
 	}
 }
 
-void SmMessageManager::OnLogout(nlohmann::json& obj)
+void SmProtocolManager::OnLogout(nlohmann::json& obj)
 {
 	try {
 		auto user_info = obj["user_info"];
@@ -115,7 +115,7 @@ void SmMessageManager::OnLogout(nlohmann::json& obj)
 	}
 }
 
-void SmMessageManager::SendResult(std::string user_id, int result_code, std::string result_msg)
+void SmProtocolManager::SendResult(std::string user_id, int result_code, std::string result_msg)
 {
 	json res = {
 		{"result", result_code},
@@ -126,7 +126,7 @@ void SmMessageManager::SendResult(std::string user_id, int result_code, std::str
 }
 
 
-void SmMessageManager::OnRegisterSymbol(nlohmann::json& obj)
+void SmProtocolManager::OnRegisterSymbol(nlohmann::json& obj)
 {
 	try {
 		std::string id = obj["user_id"];
@@ -141,7 +141,7 @@ void SmMessageManager::OnRegisterSymbol(nlohmann::json& obj)
 	}
 }
 
-void SmMessageManager::OnUnregisterSymbol(nlohmann::json& obj)
+void SmProtocolManager::OnUnregisterSymbol(nlohmann::json& obj)
 {
 	try {
 		std::string id = obj["user_id"];
@@ -156,7 +156,31 @@ void SmMessageManager::OnUnregisterSymbol(nlohmann::json& obj)
 	}
 }
 
-void SmMessageManager::OnRegisterSymbolCycle(nlohmann::json& obj)
+void SmProtocolManager::OnRegisterSymbolCycle(nlohmann::json& obj)
+{
+	try {
+		std::string id = obj["user_id"];
+		std::string symCode = obj["symbol_code"];
+		std::string chart_type = obj["chart_type"];
+		std::string cycle = obj["cycle"];
+		std::string count = obj["count"];
+		SmChartDataRequest req;
+		req.user_id = id;
+		req.symbolCode = symCode;
+		req.chartType = (SmChartType)std::stoi(chart_type);
+		req.cycle = std::stoi(cycle);
+		req.count = std::stoi(count);
+		req.next = 0;
+		SmTimeSeriesServiceManager* timeSvcMgr = SmTimeSeriesServiceManager::GetInstance();
+		timeSvcMgr->OnRegisterCycleDataRequest(std::move(req));
+		SendResult(id, 0, "register symbol cycle success!");
+	}
+	catch (std::exception e) {
+		std::string error = e.what();
+	}
+}
+
+void SmProtocolManager::OnUnregisterSymbolCycle(nlohmann::json& obj)
 {
 	try {
 		std::string id = obj["id"];
@@ -170,42 +194,28 @@ void SmMessageManager::OnRegisterSymbolCycle(nlohmann::json& obj)
 	}
 }
 
-void SmMessageManager::OnUnregisterSymbolCycle(nlohmann::json& obj)
-{
-	try {
-		std::string id = obj["id"];
-		std::string symCode = obj["symbol_code"];
-		std::string chart_type = obj["chart_type"];
-		std::string cycle = obj["cycle"];
-		SendResult(id, 0, "register symbol cycle success!");
-	}
-	catch (std::exception e) {
-		std::string error = e.what();
-	}
-}
-
-void SmMessageManager::OnOrderNew(nlohmann::json& obj)
+void SmProtocolManager::OnOrderNew(nlohmann::json& obj)
 {
 	SmOrderRequest req;
 	SmTotalOrderManager* totOrderMgr = SmTotalOrderManager::GetInstance();
 	totOrderMgr->OnOrder(std::move(req));
 }
 
-void SmMessageManager::OnOrderModify(nlohmann::json& obj)
+void SmProtocolManager::OnOrderModify(nlohmann::json& obj)
 {
 	SmOrderRequest req;
 	SmTotalOrderManager* totOrderMgr = SmTotalOrderManager::GetInstance();
 	totOrderMgr->OnOrder(std::move(req));
 }
 
-void SmMessageManager::OnOrderCancel(nlohmann::json& obj)
+void SmProtocolManager::OnOrderCancel(nlohmann::json& obj)
 {
 	SmOrderRequest req;
 	SmTotalOrderManager* totOrderMgr = SmTotalOrderManager::GetInstance();
 	totOrderMgr->OnOrder(std::move(req));
 }
 
-void SmMessageManager::OnReqChartData(nlohmann::json& obj)
+void SmProtocolManager::OnReqChartData(nlohmann::json& obj)
 {
 	try {
 		std::string id = obj["user_id"];
@@ -229,7 +239,7 @@ void SmMessageManager::OnReqChartData(nlohmann::json& obj)
 	}
 }
 
-void SmMessageManager::OnReqSiseData(nlohmann::json& obj)
+void SmProtocolManager::OnReqSiseData(nlohmann::json& obj)
 {
 	try {
 		std::string id = obj["user_id"];

@@ -27,7 +27,7 @@
 #include "SmConfigManager.h"
 #include "SmLogManager.h"
 #include "SmMarketManager.h"
-#include "SmMessageManager.h"
+#include "SmProtocolManager.h"
 #include "SmRealtimeSymbolServiceManager.h"
 #include "SmSymbolManager.h"
 #include "SmSymbolReader.h"
@@ -408,7 +408,7 @@ void CMainFrame::ClearAllResource()
 	SmConfigManager::DestroyInstance();
 	SmLogManager::DestroyInstance();
 	SmMarketManager::DestroyInstance();
-	SmMessageManager::DestroyInstance();
+	SmProtocolManager::DestroyInstance();
 	SmRealtimeSymbolServiceManager::DestroyInstance();
 	SmSymbolManager::DestroyInstance();
 	SmSymbolReader::DestroyInstance();
@@ -420,8 +420,8 @@ void CMainFrame::GetChartData()
 	req.symbolCode = "CLN19";
 	//req.symbolCode = "";
 	req.chartType = SmChartType::MIN;
-	req.cycle = 25;
-	req.count = 1500;
+	req.cycle = 1;
+	req.count = 100;
 	req.next = 0;
 	SmHdClient* client = SmHdClient::GetInstance();
 	client->GetChartData(req);

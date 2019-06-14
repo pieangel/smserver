@@ -220,9 +220,6 @@
     <ClInclude Include="Json\json.hpp">
       <Filter>Json</Filter>
     </ClInclude>
-    <ClInclude Include="SmMessageManager.h">
-      <Filter>Server</Filter>
-    </ClInclude>
     <ClInclude Include="SmRealtimeSymbolServiceManager.h">
       <Filter>Service</Filter>
     </ClInclude>
@@ -319,6 +316,9 @@
     <ClInclude Include="SmUtil.h">
       <Filter>Util</Filter>
     </ClInclude>
+    <ClInclude Include="SmProtocolManager.h">
+      <Filter>Server</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SmChartServer.cpp">
@@ -411,9 +411,6 @@
     <ClCompile Include="SmUserManager.cpp">
       <Filter>User</Filter>
     </ClCompile>
-    <ClCompile Include="SmMessageManager.cpp">
-      <Filter>Server</Filter>
-    </ClCompile>
     <ClCompile Include="SmRealtimeSymbolServiceManager.cpp">
       <Filter>Service</Filter>
     </ClCompile>
@@ -464,6 +461,9 @@
     </ClCompile>
     <ClCompile Include="SmUtil.cpp">
       <Filter>Util</Filter>
+    </ClCompile>
+    <ClCompile Include="SmProtocolManager.cpp">
+      <Filter>Server</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -38,6 +38,19 @@ SmChartData* SmChartDataManager::AddChartData(SmChartDataRequest data_req)
 	return chartData;
 }
 
+SmChartData* SmChartDataManager::AddChartData(SmChartDataItem data_item)
+{
+	SmChartData* chartData = FindChartData(data_item.GetDataKey());
+	if (!chartData) {
+		chartData = new SmChartData();
+		chartData->SymbolCode(data_item.symbolCode);
+		chartData->ChartType(data_item.chartType);
+		chartData->Cycle(data_item.cycle);
+	}
+
+	return chartData;
+}
+
 SmChartData* SmChartDataManager::FindChartData(std::string data_key)
 {
 	auto it = _ChartDataMap.find(data_key);
@@ -46,4 +59,11 @@ SmChartData* SmChartDataManager::FindChartData(std::string data_key)
 	}
 
 	return nullptr;
+}
+
+SmChartData* SmChartDataManager::PushChartData(SmChartDataItem data)
+{
+	SmChartData* chart_data = AddChartData(data);
+	chart_data->PushChartDataItem(data);
+	return chart_data;
 }

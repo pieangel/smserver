@@ -3,11 +3,11 @@
 #include <string>
 #include "Json/json.hpp"
 class SmWebsocketSession;
-class SmMessageManager : public TemplateSingleton<SmMessageManager>
+class SmProtocolManager : public TemplateSingleton<SmProtocolManager>
 {
 public:
-	SmMessageManager();
-	~SmMessageManager();
+	SmProtocolManager();
+	~SmProtocolManager();
 
 	void OnMessage(std::string message, SmWebsocketSession* socket);
 private:

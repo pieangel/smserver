@@ -242,7 +242,7 @@
     <ClInclude Include="SmLogManager.h" />
     <ClInclude Include="SmMarket.h" />
     <ClInclude Include="SmMarketManager.h" />
-    <ClInclude Include="SmMessageManager.h" />
+    <ClInclude Include="SmProtocolManager.h" />
     <ClInclude Include="SmRealtimeRegisterManager.h" />
     <ClInclude Include="SmRealtimeSymbolServiceManager.h" />
     <ClInclude Include="SmScheduler.h" />
@@ -331,7 +331,7 @@
     <ClCompile Include="SmLogManager.cpp" />
     <ClCompile Include="SmMarket.cpp" />
     <ClCompile Include="SmMarketManager.cpp" />
-    <ClCompile Include="SmMessageManager.cpp" />
+    <ClCompile Include="SmProtocolManager.cpp" />
     <ClCompile Include="SmRealtimeRegisterManager.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>

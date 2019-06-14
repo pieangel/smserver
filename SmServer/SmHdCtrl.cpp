@@ -16,6 +16,9 @@
 #include "Json/json.hpp"
 #include "SmQuoteDefine.h"
 #include "SmHogaDefine.h"
+#include "SmChartDataManager.h"
+#include "SmChartData.h"
+#include "SmTimeSeriesServiceManager.h"
 using namespace nlohmann;
 // VtHdCtrl dialog
 
@@ -425,8 +428,11 @@ void SmHdCtrl::OnRcvdAbroadChartData(CString& sTrCode, LONG& nRqID)
 		return;
 	SmChartDataRequest req = it->second;
 	SmTimeSeriesCollector* tsCol = SmTimeSeriesCollector::GetInstance();
+	SmChartDataManager* chartDataMgr = SmChartDataManager::GetInstance();
+	SmChartData* chart_data = nullptr;
+	// 가장 최근것이 가장 먼저 온다. 따라서 가장 과거의 데이터를 먼저 가져온다.
 	// Received the chart data first.
-	for (int i = 0; i < nRepeatCnt; i++) {
+	for (int i = nRepeatCnt - 1; i >= 0; --i) {
 		CString strDate = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "국내일자");
 		CString strTime = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "국내시간");
 		CString strOpen = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "시가");
@@ -453,14 +459,24 @@ void SmHdCtrl::OnRcvdAbroadChartData(CString& sTrCode, LONG& nRqID)
 		data.c = _ttoi(strClose);
 		data.v = _ttoi(strVol);
 
+		chart_data = chartDataMgr->PushChartData(data);
+
 		// 차트 데이터 항목 도착을 알린다.
 		tsCol->OnChartDataItem(std::move(data));
 	}
 
-	// 차트 데이터 수신 완료를 알릴다.
-	tsCol->OnCompleteChartData(std::move(req));
 	// 차트 데이터 수신 요청 목록에서 제거한다.
 	_ChartDataReqMap.erase(it);
+	// 주기데이터가 도착했음을 알린다.
+	if (chart_data) {
+		if (nRepeatCnt <= chart_data->DataQueueSize()) {
+			chart_data->OnChartDataUpdated();
+		}
+		else {
+			// 차트 데이터 수신 완료를 알릴다.
+			tsCol->OnCompleteChartData(std::move(req));
+		}
+	}
 }
 
 BEGIN_MESSAGE_MAP(SmHdCtrl, CDialogEx)

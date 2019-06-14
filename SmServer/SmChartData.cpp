@@ -4,6 +4,7 @@
 #include "SmTimeSeriesDBManager.h"
 #include "Json/json.hpp"
 #include "Log/loguru.hpp"
+#include "SmHdClient.h"
 
 using namespace nlohmann;
 void SmChartData::GetChartDataFromDB()
@@ -42,6 +43,42 @@ void SmChartData::GetChartDataFromDB()
 	}
 }
 
+void SmChartData::GetChartDataFromServer()
+{
+	SmChartDataRequest req;
+	req.symbolCode = _SymbolCode;
+	req.chartType = _ChartType;
+	req.cycle = _Cycle;
+	req.count = _DataQueueSize;
+	req.next = 0;
+	SmHdClient* client = SmHdClient::GetInstance();
+	client->GetChartData(req);
+}
+
+void SmChartData::SendCyclicChartDataToUsers()
+{
+	CString msg;
+	msg.Format("차트데이터 업데이트 됨 %d\n", 0);
+	TRACE(msg);
+}
+
+void SmChartData::OnChartDataUpdated()
+{
+	SendCyclicChartDataToUsers();
+}
+
+void SmChartData::PushChartDataItem(SmChartDataItem data)
+{
+	CString msg;
+	msg.Format(_T("pushed data :: date = %s, o = %d, h = %d, l = %d, c = %d, v = %d\n"), data.date.c_str(), data.o, data.h, data.l, data.c, data.v);
+	TRACE(msg);
+
+	_DataItemList.push_back(data);
+	if (_DataItemList.size() > _DataQueueSize) {
+		_DataItemList.pop_front();
+	}
+}
+
 void SmChartData::RemoveUser(std::string user_id)
 {
 	auto it = _UserList.find(user_id);
@@ -54,5 +91,5 @@ void SmChartData::OnTimer()
 {
 	if (_UserList.size() == 0)
 		return;
-	GetChartDataFromDB();
+	GetChartDataFromServer();
 }
