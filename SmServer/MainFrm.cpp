@@ -64,6 +64,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_COMMAND(ID_SERVER_USERTEST, &CMainFrame::OnServerUsertest)
 	ON_COMMAND(ID_SERVER_GETUTCTIME, &CMainFrame::OnServerGetutctime)
 	ON_COMMAND(ID_SERVER_GETMINDATA, &CMainFrame::OnServerGetmindata)
+	ON_COMMAND(ID_SERVER_GETSISE, &CMainFrame::OnServerGetsise)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -507,7 +508,7 @@ void CMainFrame::OnServerGetchartdata()
 void CMainFrame::OnServerCollectchartdata()
 {
 	SmTimeSeriesCollector* clt = SmTimeSeriesCollector::GetInstance();
-	clt->StartCollectData();
+	clt->StartCollectChartData();
 }
 
 
@@ -551,4 +552,11 @@ void CMainFrame::OnServerGetmindata()
 	CString msg;
 	msg.Format(_T("resp length = %d"), resp.length());
 	TRACE(msg);
+}
+
+
+void CMainFrame::OnServerGetsise()
+{
+	SmTimeSeriesCollector* tsMgr = SmTimeSeriesCollector::GetInstance();
+	tsMgr->StartCollectSiseData();
 }

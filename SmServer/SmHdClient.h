@@ -17,6 +17,7 @@ public:
 	void OnRcvdAbroadHoga(SmSymbol* sym);
 	void OnRcvdAbroadSise(SmSymbol* sym);
 	void DownloadMasterFiles(std::string param);
+	void GetSisiData(std::string symCode);
 private:
 	SmHdCtrl* _HdCtrl = nullptr;
 };

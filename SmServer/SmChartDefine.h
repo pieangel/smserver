@@ -11,6 +11,11 @@ enum class SmChartType
 	TICK
 };
 
+struct SmSiseDataRequest {
+	std::string user_id;
+	std::string symbol_code;
+};
+
 struct SmChartDataRequest
 {
 	std::string user_id;

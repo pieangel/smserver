@@ -66,6 +66,7 @@ const CString DEF_HW_ORD_CODE_MOD = "g12003.AO0402%";
 const CString DEF_HW_ORD_CODE_CNL = "g12003.AO0403%";
 const CString DEF_HW_MSTINFO = "o51211";
 const CString DefAbChartData = "o51200";
+const CString DefAbSiseData = "o51000";
 
 // FX마진	//@lhe 2012.06.22
 const CString DEF_FX_JANGO = "g11004.AQ0901%";		// 자산내역
@@ -128,9 +129,11 @@ public:
 	void UnregisterProduct(std::string symCode);
 	void GetChartData(SmChartDataRequest req);
 	void DownloadMasterFiles(std::string param);
+	void GetSisiData(std::string symCode);
 private:
 	void OnRcvdAbroadHoga(CString& strKey, LONG& nRealType);
 	void OnRcvdAbroadSise(CString& strKey, LONG& nRealType);
+	void OnRcvdAbroadSiseByReq(CString& sTrCode, LONG& nRqID);
 	void OnRcvdAbroadChartData(CString& sTrCode, LONG& nRqID);
 	/// <summary>
 	/// 차트 데이터 요청 맵 
@@ -138,4 +141,5 @@ private:
 	/// 값 : 요청 데이터 고유 키 값
 	/// </summary>
 	std::map<int, SmChartDataRequest> _ChartDataReqMap;
+	std::map<int, std::string> _SiseDataReqMap;
 };

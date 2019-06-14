@@ -44,7 +44,7 @@ void SmTimeSeriesCollector::CollectRecentMonthSymbolChartData()
 	client->GetChartData(req);
 	_Index++;
 	if (_Index == sym_vec.size()) {
-		_Timer.remove(_TimerId);
+		_Timer.remove(_ChartDataTimerId);
 	}
 }
 
@@ -60,10 +60,15 @@ void SmTimeSeriesCollector::OnCompleteChartData(SmChartDataRequest&& data_req)
 	tsSvcMgr->OnChartDataReceived(std::move(data_req));
 }
 
-void SmTimeSeriesCollector::StartCollectData()
+void SmTimeSeriesCollector::StartCollectChartData()
 {
 	int waitTime = 2;
-	_TimerId = _Timer.add(std::chrono::seconds(waitTime - 1), [this](CppTime::timer_id) { OnTimer(); }, std::chrono::seconds(3));
+	_ChartDataTimerId = _Timer.add(std::chrono::seconds(waitTime - 1), [this](CppTime::timer_id) { OnTimer(); }, std::chrono::seconds(3));
+}
+
+void SmTimeSeriesCollector::StartCollectSiseData()
+{
+	_ChartDataTimerId = _Timer.add(std::chrono::seconds(0), [this](CppTime::timer_id) { OnSiseTimer(); }, std::chrono::seconds(1));
 }
 
 void SmTimeSeriesCollector::GetChartData(SmChartDataRequest&& data_req)
@@ -103,5 +108,20 @@ void SmTimeSeriesCollector::OnEveryMinute()
 		CString msg;
 		msg.Format(_T("resp length = %d"), resp.length());
 		TRACE(msg);
+	}
+}
+
+void SmTimeSeriesCollector::OnSiseTimer()
+{
+	SmMarketManager* mrktMgr = SmMarketManager::GetInstance();
+	std::vector<SmSymbol*> sym_vec = mrktMgr->GetRecentMonthSymbolList();
+	if (_SiseIndex >= sym_vec.size())
+		return;
+	SmSymbol * sym = sym_vec[_SiseIndex];
+	SmHdClient * client = SmHdClient::GetInstance();
+	client->GetSisiData(sym->SymbolCode());
+	_SiseIndex++;
+	if (_SiseIndex == sym_vec.size()) {
+		_Timer.remove(_SiseTimerId);
 	}
 }

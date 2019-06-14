@@ -248,6 +248,32 @@ void SmTimeSeriesDBManager::SaveQuoteItem(SmQuote&& qitem)
 		.post_http(*_ServerInfo, &resp);
 }
 
+void SmTimeSeriesDBManager::SaveCurrentQuoteItem(SmQuote&& qitem)
+{
+	auto cur_date_time = VtStringUtil::GetCurrentDateTime();
+	std::time_t fixed_time = 1559941200;
+	std::string date_time = cur_date_time.first + cur_date_time.second;
+	std::time_t utc = VtStringUtil::GetUTCTimestamp(date_time);
+	long long nanos = VtStringUtil::GetCurrentNanoseconds();
+	std::string  meas = qitem.SymbolCode + "_current";
+	std::string resp;
+	int ret = influxdb_cpp::builder()
+		.meas(meas)
+		.tag("symbol_code", qitem.SymbolCode)
+		.field("sign_to_preday", qitem.SignToPreDay)
+		.field("to_preday", qitem.GapFromPreDay)
+		.field("ratio_to_preday", qitem.RatioToPreday)
+		.field("sign", qitem.Sign)
+		.field("origin_time", qitem.OriginTime)
+		.field("h", qitem.High)
+		.field("l", qitem.Low)
+		.field("o", qitem.Open)
+		.field("c", qitem.Close)
+		.field("v", qitem.Volume)
+		.timestamp(fixed_time * 1000000000)
+		.post_http(*_ServerInfo, &resp);
+}
+
 /*
 struct SmHoga
 {

@@ -56,3 +56,8 @@ void SmHdClient::DownloadMasterFiles(std::string param)
 {
 	_HdCtrl->DownloadMasterFiles(param);
 }
+
+void SmHdClient::GetSisiData(std::string symCode)
+{
+	_HdCtrl->GetSisiData(symCode);
+}

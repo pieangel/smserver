@@ -64,6 +64,7 @@ public:
 	afx_msg void OnServerUsertest();
 	afx_msg void OnServerGetutctime();
 	afx_msg void OnServerGetmindata();
+	afx_msg void OnServerGetsise();
 };
 
 

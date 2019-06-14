@@ -216,6 +216,17 @@ void SmHdCtrl::DownloadMasterFiles(std::string param)
 	m_CommAgent.CommReqMakeCod(param.c_str(), 0);
 }
 
+void SmHdCtrl::GetSisiData(std::string symCode)
+{
+	CString sFidCode = "o51000";
+	std::string sym_code = VtStringUtil::PadRight(symCode, ' ', 32);
+	CString sInput = sym_code.c_str();
+	CString sReqFidInput = "000001002003004005006007008009010011012013014015016017018019020021022023024025026027028029030031032033034035036037";
+	CString strNextKey = "";
+	int nRqID = m_CommAgent.CommFIDRqData(sFidCode, sInput, sReqFidInput, sInput.GetLength(), strNextKey);
+	_SiseDataReqMap[nRqID] = symCode;
+}
+
 void SmHdCtrl::OnRcvdAbroadHoga(CString& strKey, LONG& nRealType)
 {
 	SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
@@ -326,6 +337,7 @@ void SmHdCtrl::OnRcvdAbroadSise(CString& strKey, LONG& nRealType)
 
 	SmTimeSeriesDBManager* dbMgr = SmTimeSeriesDBManager::GetInstance();
 	dbMgr->SaveQuoteItem(std::move(quoteItem));
+	dbMgr->SaveCurrentQuoteItem(std::move(quoteItem));
 
 
 	SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
@@ -344,6 +356,61 @@ void SmHdCtrl::OnRcvdAbroadSise(CString& strKey, LONG& nRealType)
 	CString msg;
 	msg.Format(_T("time = %s, h=%s, l=%s, o=%s, c=%s, v=%s, ratio = %s\n"), strTime, strHigh, strLow, strOpen, strClose, strVolume, strRatioToPreDay);
 	//TRACE(msg);
+}
+
+void SmHdCtrl::OnRcvdAbroadSiseByReq(CString& sTrCode, LONG& nRqID)
+{
+	int nRepeatCnt = m_CommAgent.CommGetRepeatCnt(sTrCode, -1, "OutRec1");
+	for (int i = 0; i < nRepeatCnt; i++)
+	{
+		CString strData1 = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "종목코드");
+		CString strData2 = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "한글종목명");
+		CString strData3 = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "현재가");
+		CString msg;
+		msg.Format(_T("code = %s, name = %s, close = %s\n"), strData1, strData2, strData3);
+		TRACE(msg);
+
+		CString strSymCode = m_CommAgent.CommGetData(sTrCode, nRqID, "OutRec1", 0, "종목코드");
+		CString strTime = m_CommAgent.CommGetData(sTrCode, nRqID, "OutRec1", 0, "국내시간");
+		CString strPrev = m_CommAgent.CommGetData(sTrCode, nRqID, "OutRec1", 0, "직전대비구분");
+		CString strSignToPreDay = m_CommAgent.CommGetData(sTrCode, nRqID, "OutRec1", 0, "전일대비구분");
+		CString strToPreDay = m_CommAgent.CommGetData(sTrCode, nRqID, "OutRec1", 0, "전일대비");
+		CString strRatioToPreDay = m_CommAgent.CommGetData(sTrCode, nRqID, "OutRec1", 0, "전일대비등락율");
+		CString strClose = m_CommAgent.CommGetData(sTrCode, nRqID, "OutRec1", 0, "현재가");
+		CString strOpen = m_CommAgent.CommGetData(sTrCode, nRqID, "OutRec1", 0, "시가");
+		CString strHigh = m_CommAgent.CommGetData(sTrCode, nRqID, "OutRec1", 0, "고가");
+		CString strLow = m_CommAgent.CommGetData(sTrCode, nRqID, "OutRec1", 0, "저가");
+
+		SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
+		SmSymbol* sym = symMgr->FindSymbol((LPCTSTR)strSymCode.Trim());
+		if (!sym)
+			continue;
+		sym->Quote.Close = _ttoi(strClose);
+		sym->Quote.Open = _ttoi(strOpen);
+		sym->Quote.High = _ttoi(strHigh);
+		sym->Quote.Low = _ttoi(strLow);
+		sym->Quote.OriginTime = strTime;
+		sym->Quote.GapFromPreDay = _ttoi(strToPreDay);
+		sym->Quote.RatioToPreday = strRatioToPreDay.Trim();
+		sym->Quote.SignToPreDay = strSignToPreDay;
+
+		SmQuote quoteItem;
+		quoteItem.SymbolCode = strSymCode.Trim();
+		quoteItem.OriginTime = strTime;
+		quoteItem.SignToPreDay = strSignToPreDay.Trim();
+		quoteItem.GapFromPreDay = _ttoi(strToPreDay);
+		quoteItem.RatioToPreday = strRatioToPreDay.Trim();
+		quoteItem.Close = _ttoi(strClose);
+		quoteItem.Open = _ttoi(strOpen);
+		quoteItem.High = _ttoi(strHigh);
+		quoteItem.Low = _ttoi(strLow);
+		quoteItem.Volume = 0;
+		quoteItem.Sign = "";
+
+
+		SmTimeSeriesDBManager* dbMgr = SmTimeSeriesDBManager::GetInstance();
+		dbMgr->SaveCurrentQuoteItem(std::move(quoteItem));
+	}
 }
 
 void SmHdCtrl::OnRcvdAbroadChartData(CString& sTrCode, LONG& nRqID)
@@ -413,6 +480,9 @@ void SmHdCtrl::OnDataRecv(CString sTrCode, LONG nRqID)
 {
 	if (sTrCode == DefAbChartData) {
 		OnRcvdAbroadChartData(sTrCode, nRqID);
+	}
+	else if (sTrCode == DefAbSiseData) {
+		OnRcvdAbroadSiseByReq(sTrCode, nRqID);
 	}
 }
 

@@ -71,6 +71,9 @@ void SmMessageManager::ParseMessage(std::string message, SmWebsocketSession* soc
 		case SmProtocol::req_chart_data:
 			OnReqChartData(json_object);
 			break;
+		case SmProtocol::req_sise_data:
+			OnReqSiseData(json_object);
+			break;
 		default:
 			break;
 		}
@@ -220,6 +223,23 @@ void SmMessageManager::OnReqChartData(nlohmann::json& obj)
 		SmTimeSeriesServiceManager* timeSvcMgr = SmTimeSeriesServiceManager::GetInstance();
 		timeSvcMgr->OnChartDataRequest(std::move(req));
 		SendResult(id, 0, "request chart data success!");
+	}
+	catch (std::exception e) {
+		std::string error = e.what();
+	}
+}
+
+void SmMessageManager::OnReqSiseData(nlohmann::json& obj)
+{
+	try {
+		std::string id = obj["user_id"];
+		std::string symCode = obj["symbol_code"];
+		SmSiseDataRequest req;
+		req.symbol_code = symCode;
+		req.user_id = id;
+		SmTimeSeriesServiceManager* timeSvcMgr = SmTimeSeriesServiceManager::GetInstance();
+		timeSvcMgr->OnSiseDataRequest(std::move(req));
+		SendResult(id, 0, "request sise data success!");
 	}
 	catch (std::exception e) {
 		std::string error = e.what();

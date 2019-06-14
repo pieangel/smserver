@@ -16,6 +16,7 @@ public:
 	void OnRegisterCycleDataRequest(SmChartDataRequest&& data_req);
 	void OnChartDataRequest(SmChartDataRequest&& data_req);
 	void OnChartDataReceived(SmChartDataRequest&& data_req);
+	void OnSiseDataRequest(SmSiseDataRequest&& sise_req);
 	int SendDataSplitSize() const { return _SendDataSplitSize; }
 	void SendDataSplitSize(int val) { _SendDataSplitSize = val; }
 private:

@@ -35,6 +35,7 @@ public:
 	std::pair<std::string, std::string> GetUserInfo(std::string id);
 	void GetChartData();
 	void SaveQuoteItem(SmQuote&& qitem);
+	void SaveCurrentQuoteItem(SmQuote&& qitem);
 	void SaveHogaItem(SmHoga&& qitem);
 private:
 	std::string _Id;

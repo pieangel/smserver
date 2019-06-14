@@ -12,6 +12,8 @@
 #include "SmUtil.h"
 #include <chrono>
 #include "SmChartDataManager.h"
+#include "SmSymbolManager.h"
+#include "SmSymbol.h"
 using namespace std::chrono;
 using namespace nlohmann;
 
@@ -131,6 +133,24 @@ void SmTimeSeriesServiceManager::OnChartDataRequest(SmChartDataRequest&& data_re
 void SmTimeSeriesServiceManager::OnChartDataReceived(SmChartDataRequest&& data_req)
 {
 	OnChartDataRequest(std::move(data_req));
+}
+
+void SmTimeSeriesServiceManager::OnSiseDataRequest(SmSiseDataRequest&& sise_req)
+{
+	SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
+	SmSymbol* sym = symMgr->FindSymbol(sise_req.symbol_code);
+	if (!sym)
+		return;
+	json send_object;
+	send_object["result"] = 0;
+	send_object["symbol_code"] = sise_req.symbol_code;
+	send_object["to_preday"] = sym->Quote.GapFromPreDay;
+	send_object["sign_to_preday"] = sym->Quote.SignToPreDay;
+	send_object["ratio_to_preday"] = sym->Quote.RatioToPreday;
+	send_object["c"] = sym->Quote.Close;
+	std::string content = send_object.dump(4);
+	SmUserManager* userMgr = SmUserManager::GetInstance();
+	userMgr->SendResultMessage(sise_req.user_id, content);
 }
 
 void SmTimeSeriesServiceManager::SendChartData(std::vector<SmSimpleChartDataItem>& dataVec, SmChartDataRequest req, int totalCount, int startIndex, int endIndex)
