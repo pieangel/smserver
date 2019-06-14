@@ -5,6 +5,7 @@
 #include "Json/json.hpp"
 #include "Log/loguru.hpp"
 #include "SmHdClient.h"
+#include "SmUtil.h"
 
 using namespace nlohmann;
 void SmChartData::GetChartDataFromDB()
@@ -62,6 +63,24 @@ void SmChartData::SendCyclicChartDataToUsers()
 	TRACE(msg);
 }
 
+int SmChartData::GetCycleByTimeDif()
+{
+	if (_DataItemList.size() < 2)
+		return 0;
+	auto it = _DataItemList.begin();
+	SmChartDataItem newItem = *it++;
+	SmChartDataItem oldItem = *it;
+
+	int i = 0;
+
+	std::string new_datetime = newItem.date + newItem.time;
+	std::string old_datetime = oldItem.date + oldItem.time;
+
+	double seconds = SmUtil::GetDifTimeBySeconds(new_datetime, old_datetime);
+
+	return (int)seconds;
+}
+
 void SmChartData::OnChartDataUpdated()
 {
 	SendCyclicChartDataToUsers();
@@ -77,6 +96,8 @@ void SmChartData::PushChartDataItem(SmChartDataItem data)
 	if (_DataItemList.size() > _DataQueueSize) {
 		_DataItemList.pop_front();
 	}
+
+	GetCycleByTimeDif();
 }
 
 void SmChartData::RemoveUser(std::string user_id)

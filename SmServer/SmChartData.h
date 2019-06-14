@@ -19,6 +19,7 @@ private:
 	// 등록된 사용자들에게 차트 정기 데이터를 보내준다.
 	void SendCyclicChartDataToUsers();
 public:
+	int GetCycleByTimeDif();
 	// 차트 데이터가 새로 도착했음을 알린다.
 	void OnChartDataUpdated();
 	void PushChartDataItem(SmChartDataItem data);
