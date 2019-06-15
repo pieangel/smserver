@@ -28,9 +28,13 @@ public:
 	void SendResultMessage(std::string user_id, std::string message);
 	void Logout(std::string id);
 	bool IsExistUser(std::string id);
+	void OnLogin(std::string id, std::string pwd, SmWebsocketSession* socket);
+	void OnLogout(std::string id);
 private:
 	void AddUserToDatabase(std::string id, std::string pwd);
 	void RemoveUser(std::string id);
 	void ClearAllService(SmUser* user);
+	void SendLoginResult(std::string user_id);
+	void SendLogoutResult(std::string user_id);
 };
 

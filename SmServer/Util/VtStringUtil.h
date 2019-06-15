@@ -22,6 +22,8 @@ public:
 	static std::string PadRight(std::string input, char padding, int len);
 	static std::time_t GetUTCTimestamp(std::string datetime_string);
 	static std::string GetLocalTime(std::string utc_time_format);
+	static std::string GetLocalTime(time_t utc_time_t);
+	static std::string GetLocalTimeByDatetimeString(std::string date_time);
 	static std::time_t getEpochTime(const std::wstring& dateTime);
 	static std::time_t GetEpochTime(const std::string& dateTime);
 	static long long GetCurrentNanoseconds();

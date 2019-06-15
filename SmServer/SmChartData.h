@@ -15,11 +15,12 @@ private:
 	std::set<std::string> _UserList;
 	void GetChartDataFromDB();
 	void GetChartDataFromServer();
-	size_t _DataQueueSize = 4;
+	size_t _DataQueueSize = 3;
 	// 등록된 사용자들에게 차트 정기 데이터를 보내준다.
 	void SendCyclicChartDataToUsers();
 public:
-	int GetCycleByTimeDif();
+	// 대기시간, 사이클
+	std::pair<int, int> GetCycleByTimeDif();
 	// 차트 데이터가 새로 도착했음을 알린다.
 	void OnChartDataUpdated();
 	void PushChartDataItem(SmChartDataItem data);

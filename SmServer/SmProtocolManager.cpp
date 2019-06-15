@@ -56,8 +56,8 @@ void SmProtocolManager::ParseMessage(std::string message, SmWebsocketSession* so
 		case  SmProtocol::req_register_symbol:
 			OnRegisterSymbol(json_object);
 			break;
-		case SmProtocol::req_register_symbol_cycle:
-			OnRegisterSymbolCycle(json_object);
+		case SmProtocol::req_register_chart_cycle_data:
+			OnRegisterChartCycleData(json_object);
 			break;
 		case SmProtocol::req_order_new:
 			OnOrderNew(json_object);
@@ -91,10 +91,7 @@ void SmProtocolManager::OnLogin(nlohmann::json& obj, SmWebsocketSession* socket)
 		std::string id = user_info["id"];
 		std::string pwd = user_info["pwd"];
 		SmUserManager* userMgr = SmUserManager::GetInstance();
-		//std::string result = userMgr->CheckUserInfo(id, pwd, socket);
-		//SendResult(id, 0, result);
-		userMgr->AddUser(id, pwd, socket);
-		SendResult(id, 0, "Login Success!");
+		userMgr->OnLogin(id, pwd, socket);
 	}
 	catch (std::exception e) {
 		std::string error = e.what();
@@ -107,8 +104,7 @@ void SmProtocolManager::OnLogout(nlohmann::json& obj)
 		auto user_info = obj["user_info"];
 		std::string id = user_info["id"];
 		SmUserManager* userMgr = SmUserManager::GetInstance();
-		userMgr->Logout(id);
-		SendResult(id, 0, "logout success!");
+		userMgr->OnLogout(id);
 	}
 	catch (std::exception e) {
 		std::string error = e.what();
@@ -126,6 +122,17 @@ void SmProtocolManager::SendResult(std::string user_id, int result_code, std::st
 }
 
 
+void SmProtocolManager::SendResult(std::string user_id, SmProtocol protocol, std::string result_code, std::string result_msg)
+{
+	json res = {
+		{"res_id", (int)protocol},
+		{"result", result_code},
+		{"message", result_msg}
+	};
+	SmUserManager* userMgr = SmUserManager::GetInstance();
+	userMgr->SendResultMessage(user_id, res.dump(4));
+}
+
 void SmProtocolManager::OnRegisterSymbol(nlohmann::json& obj)
 {
 	try {
@@ -134,7 +141,7 @@ void SmProtocolManager::OnRegisterSymbol(nlohmann::json& obj)
 		SmRealtimeSymbolServiceManager* rtlSymMgr = SmRealtimeSymbolServiceManager::GetInstance();
 		rtlSymMgr->RegisterSymbol(id, symCode);
 
-		SendResult(id, 0, "register symbol success!");
+		SendResult(id, SmProtocol::res_register_symbol, 0, "register symbol success!");
 	}
 	catch (std::exception e) {
 		std::string error = e.what();
@@ -149,14 +156,14 @@ void SmProtocolManager::OnUnregisterSymbol(nlohmann::json& obj)
 		SmRealtimeSymbolServiceManager* rtlSymMgr = SmRealtimeSymbolServiceManager::GetInstance();
 		rtlSymMgr->UnregisterSymbol(id, symCode);
 
-		SendResult(id, 0, "register symbol success!");
+		SendResult(id, SmProtocol::res_unregister_symbol, 0, "register symbol success!");
 	}
 	catch (std::exception e) {
 		std::string error = e.what();
 	}
 }
 
-void SmProtocolManager::OnRegisterSymbolCycle(nlohmann::json& obj)
+void SmProtocolManager::OnRegisterChartCycleData(nlohmann::json& obj)
 {
 	try {
 		std::string id = obj["user_id"];
@@ -173,21 +180,21 @@ void SmProtocolManager::OnRegisterSymbolCycle(nlohmann::json& obj)
 		req.next = 0;
 		SmTimeSeriesServiceManager* timeSvcMgr = SmTimeSeriesServiceManager::GetInstance();
 		timeSvcMgr->OnRegisterCycleDataRequest(std::move(req));
-		SendResult(id, 0, "register symbol cycle success!");
+		SendResult(id, SmProtocol::res_register_chart_cycle_data,  0, "Success!");
 	}
 	catch (std::exception e) {
 		std::string error = e.what();
 	}
 }
 
-void SmProtocolManager::OnUnregisterSymbolCycle(nlohmann::json& obj)
+void SmProtocolManager::OnUnregisterChartCycleData(nlohmann::json& obj)
 {
 	try {
 		std::string id = obj["id"];
 		std::string symCode = obj["symbol_code"];
 		std::string chart_type = obj["chart_type"];
 		std::string cycle = obj["cycle"];
-		SendResult(id, 0, "register symbol cycle success!");
+		SendResult(id, SmProtocol::res_unregister_chart_cycle_data, 0, "success!");
 	}
 	catch (std::exception e) {
 		std::string error = e.what();

@@ -164,6 +164,23 @@ std::string VtStringUtil::GetLocalTime(std::string utc_time_format)
 	return strLocalTimeofUTCTime;
 }
 
+std::string VtStringUtil::GetLocalTime(time_t utc_time_t)
+{
+	struct tm tm;
+	/*Convert UTC TIME To Local TIme*/
+	localtime_s(&tm, &utc_time_t);
+	char CharLocalTimeofUTCTime[30];
+	strftime(CharLocalTimeofUTCTime, 30, "%Y-%m-%dT%H:%M:%SZ", &tm);
+	std::string strLocalTimeofUTCTime(CharLocalTimeofUTCTime);
+	return strLocalTimeofUTCTime;
+}
+
+std::string VtStringUtil::GetLocalTimeByDatetimeString(std::string date_time)
+{
+	std::time_t utc_time_t = GetUTCTimestamp(date_time);
+	return GetLocalTime(utc_time_t);
+}
+
 std::time_t VtStringUtil::getEpochTime(const std::wstring& dateTime)
 {
 	/* Standard UTC Format*/

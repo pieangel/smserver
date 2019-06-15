@@ -174,3 +174,26 @@ double SmUtil::GetDifTimeBySeconds(std::string newTime, std::string oldTime)
 
 	return seconds;
 }
+
+double SmUtil::GetDifTimeForNow(std::string srcTime)
+{
+	time_t now;
+	struct tm new_time;
+	double seconds;
+
+	time(&now);  /* get current time; same as: now = time(NULL)  */
+
+	std::vector<int> newVec = GetTime(srcTime);
+
+	new_time.tm_year = newVec[0] - 1900;
+	new_time.tm_mon = newVec[1] - 1;    //months since January - [0,11]
+	new_time.tm_mday = newVec[2];          //day of the month - [1,31] 
+	new_time.tm_hour = newVec[3];         //hours since midnight - [0,23]
+	new_time.tm_min = newVec[4];          //minutes after the hour - [0,59]
+	new_time.tm_sec = newVec[5];          //seconds after the minute - [0,59]
+
+
+	seconds = difftime(now, mktime(&new_time));
+
+	return seconds;
+}

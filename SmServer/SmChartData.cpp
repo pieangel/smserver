@@ -6,6 +6,8 @@
 #include "Log/loguru.hpp"
 #include "SmHdClient.h"
 #include "SmUtil.h"
+#include "Util/VtStringUtil.h"
+#include "SmServiceDefine.h"
 
 using namespace nlohmann;
 void SmChartData::GetChartDataFromDB()
@@ -61,24 +63,50 @@ void SmChartData::SendCyclicChartDataToUsers()
 	CString msg;
 	msg.Format("차트데이터 업데이트 됨 %d\n", 0);
 	TRACE(msg);
+
+	json send_object;
+	send_object["res_id"] = SmProtocol::res_chart_cycle_data;
+	send_object["symbol_code"] = _SymbolCode;
+	send_object["chart_type"] = (int)_ChartType;
+	send_object["cycle"] = _Cycle;
+	send_object["total_count"] = (int)_DataItemList.size();
+	int k = 0;
+	for (auto i = _DataItemList.begin(); i != _DataItemList.end(); ++i) {
+		SmChartDataItem item = *i;
+		std::string date = item.date + item.time;
+		std::string date_time = VtStringUtil::GetLocalTimeByDatetimeString(date);
+		send_object["data"][k++] = {
+			{ "date_time",  date_time },
+			{ "high", item.h },
+			{ "low",  item.l },
+			{ "open",  item.o },
+			{ "close",  item.c },
+			{ "volume",  item.v }
+		};
+	}
+
+	std::string content = send_object.dump(4);
+	SmUserManager* userMgr = SmUserManager::GetInstance();
+	// 등록된 유저들에게 차트 데이터를 보낸다.
+	for (auto it = _UserList.begin(); it != _UserList.end(); ++it) {
+		userMgr->SendResultMessage(*it, content);
+	}
 }
 
-int SmChartData::GetCycleByTimeDif()
+std::pair<int, int> SmChartData::GetCycleByTimeDif()
 {
 	if (_DataItemList.size() < 2)
-		return 0;
+		return std::make_pair(0,0);
 	auto it = _DataItemList.begin();
 	SmChartDataItem newItem = *it++;
 	SmChartDataItem oldItem = *it;
-
-	int i = 0;
 
 	std::string new_datetime = newItem.date + newItem.time;
 	std::string old_datetime = oldItem.date + oldItem.time;
 
 	double seconds = SmUtil::GetDifTimeBySeconds(new_datetime, old_datetime);
-
-	return (int)seconds;
+	double seconds2 = SmUtil::GetDifTimeForNow(new_datetime);
+	return std::make_pair((int)seconds, (int)seconds2);
 }
 
 void SmChartData::OnChartDataUpdated()

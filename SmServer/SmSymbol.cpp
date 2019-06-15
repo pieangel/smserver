@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "SmSymbol.h"
 #include "Json/json.hpp"
+#include "SmServiceDefine.h"
 using namespace nlohmann;
 SmSymbol::SmSymbol()
 {
@@ -14,6 +15,7 @@ SmSymbol::~SmSymbol()
 std::string SmSymbol::GetQuoteByJson()
 {
 	json quote;
+	quote["res_id"] = SmProtocol::res_realtime_sise;
 	quote["symbol_code"] = Quote.SymbolCode;
 	quote["time"] = Quote.OriginTime;
 	quote["high"] = Quote.High;
@@ -30,6 +32,7 @@ std::string SmSymbol::GetQuoteByJson()
 std::string SmSymbol::GetHogaByJson()
 {
 	json hoga;
+	hoga["res_id"] = SmProtocol::res_realtime_hoga;
 	hoga["symbol_code"] = Hoga.SymbolCode;
 	hoga["time"] = Hoga.Time;
 	hoga["domestic_date"] = Hoga.DomesticDate;

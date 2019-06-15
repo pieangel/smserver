@@ -2,6 +2,7 @@
 #include "Global/TemplateSingleton.h"
 #include <string>
 #include "Json/json.hpp"
+#include "SmServiceDefine.h"
 class SmWebsocketSession;
 class SmProtocolManager : public TemplateSingleton<SmProtocolManager>
 {
@@ -17,12 +18,13 @@ private:
 	void OnLogout(nlohmann::json& obj);
 	void OnRegisterSymbol(nlohmann::json& obj);
 	void OnUnregisterSymbol(nlohmann::json& obj);
-	void OnRegisterSymbolCycle(nlohmann::json& obj);
-	void OnUnregisterSymbolCycle(nlohmann::json& obj);
+	void OnRegisterChartCycleData(nlohmann::json& obj);
+	void OnUnregisterChartCycleData(nlohmann::json& obj);
 	void OnOrderNew(nlohmann::json& obj);
 	void OnOrderModify(nlohmann::json& obj);
 	void OnOrderCancel(nlohmann::json& obj);
 	void OnReqChartData(nlohmann::json& obj);
 	void OnReqSiseData(nlohmann::json& obj);
+	void SendResult(std::string user_id, SmProtocol protocol, std::string result_code, std::string result_msg);
 };
 

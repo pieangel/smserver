@@ -21,7 +21,10 @@ class SmSessionManager
 	// Keep a list of all the connected clients
 	std::unordered_set<SmWebsocketSession*> sessions_;
 
+
 public:
+	~SmSessionManager();
+
 	explicit
 		SmSessionManager(std::string doc_root);
 
@@ -38,4 +41,5 @@ public:
 private:
 	void AddUser(std::string id, std::string pwd, SmWebsocketSession* sess);
 	void DeleteUser(std::string id);
+	void CloseAllSocket();
 };

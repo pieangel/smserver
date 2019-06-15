@@ -18,9 +18,9 @@ enum class SmProtocol {
 	// 실시간 시세 해제 응답
 	res_unregister_symbol,
 	// 주기 차트 데이터 등록 요청
-	req_register_symbol_cycle,
+	req_register_chart_cycle_data,
 	// 주기 차트 데이터 등록 응답
-	res_register_symbol_cycle,
+	res_register_chart_cycle_data,
 	// 신규 주문 요청
 	req_order_new,
 	// 신규 주문 요청 응답
@@ -44,5 +44,15 @@ enum class SmProtocol {
 	// 시세 데이터 요청
 	req_sise_data,
 	// 시세 데이터 응답
-	res_sise_data
+	res_sise_data,
+	// 실시간 호가 전송
+	res_realtime_hoga,
+	// 실시간 시세 전송
+	res_realtime_sise,
+	// 주기 차트 데이터 전송
+	res_chart_cycle_data,
+	// 주기 차트 데이터 해제 요청
+	req_unregister_chart_cycle_data,
+	// 주기 차트 데이터 해제 응답
+	res_unregister_chart_cycle_data,
 };

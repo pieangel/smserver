@@ -14,6 +14,7 @@
 #include "SmChartDataManager.h"
 #include "SmSymbolManager.h"
 #include "SmSymbol.h"
+#include "SmServiceDefine.h"
 using namespace std::chrono;
 using namespace nlohmann;
 
@@ -144,7 +145,7 @@ void SmTimeSeriesServiceManager::OnSiseDataRequest(SmSiseDataRequest&& sise_req)
 	if (!sym)
 		return;
 	json send_object;
-	send_object["result"] = 0;
+	send_object["res_id"] = SmProtocol::res_sise_data;
 	send_object["symbol_code"] = sise_req.symbol_code;
 	send_object["to_preday"] = sym->Quote.GapFromPreDay;
 	send_object["sign_to_preday"] = sym->Quote.SignToPreDay;
@@ -160,7 +161,7 @@ void SmTimeSeriesServiceManager::SendChartData(std::vector<SmSimpleChartDataItem
 	if (dataVec.size() == 0)
 		return;
 	json send_object;
-	send_object["result"] = 0;
+	send_object["res_id"] = SmProtocol::res_chart_data;
 	send_object["symbol_code"] = req.symbolCode;
 	send_object["chart_type"] = (int)req.chartType;
 	send_object["cycle"] = req.cycle;
@@ -199,10 +200,18 @@ void SmTimeSeriesServiceManager::RegisterTimer(SmChartData* chartData)
 {
 	if (!chartData)
 		return;
-	auto curTime = SmUtil::GetLocalTime();
-	int waitTime = 60 - std::get<2>(curTime);
+	auto it = _CycleDataReqTimerMap.find(chartData->GetDataKey());
+	if (it != _CycleDataReqTimerMap.end())
+		return;
+	std::pair<int, int> timer_times = chartData->GetCycleByTimeDif();
+	// 주기가 0이면 오류 이므로 처리하지 않는다.
+	if (timer_times.second == 0)
+		return;
+	// 대기시간 
+	int waitTime = timer_times.first;
+	// 주기를 초로 환산해서 대입한다.
 	// Add to the timer.
-	auto id = _Timer.add(seconds(waitTime), std::bind(&SmChartData::OnTimer, chartData), seconds(chartData->Cycle() * 60));
+	auto id = _Timer.add(seconds(waitTime), std::bind(&SmChartData::OnTimer, chartData), seconds(timer_times.second));
 	// Add to the request map.
 	_CycleDataReqTimerMap[chartData->GetDataKey()] = id;
 }

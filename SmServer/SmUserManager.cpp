@@ -4,6 +4,7 @@
 #include "SmRealtimeSymbolServiceManager.h"
 #include "SmTimeSeriesDBManager.h"
 #include "Json/json.hpp"
+#include "SmServiceDefine.h"
 using namespace nlohmann;
 SmUserManager::SmUserManager()
 {
@@ -117,6 +118,26 @@ void SmUserManager::ClearAllService(SmUser* user)
 	rtlSymSvcMgr->UnregisterAllSymbol(user->Id());
 }
 
+void SmUserManager::SendLoginResult(std::string user_id)
+{
+	json send_object;
+	send_object["res_id"] = SmProtocol::res_login;
+	send_object["result_msg"] = "Login Success!";
+	send_object["result_code"] = 0;
+	std::string content = send_object.dump(4);
+	SendResultMessage(user_id, content);
+}
+
+void SmUserManager::SendLogoutResult(std::string user_id)
+{
+	json send_object;
+	send_object["res_id"] = SmProtocol::res_logout;
+	send_object["result_msg"] = "Logout Success!";
+	send_object["result_code"] = 0;
+	std::string content = send_object.dump(4);
+	SendResultMessage(user_id, content);
+}
+
 void SmUserManager::SendBroadcastMessage(std::string message)
 {
 	// Put the message in a shared pointer so we can re-use it for each client
@@ -224,4 +245,16 @@ bool SmUserManager::IsExistUser(std::string id)
 		return true;
 	else
 		return false;
+}
+
+void SmUserManager::OnLogin(std::string id, std::string pwd, SmWebsocketSession* socket)
+{
+	AddUser(id, pwd, socket);
+	SendLoginResult(id);
+}
+
+void SmUserManager::OnLogout(std::string id)
+{
+	RemoveUser(id);
+	SendLogoutResult(id);
 }
