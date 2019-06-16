@@ -25,6 +25,6 @@ private:
 	void OnOrderCancel(nlohmann::json& obj);
 	void OnReqChartData(nlohmann::json& obj);
 	void OnReqSiseData(nlohmann::json& obj);
-	void SendResult(std::string user_id, SmProtocol protocol, std::string result_code, std::string result_msg);
+	void SendResult(std::string user_id, SmProtocol protocol, int result_code, std::string result_msg);
 };
 

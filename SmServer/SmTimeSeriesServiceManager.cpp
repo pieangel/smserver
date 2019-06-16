@@ -122,9 +122,14 @@ void SmTimeSeriesServiceManager::OnChartDataRequest(SmChartDataRequest&& data_re
 			cur_count++;
 			if (cur_count % split_size == 0) {
 				SendChartData(dataVec, data_req, a.size(), start_index, end_index);
+				if (end_index != a.size() - 1)
+					start_index = end_index;
+				dataVec.clear();
 			}
 		}
-		SendChartData(dataVec, data_req, a.size(), start_index, end_index - 1);
+		if (a.size() % split_size != 0) {
+			SendChartData(dataVec, data_req, a.size(), start_index, end_index);
+		}
 	}
 	catch (const std::exception& e)
 	{

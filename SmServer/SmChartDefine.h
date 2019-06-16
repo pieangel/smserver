@@ -8,7 +8,8 @@ enum class SmChartType
 	MONTH,
 	HOUR,
 	MIN,
-	TICK
+	TICK,
+	YEAR
 };
 
 struct SmSiseDataRequest {

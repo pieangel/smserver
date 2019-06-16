@@ -114,20 +114,20 @@ void SmProtocolManager::OnLogout(nlohmann::json& obj)
 void SmProtocolManager::SendResult(std::string user_id, int result_code, std::string result_msg)
 {
 	json res = {
-		{"result", result_code},
-		{"message", result_msg}
+		{"result_code", result_code},
+		{"result_msg", result_msg}
 	};
 	SmUserManager* userMgr = SmUserManager::GetInstance();
 	userMgr->SendResultMessage(user_id, res.dump(4));
 }
 
 
-void SmProtocolManager::SendResult(std::string user_id, SmProtocol protocol, std::string result_code, std::string result_msg)
+void SmProtocolManager::SendResult(std::string user_id, SmProtocol protocol, int result_code, std::string result_msg)
 {
 	json res = {
 		{"res_id", (int)protocol},
-		{"result", result_code},
-		{"message", result_msg}
+		{"result_code", result_code},
+		{"result_msg", result_msg}
 	};
 	SmUserManager* userMgr = SmUserManager::GetInstance();
 	userMgr->SendResultMessage(user_id, res.dump(4));
@@ -227,19 +227,19 @@ void SmProtocolManager::OnReqChartData(nlohmann::json& obj)
 	try {
 		std::string id = obj["user_id"];
 		std::string symCode = obj["symbol_code"];
-		std::string chart_type = obj["chart_type"];
-		std::string cycle = obj["cycle"];
-		std::string count = obj["count"];
+		int chart_type = obj["chart_type"];
+		int cycle = obj["cycle"];
+		int count = obj["count"];
 		SmChartDataRequest req;
 		req.user_id = id;
 		req.symbolCode = symCode;
-		req.chartType = (SmChartType)std::stoi(chart_type);
-		req.cycle = std::stoi(cycle);
-		req.count = std::stoi(count);
+		req.chartType = (SmChartType)chart_type;
+		req.cycle = cycle;
+		req.count = count;
 		req.next = 0;
 		SmTimeSeriesServiceManager* timeSvcMgr = SmTimeSeriesServiceManager::GetInstance();
 		timeSvcMgr->OnChartDataRequest(std::move(req));
-		SendResult(id, 0, "request chart data success!");
+		//SendResult(id, SmProtocol::res_chart_data, 0, "request chart data success!");
 	}
 	catch (std::exception e) {
 		std::string error = e.what();
@@ -256,7 +256,7 @@ void SmProtocolManager::OnReqSiseData(nlohmann::json& obj)
 		req.user_id = id;
 		SmTimeSeriesServiceManager* timeSvcMgr = SmTimeSeriesServiceManager::GetInstance();
 		timeSvcMgr->OnSiseDataRequest(std::move(req));
-		SendResult(id, 0, "request sise data success!");
+		//SendResult(id, SmProtocol::res_sise_data, 0, "request sise data success!");
 	}
 	catch (std::exception e) {
 		std::string error = e.what();

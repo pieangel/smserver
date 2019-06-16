@@ -55,4 +55,8 @@ enum class SmProtocol {
 	req_unregister_chart_cycle_data,
 	// 주기 차트 데이터 해제 응답
 	res_unregister_chart_cycle_data,
+	// 호가데이터 요청
+	req_hoga_data,
+	// 호가데이터 응답
+	res_hoga_data
 };
