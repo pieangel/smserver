@@ -73,14 +73,7 @@ void SmChartData::SendCyclicChartDataToUsers()
 	int k = 0;
 	for (auto i = _DataItemList.begin(); i != _DataItemList.end(); ++i) {
 		SmChartDataItem item = *i;
-		std::string date = item.date + item.time;
-		// 문자열에서 T, Z 문자를 없애 버린다. 호환성을 위하여
-		std::string chars = "TZ";
-
-		for (char c : chars) {
-			date.erase(std::remove(date.begin(), date.end(), c), date.end());
-		}
-		std::string date_time = VtStringUtil::GetLocalTimeByDatetimeString(date);
+		std::string date_time = VtStringUtil::GetLocalTimeByDatetimeString(item.date);
 		send_object["data"][k++] = {
 			{ "date_time",  date_time },
 			{ "high", item.h },

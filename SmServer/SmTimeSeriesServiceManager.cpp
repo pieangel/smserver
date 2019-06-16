@@ -176,8 +176,9 @@ void SmTimeSeriesServiceManager::SendChartData(std::vector<SmSimpleChartDataItem
 	send_object["end_index"] = endIndex;
 	for (size_t i = 0; i < dataVec.size(); ++i) {
 		SmSimpleChartDataItem item = dataVec[i];
+		std::string date = item.date_time;
 		send_object["data"][i] = {
-			{ "date_time",  item.date_time },
+			{ "date_time",  date },
 			{ "high", item.h },
 			{ "low",  item.l },
 			{ "open",  item.o },
