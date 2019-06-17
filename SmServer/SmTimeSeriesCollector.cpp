@@ -14,12 +14,13 @@
 #include "SmSymbolManager.h"
 #include "SmMarketManager.h"
 #include "SmUtil.h"
+#include "SmSymbol.h"
 using namespace nlohmann;
 
 
 SmTimeSeriesCollector::SmTimeSeriesCollector()
 {
-	
+	GetRecentMonthSymbolList();
 }
 
 SmTimeSeriesCollector::~SmTimeSeriesCollector()
@@ -29,11 +30,9 @@ SmTimeSeriesCollector::~SmTimeSeriesCollector()
 
 void SmTimeSeriesCollector::CollectRecentMonthSymbolChartData()
 {
-	SmMarketManager* mrktMgr = SmMarketManager::GetInstance();
-	std::vector<SmSymbol*> sym_vec = mrktMgr->GetRecentMonthSymbolList();
-	if (_Index >= sym_vec.size())
+	if (_Index >= _RecentMonthSymbolVec.size())
 		return;
-	SmSymbol* sym = sym_vec[_Index];
+	SmSymbol* sym = _RecentMonthSymbolVec[_Index];
 	SmChartDataRequest req;
 	req.symbolCode = sym->SymbolCode();
 	req.chartType = SmChartType::MIN;
@@ -43,7 +42,7 @@ void SmTimeSeriesCollector::CollectRecentMonthSymbolChartData()
 	SmHdClient* client = SmHdClient::GetInstance();
 	client->GetChartData(req);
 	_Index++;
-	if (_Index == sym_vec.size()) {
+	if (_Index == _RecentMonthSymbolVec.size()) {
 		_Timer.remove(_ChartDataTimerId);
 	}
 }
@@ -68,13 +67,24 @@ void SmTimeSeriesCollector::StartCollectChartData()
 
 void SmTimeSeriesCollector::StartCollectSiseData()
 {
-	_ChartDataTimerId = _Timer.add(std::chrono::seconds(0), [this](CppTime::timer_id) { OnSiseTimer(); }, std::chrono::seconds(1));
+	_SiseTimerId = _Timer.add(std::chrono::seconds(0), [this](CppTime::timer_id) { OnSiseTimer(); }, std::chrono::seconds(1));
+}
+
+void SmTimeSeriesCollector::StartCollectHogaData()
+{
+	_HogaTimerId = _Timer.add(std::chrono::seconds(0), [this](CppTime::timer_id) { OnHogaTimer(); }, std::chrono::seconds(1));
 }
 
 void SmTimeSeriesCollector::GetChartData(SmChartDataRequest&& data_req)
 {
 	SmHdClient* client = SmHdClient::GetInstance();
 	client->GetChartData(data_req);
+}
+
+void SmTimeSeriesCollector::GetRecentMonthSymbolList()
+{
+	SmMarketManager* mrktMgr = SmMarketManager::GetInstance();
+	_RecentMonthSymbolVec = mrktMgr->GetRecentMonthSymbolList();
 }
 
 void SmTimeSeriesCollector::OnTimer()
@@ -86,11 +96,11 @@ void SmTimeSeriesCollector::OnEveryMinute()
 {
 	SmTimeSeriesDBManager* dbMgr = SmTimeSeriesDBManager::GetInstance();
 	SmMarketManager* mrktMgr = SmMarketManager::GetInstance();
-	std::vector<SmSymbol*> symVec = mrktMgr->GetRecentMonthSymbolList();
+	_RecentMonthSymbolVec = mrktMgr->GetRecentMonthSymbolList();
 	std::string curTime = SmUtil::GetUTCDateTimeStringForNowMin();
 	std::string prevTime = SmUtil::GetUTCDateTimeStringForPreMin(2);
 
-	for (auto it = symVec.begin(); it != symVec.end(); ++it) {
+	for (auto it = _RecentMonthSymbolVec.begin(); it != _RecentMonthSymbolVec.end(); ++it) {
 		SmSymbol* sym = *it;
 		std::string  meas = sym->SymbolCode() + "_quote";
 
@@ -113,15 +123,26 @@ void SmTimeSeriesCollector::OnEveryMinute()
 
 void SmTimeSeriesCollector::OnSiseTimer()
 {
-	SmMarketManager* mrktMgr = SmMarketManager::GetInstance();
-	std::vector<SmSymbol*> sym_vec = mrktMgr->GetRecentMonthSymbolList();
-	if (_SiseIndex >= sym_vec.size())
+	if (_SiseIndex >= _RecentMonthSymbolVec.size())
 		return;
-	SmSymbol * sym = sym_vec[_SiseIndex];
+	SmSymbol * sym = _RecentMonthSymbolVec[_SiseIndex];
 	SmHdClient * client = SmHdClient::GetInstance();
-	client->GetSisiData(sym->SymbolCode());
+	client->GetSiseData(sym->SymbolCode());
 	_SiseIndex++;
-	if (_SiseIndex == sym_vec.size()) {
+	if (_SiseIndex == _RecentMonthSymbolVec.size()) {
 		_Timer.remove(_SiseTimerId);
+	}
+}
+
+void SmTimeSeriesCollector::OnHogaTimer()
+{
+	if (_HogaIndex >= _RecentMonthSymbolVec.size())
+		return;
+	SmSymbol* sym = _RecentMonthSymbolVec[_HogaIndex];
+	SmHdClient* client = SmHdClient::GetInstance();
+	client->GetHogaData(sym->SymbolCode());
+	_HogaIndex++;
+	if (_HogaIndex == _RecentMonthSymbolVec.size()) {
+		_Timer.remove(_HogaTimerId);
 	}
 }

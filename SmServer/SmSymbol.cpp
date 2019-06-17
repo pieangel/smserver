@@ -16,13 +16,13 @@ std::string SmSymbol::GetQuoteByJson()
 {
 	json quote;
 	quote["res_id"] = SmProtocol::res_realtime_sise;
-	quote["symbol_code"] = Quote.SymbolCode;
+	quote["symbol_code"] = _SymbolCode;
 	quote["time"] = Quote.OriginTime;
 	quote["high"] = Quote.High;
 	quote["low"] = Quote.Low;
 	quote["open"] = Quote.Open;
 	quote["close"] = Quote.Close;
-	quote["ratio_to_preday_sign"] = Quote.SignToPreDay;
+	quote["sign_to_preday"] = Quote.SignToPreDay;
 	quote["gap_from_preday"] = Quote.GapFromPreDay;
 	quote["ratio_to_preday"] = Quote.RatioToPreday;
 
@@ -33,7 +33,7 @@ std::string SmSymbol::GetHogaByJson()
 {
 	json hoga;
 	hoga["res_id"] = SmProtocol::res_realtime_hoga;
-	hoga["symbol_code"] = Hoga.SymbolCode;
+	hoga["symbol_code"] = _SymbolCode;
 	hoga["time"] = Hoga.Time;
 	hoga["domestic_date"] = Hoga.DomesticDate;
 	hoga["domestic_time"] = Hoga.DomesticTime;

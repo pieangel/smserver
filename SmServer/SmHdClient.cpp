@@ -57,7 +57,12 @@ void SmHdClient::DownloadMasterFiles(std::string param)
 	_HdCtrl->DownloadMasterFiles(param);
 }
 
-void SmHdClient::GetSisiData(std::string symCode)
+void SmHdClient::GetSiseData(std::string symCode)
 {
-	_HdCtrl->GetSisiData(symCode);
+	_HdCtrl->GetSiseData(symCode);
+}
+
+void SmHdClient::GetHogaData(std::string symCode)
+{
+	_HdCtrl->GetHogaData(symCode);
 }

@@ -149,16 +149,20 @@ void SmTimeSeriesServiceManager::OnSiseDataRequest(SmSiseDataRequest&& sise_req)
 	SmSymbol* sym = symMgr->FindSymbol(sise_req.symbol_code);
 	if (!sym)
 		return;
-	json send_object;
-	send_object["res_id"] = SmProtocol::res_sise_data;
-	send_object["symbol_code"] = sise_req.symbol_code;
-	send_object["to_preday"] = sym->Quote.GapFromPreDay;
-	send_object["sign_to_preday"] = sym->Quote.SignToPreDay;
-	send_object["ratio_to_preday"] = sym->Quote.RatioToPreday;
-	send_object["c"] = sym->Quote.Close;
-	std::string content = send_object.dump(4);
+	std::string content = sym->GetQuoteByJson();
 	SmUserManager* userMgr = SmUserManager::GetInstance();
 	userMgr->SendResultMessage(sise_req.user_id, content);
+}
+
+void SmTimeSeriesServiceManager::OnHogaDataRequest(SmHogaDataRequest&& hoga_req)
+{
+	SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
+	SmSymbol* sym = symMgr->FindSymbol(hoga_req.symbol_code);
+	if (!sym)
+		return;
+	std::string content = sym->GetHogaByJson();
+	SmUserManager* userMgr = SmUserManager::GetInstance();
+	userMgr->SendResultMessage(hoga_req.user_id, content);
 }
 
 void SmTimeSeriesServiceManager::SendChartData(std::vector<SmSimpleChartDataItem>& dataVec, SmChartDataRequest req, int totalCount, int startIndex, int endIndex)

@@ -65,6 +65,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_COMMAND(ID_SERVER_GETUTCTIME, &CMainFrame::OnServerGetutctime)
 	ON_COMMAND(ID_SERVER_GETMINDATA, &CMainFrame::OnServerGetmindata)
 	ON_COMMAND(ID_SERVER_GETSISE, &CMainFrame::OnServerGetsise)
+	ON_COMMAND(ID_SERVER_GETHOGA, &CMainFrame::OnServerGethoga)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -559,4 +560,13 @@ void CMainFrame::OnServerGetsise()
 {
 	SmTimeSeriesCollector* tsMgr = SmTimeSeriesCollector::GetInstance();
 	tsMgr->StartCollectSiseData();
+}
+
+
+void CMainFrame::OnServerGethoga()
+{
+	SmTimeSeriesCollector* tsMgr = SmTimeSeriesCollector::GetInstance();
+	tsMgr->StartCollectHogaData();
+	SmHdClient* client = SmHdClient::GetInstance();
+	//client->GetHogaData("CLN19");
 }

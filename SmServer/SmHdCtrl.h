@@ -67,6 +67,7 @@ const CString DEF_HW_ORD_CODE_CNL = "g12003.AO0403%";
 const CString DEF_HW_MSTINFO = "o51211";
 const CString DefAbChartData = "o51200";
 const CString DefAbSiseData = "o51000";
+const CString DefAbHogaData = "o51010";
 
 // FX마진	//@lhe 2012.06.22
 const CString DEF_FX_JANGO = "g11004.AQ0901%";		// 자산내역
@@ -87,6 +88,7 @@ struct HdHogaItem {
 };
 
 struct HdHoga {
+	CString strSymbolCode;
 	HdHogaItem Items[5];
 };
 class SmHdCtrl : public CDialogEx
@@ -129,11 +131,13 @@ public:
 	void UnregisterProduct(std::string symCode);
 	void GetChartData(SmChartDataRequest req);
 	void DownloadMasterFiles(std::string param);
-	void GetSisiData(std::string symCode);
+	void GetSiseData(std::string symCode);
+	void GetHogaData(std::string symCode);
 private:
 	void OnRcvdAbroadHoga(CString& strKey, LONG& nRealType);
 	void OnRcvdAbroadSise(CString& strKey, LONG& nRealType);
 	void OnRcvdAbroadSiseByReq(CString& sTrCode, LONG& nRqID);
+	void OnRcvdAbroadHogaByReq(CString& sTrCode, LONG& nRqID);
 	void OnRcvdAbroadChartData(CString& sTrCode, LONG& nRqID);
 	/// <summary>
 	/// 차트 데이터 요청 맵 

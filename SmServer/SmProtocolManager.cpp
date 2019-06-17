@@ -74,6 +74,8 @@ void SmProtocolManager::ParseMessage(std::string message, SmWebsocketSession* so
 		case SmProtocol::req_sise_data:
 			OnReqSiseData(json_object);
 			break;
+		case SmProtocol::req_hoga_data:
+			OnReqHogaData(json_object);
 		default:
 			break;
 		}
@@ -256,7 +258,22 @@ void SmProtocolManager::OnReqSiseData(nlohmann::json& obj)
 		req.user_id = id;
 		SmTimeSeriesServiceManager* timeSvcMgr = SmTimeSeriesServiceManager::GetInstance();
 		timeSvcMgr->OnSiseDataRequest(std::move(req));
-		//SendResult(id, SmProtocol::res_sise_data, 0, "request sise data success!");
+	}
+	catch (std::exception e) {
+		std::string error = e.what();
+	}
+}
+
+void SmProtocolManager::OnReqHogaData(nlohmann::json& obj)
+{
+	try {
+		std::string id = obj["user_id"];
+		std::string symCode = obj["symbol_code"];
+		SmHogaDataRequest req;
+		req.symbol_code = symCode;
+		req.user_id = id;
+		SmTimeSeriesServiceManager* timeSvcMgr = SmTimeSeriesServiceManager::GetInstance();
+		timeSvcMgr->OnHogaDataRequest(std::move(req));
 	}
 	catch (std::exception e) {
 		std::string error = e.what();

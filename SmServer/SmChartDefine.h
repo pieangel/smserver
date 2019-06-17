@@ -17,6 +17,11 @@ struct SmSiseDataRequest {
 	std::string symbol_code;
 };
 
+struct SmHogaDataRequest {
+	std::string user_id;
+	std::string symbol_code;
+};
+
 struct SmChartDataRequest
 {
 	std::string user_id;

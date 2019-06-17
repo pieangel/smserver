@@ -219,12 +219,23 @@ void SmHdCtrl::DownloadMasterFiles(std::string param)
 	m_CommAgent.CommReqMakeCod(param.c_str(), 0);
 }
 
-void SmHdCtrl::GetSisiData(std::string symCode)
+void SmHdCtrl::GetSiseData(std::string symCode)
 {
 	CString sFidCode = "o51000";
 	std::string sym_code = VtStringUtil::PadRight(symCode, ' ', 32);
 	CString sInput = sym_code.c_str();
 	CString sReqFidInput = "000001002003004005006007008009010011012013014015016017018019020021022023024025026027028029030031032033034035036037";
+	CString strNextKey = "";
+	int nRqID = m_CommAgent.CommFIDRqData(sFidCode, sInput, sReqFidInput, sInput.GetLength(), strNextKey);
+	_SiseDataReqMap[nRqID] = symCode;
+}
+
+void SmHdCtrl::GetHogaData(std::string symCode)
+{
+	CString sFidCode = "o51010";
+	std::string sym_code = VtStringUtil::PadRight(symCode, ' ', 32);
+	CString sInput = sym_code.c_str();
+	CString sReqFidInput = "000001002003004005006007008009010011012013014015016017018019020021022023024025026027028029030031032033034035036037038039040041042043044045046";
 	CString strNextKey = "";
 	int nRqID = m_CommAgent.CommFIDRqData(sFidCode, sInput, sReqFidInput, sInput.GetLength(), strNextKey);
 	_SiseDataReqMap[nRqID] = symCode;
@@ -275,10 +286,10 @@ void SmHdCtrl::OnRcvdAbroadHoga(CString& strKey, LONG& nRealType)
 	hoga.Items[4].strBuyHogaCnt = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매수호가건수5");
 	hoga.Items[4].strSellHogaCnt = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매도호가건수5");
 
-	CString strTotBuyQty = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매수총호가수량");
-	CString strTotSellQty = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매도총호가수량");
-	CString strTotBuyCnt = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매수총호가건수");
-	CString strTotSellCnt = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매도총호가건수");
+	CString strTotBuyQty = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매수호가총수량");
+	CString strTotSellQty = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매도호가총수량");
+	CString strTotBuyCnt = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매수호가총건수");
+	CString strTotSellCnt = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "매도호가총건수");
 	CString strDomDate = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "국내일자");
 	CString strDomTime = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "국내시간");
 	SmHoga hoga_data;
@@ -416,6 +427,85 @@ void SmHdCtrl::OnRcvdAbroadSiseByReq(CString& sTrCode, LONG& nRqID)
 	}
 }
 
+void SmHdCtrl::OnRcvdAbroadHogaByReq(CString& sTrCode, LONG& nRqID)
+{
+	int nRepeatCnt = m_CommAgent.CommGetRepeatCnt(sTrCode, -1, "OutRec1");
+	for (int i = 0; i < nRepeatCnt; i++)
+	{
+		SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
+		CString strSymCode = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "종목코드");
+		SmSymbol* sym = symMgr->FindSymbol((LPCTSTR)strSymCode.Trim());
+		if (!sym)
+			continue;
+		CString strHogaTime = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "호가시간");
+
+		HdHoga hoga;
+		hoga.strSymbolCode = strSymCode;
+		hoga.Items[0].strBuyHoga = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "매수호가1");
+		hoga.Items[0].strSellHoga = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "매도호가1");
+		hoga.Items[0].strBuyHogaQty = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "매수호가수량1");
+		hoga.Items[0].strSellHogaQty = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "매도호가수량1");
+		hoga.Items[0].strBuyHogaCnt = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "매수호가건수1");
+		hoga.Items[0].strSellHogaCnt = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "매도호가건수1");
+
+		hoga.Items[1].strBuyHoga = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "매수호가2");
+		hoga.Items[1].strSellHoga = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "매도호가2");
+		hoga.Items[1].strBuyHogaQty = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "매수호가수량2");
+		hoga.Items[1].strSellHogaQty = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "매도호가수량2");
+		hoga.Items[1].strBuyHogaCnt = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "매수호가건수2");
+		hoga.Items[1].strSellHogaCnt = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "매도호가건수2");
+
+		hoga.Items[2].strBuyHoga = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "매수호가3");
+		hoga.Items[2].strSellHoga = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "매도호가3");
+		hoga.Items[2].strBuyHogaQty = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "매수호가수량3");
+		hoga.Items[2].strSellHogaQty = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "매도호가수량3");
+		hoga.Items[2].strBuyHogaCnt = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "매수호가건수3");
+		hoga.Items[2].strSellHogaCnt = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "매도호가건수3");
+
+		hoga.Items[3].strBuyHoga = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "매수호가4");
+		hoga.Items[3].strSellHoga = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "매도호가4");
+		hoga.Items[3].strBuyHogaQty = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "매수호가수량4");
+		hoga.Items[3].strSellHogaQty = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "매도호가수량4");
+		hoga.Items[3].strBuyHogaCnt = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "매수호가건수4");
+		hoga.Items[3].strSellHogaCnt = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "매도호가건수4");
+
+		hoga.Items[4].strBuyHoga = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "매수호가5");
+		hoga.Items[4].strSellHoga = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "매도호가5");
+		hoga.Items[4].strBuyHogaQty = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "매수호가수량5");
+		hoga.Items[4].strSellHogaQty = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "매도호가수량5");
+		hoga.Items[4].strBuyHogaCnt = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "매수호가건수5");
+		hoga.Items[4].strSellHogaCnt = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "매도호가건수5");
+
+		CString strTotBuyQty = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "총매수호가잔량");
+		CString strTotSellQty = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "총매도호가잔량");
+		CString strTotBuyCnt = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "총매수호가건수");
+		CString strTotSellCnt = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "총매도호가건수");
+		
+		SmHoga hoga_data;
+		for (int i = 0; i < 5; i++) {
+			hoga_data.Ary[i].BuyPrice = sym->Hoga.Ary[i].BuyPrice = _ttoi(hoga.Items[i].strBuyHoga);
+			hoga_data.Ary[i].BuyCnt = sym->Hoga.Ary[i].BuyCnt = _ttoi(hoga.Items[i].strBuyHogaCnt);
+			hoga_data.Ary[i].BuyQty = sym->Hoga.Ary[i].BuyQty = _ttoi(hoga.Items[i].strBuyHogaQty);
+			hoga_data.Ary[i].SellPrice = sym->Hoga.Ary[i].SellPrice = _ttoi(hoga.Items[i].strSellHoga);
+			hoga_data.Ary[i].SellCnt = sym->Hoga.Ary[i].SellCnt = _ttoi(hoga.Items[i].strSellHogaCnt);
+			hoga_data.Ary[i].SellQty = sym->Hoga.Ary[i].SellQty = _ttoi(hoga.Items[i].strSellHogaQty);
+		}
+
+		hoga_data.Time = sym->Hoga.Time = strHogaTime;
+		hoga_data.TotBuyCnt = sym->Hoga.TotBuyCnt = _ttoi(strTotBuyCnt);
+		hoga_data.TotBuyQty = sym->Hoga.TotBuyQty = _ttoi(strTotBuyQty);
+		hoga_data.TotSellCnt = sym->Hoga.TotSellCnt = _ttoi(strTotSellCnt);
+		hoga_data.TotSellQty = sym->Hoga.TotSellQty = _ttoi(strTotSellQty);
+
+		SmTimeSeriesDBManager* dbMgr = SmTimeSeriesDBManager::GetInstance();
+		dbMgr->SaveHogaItem(std::move(hoga_data));
+
+		CString msg;
+		msg.Format(_T("hoga :: time = %s, tot_buy_cnt = %d\n"), sym->Hoga.SymbolCode.c_str(), sym->Hoga.TotBuyCnt);
+		//TRACE(msg);
+	}
+}
+
 void SmHdCtrl::OnRcvdAbroadChartData(CString& sTrCode, LONG& nRqID)
 {
 	int nRepeatCnt = m_CommAgent.CommGetRepeatCnt(sTrCode, -1, "OutRec1");
@@ -499,6 +589,9 @@ void SmHdCtrl::OnDataRecv(CString sTrCode, LONG nRqID)
 	}
 	else if (sTrCode == DefAbSiseData) {
 		OnRcvdAbroadSiseByReq(sTrCode, nRqID);
+	}
+	else if (sTrCode == DefAbHogaData) {
+		OnRcvdAbroadHogaByReq(sTrCode, nRqID);
 	}
 }
 
