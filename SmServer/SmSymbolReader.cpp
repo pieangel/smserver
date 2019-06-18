@@ -9,7 +9,9 @@
 #include "SmMarketManager.h"
 #include "SmCategory.h"
 #include "SmSymbol.h"
+#include "SmTimeSeriesServiceManager.h"
 #include "SmSymbolManager.h"
+#include "SmTimeSeriesDBManager.h"
 namespace fs = std::filesystem;
 SmSymbolReader::SmSymbolReader()
 {
@@ -86,6 +88,7 @@ void SmSymbolReader::ReadMarketFile(std::string fullPath)
 		
 		SmMarket* market = marketMgr->AddMarket(market_type);
 		SmCategory* cat = market->AddCategory(pmCode);
+		cat->MarketName(market_type);
 		cat->Exchange(exchange);
 		cat->Name(enName);
 		cat->NameKr(name);
@@ -422,7 +425,7 @@ void SmSymbolReader::ReadJmFile(std::string fullPath)
 		boost::trim_right(SeriesNmKor);
 		boost::trim_right(MrktCd);
 		msg.Format(_T("code = %s, name = %s, name_kr = %s\n"), Series.c_str(), SeriesNm.c_str(), SeriesNmKor.c_str());
-		//TRACE(msg);
+		TRACE(msg);
 
 		SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
 		SmCategory* cat = marketMgr->FindCategory(MrktCd);
@@ -431,6 +434,21 @@ void SmSymbolReader::ReadJmFile(std::string fullPath)
 			sym->Name(SeriesNmKor);
 			sym->NameEn(SeriesNm);
 			symMgr->AddSymbol(sym);
+			sym->CategoryCode(cat->Code());
+			sym->MarketName(cat->MarketName());
+			sym->Decimal(std::stoi(Pdesz));
+			sym->Seungsu(std::stoi(MltiPler));
+			sym->CtrUnit(std::stod(CtrtSize));
+			sym->TickValue(std::stod(TickValue));
+			sym->TickSize(std::stod(TickSize));
+
+			SmTimeSeriesDBManager* dbMgr = SmTimeSeriesDBManager::GetInstance();
+			//dbMgr->SaveSymbol(sym);
+
+			double profit = sym->TickSize() * sym->CtrUnit();
+			if (Series.compare("CLN19") == 0) {
+				int k = 0;
+			}
 		}
 	}
 }

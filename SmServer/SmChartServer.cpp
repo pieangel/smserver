@@ -30,7 +30,7 @@ void SmChartServer::Start()
 
 	std::string addr = server_info.child("ip").text().as_string();
 	std::string port = server_info.child("port").text().as_string();
-	std::string root_path = server_info.child("root_path").text().as_string();
+	std::string root_path = appPath; // server_info.child("root_path").text().as_string();
 	std::string thread_count = server_info.child("thread_count").text().as_string();
 
 	auto const address = net::ip::make_address(addr.c_str());

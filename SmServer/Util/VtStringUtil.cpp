@@ -6,6 +6,7 @@
 #include <ctime>
 #include <time.h>
 #include <iomanip>
+#include "../SmUtil.h"
 
 VtStringUtil::VtStringUtil()
 {
@@ -225,5 +226,26 @@ long long VtStringUtil::GetCurrentNanoseconds()
 	duration -= seconds;
 	auto tot_nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(duration);
 	return tot_nanoseconds.count();
+}
+
+std::time_t VtStringUtil::GetUTCTimestampByDate()
+{
+	time_t rawtime;
+	struct tm* timeinfo;
+
+	/* get current timeinfo: */
+	time(&rawtime); //or: rawtime = time(0);
+	/* convert to struct: */
+	timeinfo = localtime(&rawtime);
+
+	/* now modify the timeinfo to the given date: */
+	timeinfo->tm_hour = 0;         //hours since midnight - [0,23]
+	timeinfo->tm_min = 0;          //minutes after the hour - [0,59]
+	timeinfo->tm_sec = 0;          //seconds after the minute - [0,59]
+
+	/* call mktime: create unix time stamp from timeinfo struct */
+	std::time_t date = mktime(timeinfo);
+
+	return date;
 }
 

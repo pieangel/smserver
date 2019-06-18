@@ -258,6 +258,7 @@
     <ClInclude Include="SmTotalOrderManager.h" />
     <ClInclude Include="SmUser.h" />
     <ClInclude Include="SmUserManager.h" />
+    <ClInclude Include="SmUTF8Converter.h" />
     <ClInclude Include="SmUtil.h" />
     <ClInclude Include="SmWebsocketSession.h" />
     <ClInclude Include="targetver.h" />
@@ -270,6 +271,9 @@
     <ClInclude Include="Time\ptz.h" />
     <ClInclude Include="Time\tz.h" />
     <ClInclude Include="Time\tz_private.h" />
+    <ClInclude Include="Util\tinyutf8.h" />
+    <ClInclude Include="Util\tinyutf8.hpp" />
+    <ClInclude Include="Util\UtfConverter.h" />
     <ClInclude Include="Util\VtStringUtil.h" />
     <ClInclude Include="SmHdCtrl.h" />
     <ClInclude Include="Xml\pugiconfig.hpp" />
@@ -359,7 +363,9 @@
     <ClCompile Include="SmSymbolReader.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="SmTimeSeriesServiceManager.cpp" />
+    <ClCompile Include="SmTimeSeriesServiceManager.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="SmTotalOrderManager.cpp" />
     <ClCompile Include="SmUser.cpp" />
     <ClCompile Include="SmUserManager.cpp">
@@ -374,6 +380,12 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Time\tz.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Util\tinyutf8.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Util\UtfConverter.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Util\VtStringUtil.cpp" />

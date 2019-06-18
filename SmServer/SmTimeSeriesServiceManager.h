@@ -18,6 +18,7 @@ public:
 	void OnChartDataReceived(SmChartDataRequest&& data_req);
 	void OnSiseDataRequest(SmSiseDataRequest&& sise_req);
 	void OnHogaDataRequest(SmHogaDataRequest&& hoga_req);
+	void OnSymbolMasterRequest(SmSymbolMasterRequest&& master_req);
 	int SendDataSplitSize() const { return _SendDataSplitSize; }
 	void SendDataSplitSize(int val) { _SendDataSplitSize = val; }
 private:

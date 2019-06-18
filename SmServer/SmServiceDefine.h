@@ -58,5 +58,15 @@ enum class SmProtocol {
 	// 호가데이터 요청
 	req_hoga_data,
 	// 호가데이터 응답
-	res_hoga_data
+	res_hoga_data,
+	// 심볼 마스트 요청
+	req_symbol_master,
+	// 심볼 마스터 응답
+	res_symbol_master,
+	// 모든 심볼 마스터 요청
+	req_symbol_master_all,
+	// 모든 종목 현시세 요청
+	req_sise_data_all,
+	// 최근월물 모든 현시세 요청
+	req_recent_sise_data_all
 };

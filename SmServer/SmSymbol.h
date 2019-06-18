@@ -23,6 +23,16 @@ public:
 	void Decimal(int val) { _Decimal = val; }
 	int Seungsu() const { return _Seungsu; }
 	void Seungsu(int val) { _Seungsu = val; }
+	std::string CategoryCode() const { return _CategoryCode; }
+	void CategoryCode(std::string val) { _CategoryCode = val; }
+	std::string MarketName() const { return _MarketName; }
+	void MarketName(std::string val) { _MarketName = val; }
+	double CtrUnit() const { return _CtrUnit; }
+	void CtrUnit(double val) { _CtrUnit = val; }
+	double TickValue() const { return _TickValue; }
+	void TickValue(double val) { _TickValue = val; }
+	double TickSize() const { return _TickSize; }
+	void TickSize(double val) { _TickSize = val; }
 private:
 	/// <summary>
 	/// 종목 코드 - 종목을 구분하는 키가 된다.
@@ -38,7 +48,17 @@ private:
 	std::string _NameEn;
 	// 소수점 자리수
 	int _Decimal;
-	// 승수
+	// 거래 승수
 	int _Seungsu;
+	// 계약단위
+	double _CtrUnit;
+	// 틱 가치  = 호가 단위 * 계약단위
+	double _TickValue;
+	// 틱 크기 - 호가 단위
+	double _TickSize;
+	// 카데고리 코드
+	std::string _CategoryCode;
+	// 시장 이름
+	std::string _MarketName;
 };
 

@@ -9,6 +9,7 @@ namespace influxdb_cpp
 {
 	struct server_info;
 };
+class SmSymbol;
 class SmTimeSeriesDBManager : public TemplateSingleton<SmTimeSeriesDBManager>
 {
 public:
@@ -37,6 +38,8 @@ public:
 	void SaveQuoteItem(SmQuote&& qitem);
 	void SaveCurrentQuoteItem(SmQuote&& qitem);
 	void SaveHogaItem(SmHoga&& qitem);
+	void SaveSymbol(SmSymbol* sym);
+	void GetSymbolMaster(std::string symCode);
 private:
 	std::string _Id;
 	std::string _Password;

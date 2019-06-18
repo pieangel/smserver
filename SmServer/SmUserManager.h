@@ -34,7 +34,7 @@ private:
 	void AddUserToDatabase(std::string id, std::string pwd);
 	void RemoveUser(std::string id);
 	void ClearAllService(SmUser* user);
-	void SendLoginResult(std::string user_id);
+	void SendLoginResult(std::string user_id, std::string msg);
 	void SendLogoutResult(std::string user_id);
 };
 

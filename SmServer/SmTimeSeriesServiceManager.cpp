@@ -15,6 +15,8 @@
 #include "SmSymbolManager.h"
 #include "SmSymbol.h"
 #include "SmServiceDefine.h"
+#include "SmUTF8Converter.h"
+
 using namespace std::chrono;
 using namespace nlohmann;
 
@@ -81,14 +83,14 @@ void SmTimeSeriesServiceManager::OnChartDataRequest(SmChartDataRequest&& data_re
 	std::string resp = dbMgr->ExecQuery(query_string);
 	CString msg;
 	msg.Format("resp len = %d", resp.length());
-	TRACE(msg);
+	//TRACE(msg);
 	try
 	{
 		auto json_object = json::parse(resp);
 		auto it = json_object.find("error");
 		if (it != json_object.end()) {
 			std::string err_msg = json_object["error"];
-			TRACE(err_msg.c_str());
+			//TRACE(err_msg.c_str());
 			LOG_F(INFO, "Query Error", err_msg);
 			return;
 		}
@@ -163,6 +165,30 @@ void SmTimeSeriesServiceManager::OnHogaDataRequest(SmHogaDataRequest&& hoga_req)
 	std::string content = sym->GetHogaByJson();
 	SmUserManager* userMgr = SmUserManager::GetInstance();
 	userMgr->SendResultMessage(hoga_req.user_id, content);
+}
+
+void SmTimeSeriesServiceManager::OnSymbolMasterRequest(SmSymbolMasterRequest&& master_req)
+{
+	SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
+	SmSymbol* sym = symMgr->FindSymbol(master_req.symbol_code);
+	if (!sym)
+		return;
+	json send_object;
+	send_object["res_id"] = SmProtocol::res_symbol_master;
+	send_object["symbol_code"] = sym->SymbolCode();
+	send_object["name_kr"] = SmUtil::AnsiToUtf8((char*)sym->Name().c_str());
+	send_object["name_en"] = sym->NameEn().c_str();
+	send_object["category_code"] = sym->CategoryCode();
+	send_object["market_name"] = SmUtil::AnsiToUtf8((char*)sym->MarketName().c_str());
+	send_object["decimal"] = sym->Decimal();
+	send_object["contract_unit"] = sym->CtrUnit();
+	send_object["seungsu"] = sym->Seungsu();
+	send_object["tick_size"] = sym->TickSize();
+	send_object["tick_value"] = sym->TickValue();
+
+	std::string content = send_object.dump(4);
+	SmUserManager* userMgr = SmUserManager::GetInstance();
+	userMgr->SendResultMessage(master_req.user_id, content);
 }
 
 void SmTimeSeriesServiceManager::SendChartData(std::vector<SmSimpleChartDataItem>& dataVec, SmChartDataRequest req, int totalCount, int startIndex, int endIndex)

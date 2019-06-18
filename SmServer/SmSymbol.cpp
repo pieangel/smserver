@@ -2,6 +2,7 @@
 #include "SmSymbol.h"
 #include "Json/json.hpp"
 #include "SmServiceDefine.h"
+#include "SmTimeSeriesDBManager.h"
 using namespace nlohmann;
 SmSymbol::SmSymbol()
 {

@@ -8,6 +8,7 @@
 class SmUtil {
 public:
 	static std::tuple<int, int, int> GetLocalTime();
+	static std::vector<int> GetLocalDate();
 	static std::vector<int> GetTime(std::string datetime_string);
 	static std::vector<int> GetLocalDateTime();
 	static std::vector<int> GetUtcDateTime();
@@ -16,5 +17,7 @@ public:
 	static std::string GetUTCDateTimeStringForPreMin(int previousMinLen);
 	static double GetDifTimeBySeconds(std::string newTime, std::string oldTime);
 	static double GetDifTimeForNow(std::string srcTime);
+	static std::string AnsiToUtf8(char* ansi);
+	static std::string Utf8ToAnsi(char* utf8);
 };
 

@@ -26,6 +26,8 @@ private:
 	void OnReqChartData(nlohmann::json& obj);
 	void OnReqSiseData(nlohmann::json& obj);
 	void OnReqHogaData(nlohmann::json& obj);
+	void OnReqSymbolMaster(nlohmann::json& obj);
+	void OnReqSymbolMasterAll(nlohmann::json& obj);
 	void SendResult(std::string user_id, SmProtocol protocol, int result_code, std::string result_msg);
 };
 

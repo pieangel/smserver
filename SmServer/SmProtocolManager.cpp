@@ -10,6 +10,8 @@
 #include "SmChartDefine.h"
 #include "SmTimeSeriesCollector.h"
 #include "SmTimeSeriesServiceManager.h"
+#include "SmSymbolManager.h"
+#include "SmSymbol.h"
 using namespace nlohmann;
 SmProtocolManager::SmProtocolManager()
 {
@@ -76,6 +78,13 @@ void SmProtocolManager::ParseMessage(std::string message, SmWebsocketSession* so
 			break;
 		case SmProtocol::req_hoga_data:
 			OnReqHogaData(json_object);
+			break;
+		case SmProtocol::req_symbol_master:
+			OnReqSymbolMaster(json_object);
+			break;
+		case SmProtocol::req_symbol_master_all:
+			OnReqSymbolMasterAll(json_object);
+			break;
 		default:
 			break;
 		}
@@ -274,6 +283,42 @@ void SmProtocolManager::OnReqHogaData(nlohmann::json& obj)
 		req.user_id = id;
 		SmTimeSeriesServiceManager* timeSvcMgr = SmTimeSeriesServiceManager::GetInstance();
 		timeSvcMgr->OnHogaDataRequest(std::move(req));
+	}
+	catch (std::exception e) {
+		std::string error = e.what();
+	}
+}
+
+void SmProtocolManager::OnReqSymbolMaster(nlohmann::json& obj)
+{
+	try {
+		std::string id = obj["user_id"];
+		std::string symCode = obj["symbol_code"];
+		SmSymbolMasterRequest req;
+		req.symbol_code = symCode;
+		req.user_id = id;
+		SmTimeSeriesServiceManager* timeSvcMgr = SmTimeSeriesServiceManager::GetInstance();
+		timeSvcMgr->OnSymbolMasterRequest(std::move(req));
+	}
+	catch (std::exception e) {
+		std::string error = e.what();
+	}
+}
+
+void SmProtocolManager::OnReqSymbolMasterAll(nlohmann::json& obj)
+{
+	try {
+		SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
+		std::map<std::string, SmSymbol*>& symbolMap = symMgr->GetSymbolMap();
+		for (auto it = symbolMap.begin(); it != symbolMap.end(); ++it) {
+			std::string id = obj["user_id"];
+			std::string symCode = it->second->SymbolCode();
+			SmSymbolMasterRequest req;
+			req.symbol_code = symCode;
+			req.user_id = id;
+			SmTimeSeriesServiceManager* timeSvcMgr = SmTimeSeriesServiceManager::GetInstance();
+			timeSvcMgr->OnSymbolMasterRequest(std::move(req));
+		}
 	}
 	catch (std::exception e) {
 		std::string error = e.what();

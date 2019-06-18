@@ -9,6 +9,15 @@
 #include <algorithm>
 #include <boost/asio.hpp>
 #include "Json/json.hpp"
+#include "SmSymbol.h"
+#include <boost/iostreams/stream.hpp>
+#include <boost/iostreams/categories.hpp> 
+#include <boost/iostreams/code_converter.hpp>
+#include "Util/UtfConverter.h"
+#include <boost/locale.hpp>
+#include <iostream>
+
+namespace io = boost::iostreams;
 using namespace nlohmann;
 
 namespace ip = boost::asio::ip;
@@ -161,8 +170,7 @@ std::pair<std::string, std::string> SmTimeSeriesDBManager::GetUserInfo(std::stri
 {
 	// 태크가 있을 때는 반드시 태그외에 필드를 하나는 포함해야 한다.
 	//The query selects the level description field, the location tag, and the water_level field. Note that the SELECT clause must specify at least one field when it includes a tag.
-	//std::string query_string = "select \"tag_id\" from \"user_info\" where  \"tag_id\" = \'angelpie\'";
-	std::string query_string = "select \"id\"  from \"user_info\" where  \"id\" = \'angelpie\'";
+	std::string query_string = "select \"id\"  , \"pwd\" from \"user_info\" where  \"id\" = \'angelpie\'";
 	std::string resp = ExecQuery(query_string);
 	std::string str_id = "";
 	std::string str_pwd = "";
@@ -180,7 +188,6 @@ std::pair<std::string, std::string> SmTimeSeriesDBManager::GetUserInfo(std::stri
 
 void SmTimeSeriesDBManager::GetChartData()
 {
-	SmTimeSeriesDBManager* dbMgr = SmTimeSeriesDBManager::GetInstance();
 	std::string query_string = ""; // "select * from \"chart_data\" where \"symbol_code\" = \'CLN19\' AND \"chart_type\" = \'5\' AND \"cycle\" = \'1\'";
 	std::string str_cycle = std::to_string(1);
 	std::string str_chart_type = std::to_string(5);
@@ -193,7 +200,7 @@ void SmTimeSeriesDBManager::GetChartData()
 	query_string.append("\' AND \"cycle\" = \'");
 	query_string.append(str_cycle);
 	query_string.append("\'");
-	std::string resp = dbMgr->ExecQuery(query_string);
+	std::string resp = ExecQuery(query_string);
 	CString msg;
 	msg.Format(_T("resp length = %d"), resp.length());
 	TRACE(msg);
@@ -328,4 +335,69 @@ void SmTimeSeriesDBManager::SaveHogaItem(SmHoga&& qitem)
 		.field("sell_hoga_cnt5", qitem.Ary[4].SellCnt)
 		.timestamp(utc * 1000000000 + nanos)
 		.post_http(*_ServerInfo, &resp);
+}
+
+void SmTimeSeriesDBManager::SaveSymbol(SmSymbol* sym)
+{
+	if (!sym)
+		return;
+	std::time_t utc = VtStringUtil::GetUTCTimestampByDate();
+	std::string name_kr = sym->Name();
+	std::wstring utf8_name;
+	utf8_name.assign(name_kr.begin(), name_kr.end());
+	std::string utf8_string = UtfConverter::ToUtf8(utf8_name);
+	std::string  meas = "symbol_master";
+	std::string resp;
+	int ret = influxdb_cpp::builder()
+		.meas(meas)
+		.tag("symbol_code", sym->SymbolCode())
+		.field("name_kr", utf8_string)
+		.field("name_en", sym->NameEn())
+		.field("decimal", sym->Decimal())
+		.field("seungsu", sym->Seungsu())
+		.field("contract_unit", sym->CtrUnit())
+		.field("tick_size", sym->TickSize())
+		.field("tick_value", sym->TickValue())
+		.timestamp(utc * 1000000000)
+		.post_http(*_ServerInfo, &resp);
+}
+
+void SmTimeSeriesDBManager::GetSymbolMaster(std::string symCode)
+{
+	std::string query_string = "";
+	std::string str_cycle = std::to_string(1);
+	std::string str_chart_type = std::to_string(5);
+	query_string.append("SELECT * FROM \"");
+	query_string.append("symbol_master");
+	query_string.append("\" WHERE \"symbol_code\" = \'");
+	query_string.append(symCode);
+	query_string.append("\'");
+	std::string resp = ExecQuery(query_string);
+	CString msg;
+	msg.Format(_T("resp length = %d"), resp.length());
+	TRACE(msg);
+	try
+	{
+		auto json_object = json::parse(resp);
+		auto a = json_object["results"][0]["series"][0]["values"];
+		for (size_t i = 0; i < a.size(); i++) {
+			auto val = a[i];
+			std::string time = val[0];
+			int h = 0, l = 0, o = 0, c = 0, v = 0;
+			h = val[1];
+			l = val[4];
+			o = val[5];
+			c = val[6];
+			//v = val[7];
+
+			std::string local_time = VtStringUtil::GetLocalTime(time);
+
+			msg.Format(_T("index = %d, date_time = %s, lc = %s, h = %d, l = %d, o = %d, c = %d\n"), i, time.c_str(), local_time.c_str(), h, l, o, c);
+			TRACE(msg);
+		}
+	}
+	catch (const std::exception& e)
+	{
+		std::string error = e.what();
+	}
 }

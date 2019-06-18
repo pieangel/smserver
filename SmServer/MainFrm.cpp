@@ -449,6 +449,11 @@ void CMainFrame::ReadSymbols()
 
 	mrktMgr->ReadSymbolsFromFile();
 
+	SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
+	SmSymbol* sym = symMgr->FindSymbol("LGG");
+
+	SmTimeSeriesDBManager* dbMgr = SmTimeSeriesDBManager::GetInstance();
+	dbMgr->GetSymbolMaster("VXM19");
 }
 
 

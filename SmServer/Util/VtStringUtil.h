@@ -27,5 +27,6 @@ public:
 	static std::time_t getEpochTime(const std::wstring& dateTime);
 	static std::time_t GetEpochTime(const std::string& dateTime);
 	static long long GetCurrentNanoseconds();
+	static std::time_t GetUTCTimestampByDate();
 };
 

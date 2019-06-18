@@ -76,7 +76,7 @@ std::string SmUserManager::CheckUserInfo(std::string id, std::string pwd, SmWebs
 	std::string result_msg = "";
 	if (!IsExistUser(id)) {
 		AddUser(id, pwd, socket);
-		result_msg = "Login success!";
+		result_msg = "User registered successfully!";
 		return result_msg;
 	}
 	SmTimeSeriesDBManager* dbMgr = SmTimeSeriesDBManager::GetInstance();
@@ -118,11 +118,12 @@ void SmUserManager::ClearAllService(SmUser* user)
 	rtlSymSvcMgr->UnregisterAllSymbol(user->Id());
 }
 
-void SmUserManager::SendLoginResult(std::string user_id)
+
+void SmUserManager::SendLoginResult(std::string user_id, std::string msg)
 {
 	json send_object;
 	send_object["res_id"] = SmProtocol::res_login;
-	send_object["result_msg"] = "Login Success!";
+	send_object["result_msg"] = msg;
 	send_object["result_code"] = 0;
 	std::string content = send_object.dump(4);
 	SendResultMessage(user_id, content);
@@ -249,8 +250,8 @@ bool SmUserManager::IsExistUser(std::string id)
 
 void SmUserManager::OnLogin(std::string id, std::string pwd, SmWebsocketSession* socket)
 {
-	AddUser(id, pwd, socket);
-	SendLoginResult(id);
+	std::string result = CheckUserInfo(id, pwd, socket);
+	SendLoginResult(id, result);
 }
 
 void SmUserManager::OnLogout(std::string id)
