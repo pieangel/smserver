@@ -313,7 +313,7 @@ void SmHdCtrl::OnRcvdAbroadHoga(CString& strKey, LONG& nRealType)
 	//TRACE(sym->Hoga.Time.c_str());
 
 	SmTimeSeriesDBManager* dbMgr = SmTimeSeriesDBManager::GetInstance();
-	dbMgr->SaveHogaItem(std::move(hoga_data));
+	//dbMgr->SaveHogaItem(std::move(hoga_data));
 
 	CString msg;
 	msg.Format(_T("hoga :: time = %s, tot_buy_cnt = %d\n"), sym->Hoga.SymbolCode.c_str(), sym->Hoga.TotBuyCnt);
@@ -350,8 +350,8 @@ void SmHdCtrl::OnRcvdAbroadSise(CString& strKey, LONG& nRealType)
 
 
 	SmTimeSeriesDBManager* dbMgr = SmTimeSeriesDBManager::GetInstance();
-	dbMgr->SaveQuoteItem(std::move(quoteItem));
-	dbMgr->SaveCurrentQuoteItem(std::move(quoteItem));
+	//dbMgr->SaveQuoteItem(std::move(quoteItem));
+	//dbMgr->SaveCurrentQuoteItem(std::move(quoteItem));
 
 
 	SmSymbolManager* symMgr = SmSymbolManager::GetInstance();

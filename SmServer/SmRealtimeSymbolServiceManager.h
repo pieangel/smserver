@@ -16,6 +16,7 @@ private:
 	typedef std::map<SmUser*, SmUser*> SmUserMap;
 	std::map<SmSymbol*, SmUserMap> _ServiceMap;
 public:
+	void RegisterAllRecentSymbol();
 	void RegisterSymbol(std::string user_id, std::string symCode);
 	void UnregisterSymbol(std::string user_id, std::string symCode);
 	void UnregisterAllSymbol(std::string user_id);

@@ -12,6 +12,7 @@
 #include "SmTimeSeriesServiceManager.h"
 #include "SmSymbolManager.h"
 #include "SmSymbol.h"
+#include "SmMarketManager.h"
 using namespace nlohmann;
 SmProtocolManager::SmProtocolManager()
 {
@@ -84,6 +85,15 @@ void SmProtocolManager::ParseMessage(std::string message, SmWebsocketSession* so
 			break;
 		case SmProtocol::req_symbol_master_all:
 			OnReqSymbolMasterAll(json_object);
+			break;
+		case SmProtocol::req_recent_sise_data_all:
+			OnReqRecentSiseDataAll(json_object);
+			break;
+		case SmProtocol::req_sise_data_all:
+			OnReqSiseDataAll(json_object);
+			break;
+		case SmProtocol::req_register_recent_realtime_sise_all:
+			OnReqRegisterRecentRealtimeSiseAll(json_object);
 			break;
 		default:
 			break;
@@ -318,6 +328,63 @@ void SmProtocolManager::OnReqSymbolMasterAll(nlohmann::json& obj)
 			req.user_id = id;
 			SmTimeSeriesServiceManager* timeSvcMgr = SmTimeSeriesServiceManager::GetInstance();
 			timeSvcMgr->OnSymbolMasterRequest(std::move(req));
+		}
+	}
+	catch (std::exception e) {
+		std::string error = e.what();
+	}
+}
+
+void SmProtocolManager::OnReqSiseDataAll(nlohmann::json& obj)
+{
+	try {
+		SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
+		std::map<std::string, SmSymbol*>& symbolMap = symMgr->GetSymbolMap();
+		for (auto it = symbolMap.begin(); it != symbolMap.end(); ++it) {
+			std::string id = obj["user_id"];
+			std::string symCode = it->second->SymbolCode();
+			SmSiseDataRequest req;
+			req.symbol_code = symCode;
+			req.user_id = id;
+			SmTimeSeriesServiceManager* timeSvcMgr = SmTimeSeriesServiceManager::GetInstance();
+			timeSvcMgr->OnSiseDataRequest(std::move(req));
+		}
+	}
+	catch (std::exception e) {
+		std::string error = e.what();
+	}
+}
+
+void SmProtocolManager::OnReqRecentSiseDataAll(nlohmann::json& obj)
+{
+	try {
+		SmMarketManager* symMgr = SmMarketManager::GetInstance();
+		std::vector<SmSymbol*> symVec = symMgr->GetRecentMonthSymbolList();
+		for (auto it = symVec.begin(); it != symVec.end(); ++it) {
+			std::string id = obj["user_id"];
+			std::string symCode = (*it)->SymbolCode();
+			SmSiseDataRequest req;
+			req.symbol_code = symCode;
+			req.user_id = id;
+			SmTimeSeriesServiceManager* timeSvcMgr = SmTimeSeriesServiceManager::GetInstance();
+			timeSvcMgr->OnSiseDataRequest(std::move(req));
+		}
+	}
+	catch (std::exception e) {
+		std::string error = e.what();
+	}
+}
+
+void SmProtocolManager::OnReqRegisterRecentRealtimeSiseAll(nlohmann::json& obj)
+{
+	try {
+		SmMarketManager* symMgr = SmMarketManager::GetInstance();
+		std::vector<SmSymbol*> symVec = symMgr->GetRecentMonthSymbolList();
+		for (auto it = symVec.begin(); it != symVec.end(); ++it) {
+			std::string id = obj["user_id"];
+			std::string symCode = (*it)->SymbolCode();
+			SmRealtimeSymbolServiceManager* rtlSymMgr = SmRealtimeSymbolServiceManager::GetInstance();
+			rtlSymMgr->RegisterSymbol(id, symCode);
 		}
 	}
 	catch (std::exception e) {

@@ -66,6 +66,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_COMMAND(ID_SERVER_GETMINDATA, &CMainFrame::OnServerGetmindata)
 	ON_COMMAND(ID_SERVER_GETSISE, &CMainFrame::OnServerGetsise)
 	ON_COMMAND(ID_SERVER_GETHOGA, &CMainFrame::OnServerGethoga)
+	ON_COMMAND(ID_SERVER_REGISTERALLRECENTSYMBOL, &CMainFrame::OnServerRegisterallrecentsymbol)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -574,4 +575,11 @@ void CMainFrame::OnServerGethoga()
 	tsMgr->StartCollectHogaData();
 	SmHdClient* client = SmHdClient::GetInstance();
 	//client->GetHogaData("CLN19");
+}
+
+
+void CMainFrame::OnServerRegisterallrecentsymbol()
+{
+	SmRealtimeSymbolServiceManager* rtlSvcMgr = SmRealtimeSymbolServiceManager::GetInstance();
+	rtlSvcMgr->RegisterAllRecentSymbol();
 }

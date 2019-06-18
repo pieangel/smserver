@@ -4,6 +4,19 @@
 #include "SmSymbolManager.h"
 #include "SmUserManager.h"
 #include "SmSymbol.h"
+#include "SmMarketManager.h"
+#include "SmHdClient.h"
+
+void SmRealtimeSymbolServiceManager::RegisterAllRecentSymbol()
+{
+	SmHdClient* client = SmHdClient::GetInstance();
+	SmMarketManager* mrktMgr = SmMarketManager::GetInstance();
+	std::vector<SmSymbol*> symVec = mrktMgr->GetRecentMonthSymbolList();
+	for (auto it = symVec.begin(); it != symVec.end(); ++it) {
+		client->RegisterProduct((*it)->SymbolCode());
+	}
+}
+
 void SmRealtimeSymbolServiceManager::RegisterSymbol(std::string user_id, std::string symCode)
 {
 	SmUserManager* userMgr = SmUserManager::GetInstance();

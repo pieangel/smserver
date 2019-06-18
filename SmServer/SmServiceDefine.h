@@ -68,5 +68,7 @@ enum class SmProtocol {
 	// 모든 종목 현시세 요청
 	req_sise_data_all,
 	// 최근월물 모든 현시세 요청
-	req_recent_sise_data_all
+	req_recent_sise_data_all,
+	// 최근월물 실시간 시세 등록 요청
+	req_register_recent_realtime_sise_all
 };
