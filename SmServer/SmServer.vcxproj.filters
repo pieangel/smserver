@@ -328,9 +328,7 @@
     <ClInclude Include="Util\tinyutf8.hpp">
       <Filter>Util</Filter>
     </ClInclude>
-    <ClInclude Include="SmUTF8Converter.h">
-      <Filter>Util</Filter>
-    </ClInclude>
+    <ClInclude Include="SmUtfUtil.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SmChartServer.cpp">
@@ -483,6 +481,7 @@
     <ClCompile Include="Util\tinyutf8.cpp">
       <Filter>Util</Filter>
     </ClCompile>
+    <ClCompile Include="SmUtfUtil.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="SmServer.rc">

@@ -15,7 +15,7 @@
 #include "SmSymbolManager.h"
 #include "SmSymbol.h"
 #include "SmServiceDefine.h"
-#include "SmUTF8Converter.h"
+#include "SmUtfUtil.h"
 
 using namespace std::chrono;
 using namespace nlohmann;
@@ -176,10 +176,10 @@ void SmTimeSeriesServiceManager::OnSymbolMasterRequest(SmSymbolMasterRequest&& m
 	json send_object;
 	send_object["res_id"] = SmProtocol::res_symbol_master;
 	send_object["symbol_code"] = sym->SymbolCode();
-	send_object["name_kr"] = SmUtil::AnsiToUtf8((char*)sym->Name().c_str());
+	send_object["name_kr"] = SmUtfUtil::AnsiToUtf8((char*)sym->Name().c_str());
 	send_object["name_en"] = sym->NameEn().c_str();
 	send_object["category_code"] = sym->CategoryCode();
-	send_object["market_name"] = SmUtil::AnsiToUtf8((char*)sym->MarketName().c_str());
+	send_object["market_name"] = SmUtfUtil::AnsiToUtf8((char*)sym->MarketName().c_str());
 	send_object["decimal"] = sym->Decimal();
 	send_object["contract_unit"] = sym->CtrUnit();
 	send_object["seungsu"] = sym->Seungsu();

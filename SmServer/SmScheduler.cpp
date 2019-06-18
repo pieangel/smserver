@@ -18,7 +18,7 @@ SmScheduler::~SmScheduler()
 
 void SmScheduler::RepeatSymbolService()
 {
-	std::chrono::milliseconds milSec(500);
+	std::chrono::milliseconds milSec(200);
 	_Scheduler->every(milSec, [this]() { this->SendRealtimeSymbol(); });
 }
 
