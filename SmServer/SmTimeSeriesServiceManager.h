@@ -21,6 +21,7 @@ public:
 	void OnSymbolMasterRequest(SmSymbolMasterRequest&& master_req);
 	int SendDataSplitSize() const { return _SendDataSplitSize; }
 	void SendDataSplitSize(int val) { _SendDataSplitSize = val; }
+	void OnCompleteChartData(SmChartDataRequest&& data_req, SmChartData* chart_data);
 private:
 	void SendChartData(std::vector<SmSimpleChartDataItem>& dataVec, SmChartDataRequest req, int totalCount, int startIndex, int endIndex);
 	std::map<std::string, SmChartDataRequest> _HistoryDataReqMap;
@@ -30,5 +31,8 @@ private:
 	std::map<std::string, SmChartData*> _CycleDataReqMap;
 	SmChartData* AddCycleDataReq(SmChartDataRequest data_req);
 	void RegisterTimer(SmChartData* chartData);
+	void SendChartDataFromDB(SmChartDataRequest&& data_req);
+	void GetChartDataFromAnotherServer(SmChartDataRequest&& data_req);
+	void SendChartData(SmChartDataRequest&& data_req, SmChartData* chart_data);
 };
 

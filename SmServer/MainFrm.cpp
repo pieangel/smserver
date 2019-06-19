@@ -67,6 +67,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_COMMAND(ID_SERVER_GETSISE, &CMainFrame::OnServerGetsise)
 	ON_COMMAND(ID_SERVER_GETHOGA, &CMainFrame::OnServerGethoga)
 	ON_COMMAND(ID_SERVER_REGISTERALLRECENTSYMBOL, &CMainFrame::OnServerRegisterallrecentsymbol)
+	ON_COMMAND(ID_SERVER_DELETEMEASURE, &CMainFrame::OnServerDeletemeasure)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -423,7 +424,7 @@ void CMainFrame::GetChartData()
 	//req.symbolCode = "";
 	req.chartType = SmChartType::MIN;
 	req.cycle = 1;
-	req.count = 100;
+	req.count = ChartDataSize;
 	req.next = 0;
 	SmHdClient* client = SmHdClient::GetInstance();
 	client->GetChartData(req);
@@ -582,4 +583,11 @@ void CMainFrame::OnServerRegisterallrecentsymbol()
 {
 	SmRealtimeSymbolServiceManager* rtlSvcMgr = SmRealtimeSymbolServiceManager::GetInstance();
 	rtlSvcMgr->RegisterAllRecentSymbol();
+}
+
+
+void CMainFrame::OnServerDeletemeasure()
+{
+	SmTimeSeriesDBManager* dbMgr = SmTimeSeriesDBManager::GetInstance();
+	dbMgr->DeleteMeasurement("CLN19:5:1");
 }

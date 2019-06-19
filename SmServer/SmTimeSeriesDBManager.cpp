@@ -66,13 +66,15 @@ void SmTimeSeriesDBManager::OnChartDataItem(SmChartDataItem data_item)
 {
 	std::string date_time = data_item.date + data_item.time;
 	std::time_t utc = VtStringUtil::GetUTCTimestamp(date_time);
-	std::string  meas = "chart_data";
+	std::string  meas = data_item.GetDataKey();
 	std::string resp;
 	int ret = influxdb_cpp::builder()
 		.meas(meas)
 		.tag("symbol_code", data_item.symbolCode)
 		.tag("chart_type", std::to_string((int)data_item.chartType))
 		.tag("cycle", std::to_string(data_item.cycle))
+		.field("local_date", data_item.date)
+		.field("local_time", data_item.time)
 		.field("h", data_item.h)
 		.field("l", data_item.l)
 		.field("o", data_item.o)
@@ -188,18 +190,7 @@ std::pair<std::string, std::string> SmTimeSeriesDBManager::GetUserInfo(std::stri
 
 void SmTimeSeriesDBManager::GetChartData()
 {
-	std::string query_string = ""; // "select * from \"chart_data\" where \"symbol_code\" = \'CLN19\' AND \"chart_type\" = \'5\' AND \"cycle\" = \'1\'";
-	std::string str_cycle = std::to_string(1);
-	std::string str_chart_type = std::to_string(5);
-	query_string.append("SELECT * FROM \"");
-	query_string.append("chart_data");
-	query_string.append("\" WHERE \"symbol_code\" = \'");
-	query_string.append("CLN19");
-	query_string.append("\' AND \"chart_type\" = \'");
-	query_string.append(str_chart_type);
-	query_string.append("\' AND \"cycle\" = \'");
-	query_string.append(str_cycle);
-	query_string.append("\'");
+	std::string query_string = ""; 
 	std::string resp = ExecQuery(query_string);
 	CString msg;
 	msg.Format(_T("resp length = %d"), resp.length());
@@ -400,4 +391,13 @@ void SmTimeSeriesDBManager::GetSymbolMaster(std::string symCode)
 	{
 		std::string error = e.what();
 	}
+}
+
+void SmTimeSeriesDBManager::DeleteMeasurement(std::string measure_name)
+{
+	std::string query_string = "DROP MEASUREMENT ";
+	query_string.append("\"");
+	query_string.append(measure_name);
+	query_string.append("\"");
+	std::string resp = ExecQuery(query_string);
 }

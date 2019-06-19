@@ -40,6 +40,7 @@ public:
 	void SaveHogaItem(SmHoga&& qitem);
 	void SaveSymbol(SmSymbol* sym);
 	void GetSymbolMaster(std::string symCode);
+	void DeleteMeasurement(std::string measure_name);
 private:
 	std::string _Id;
 	std::string _Password;

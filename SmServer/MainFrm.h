@@ -67,6 +67,7 @@ public:
 	afx_msg void OnServerGetsise();
 	afx_msg void OnServerGethoga();
 	afx_msg void OnServerRegisterallrecentsymbol();
+	afx_msg void OnServerDeletemeasure();
 };
 
 

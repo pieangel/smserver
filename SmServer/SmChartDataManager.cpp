@@ -63,9 +63,3 @@ SmChartData* SmChartDataManager::FindChartData(std::string data_key)
 	return nullptr;
 }
 
-SmChartData* SmChartDataManager::PushChartData(SmChartDataItem data)
-{
-	SmChartData* chart_data = AddChartData(data);
-	chart_data->PushChartDataItem(data);
-	return chart_data;
-}

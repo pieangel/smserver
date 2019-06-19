@@ -13,6 +13,8 @@
 #include "SmSymbolManager.h"
 #include "SmSymbol.h"
 #include "SmMarketManager.h"
+#include "SmChartDataManager.h"
+#include "SmChartData.h"
 using namespace nlohmann;
 SmProtocolManager::SmProtocolManager()
 {
@@ -246,6 +248,7 @@ void SmProtocolManager::OnOrderCancel(nlohmann::json& obj)
 void SmProtocolManager::OnReqChartData(nlohmann::json& obj)
 {
 	try {
+		std::string chart_id = obj["chart_id"];
 		std::string id = obj["user_id"];
 		std::string symCode = obj["symbol_code"];
 		int chart_type = obj["chart_type"];
@@ -260,7 +263,6 @@ void SmProtocolManager::OnReqChartData(nlohmann::json& obj)
 		req.next = 0;
 		SmTimeSeriesServiceManager* timeSvcMgr = SmTimeSeriesServiceManager::GetInstance();
 		timeSvcMgr->OnChartDataRequest(std::move(req));
-		//SendResult(id, SmProtocol::res_chart_data, 0, "request chart data success!");
 	}
 	catch (std::exception e) {
 		std::string error = e.what();

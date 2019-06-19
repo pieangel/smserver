@@ -10,20 +10,30 @@ private:
 	std::string _SymbolCode;
 	SmChartType _ChartType = SmChartType::MIN;
 	int _Cycle = 0;
+	// 최신데이터가 맨 앞에 온다. 
+	// 따라서 인덱스 0이 가장 최신 데이터이다.
 	std::list<SmChartDataItem> _DataItemList;
 	// 차트를 요청하는 사용자 아이디 목록
 	std::set<std::string> _UserList;
 	void GetChartDataFromDB();
 	void GetChartDataFromServer();
-	size_t _DataQueueSize = 3;
+	size_t _DataQueueSize = ChartDataSize;
+	size_t _CycleDataSize = 3;
 	// 등록된 사용자들에게 차트 정기 데이터를 보내준다.
 	void SendCyclicChartDataToUsers();
 public:
+	std::list<SmChartDataItem>& GetDataItemList() {
+		return _DataItemList;
+	}
+	size_t GetChartDataCount() {
+		return _DataItemList.size();
+	}
 	// 대기시간, 사이클
 	std::pair<int, int> GetCycleByTimeDif();
 	// 차트 데이터가 새로 도착했음을 알린다.
 	void OnChartDataUpdated();
-	void PushChartDataItem(SmChartDataItem data);
+	void PushChartDataItemToBack(SmChartDataItem data);
+	void PushChartDataItemToFront(SmChartDataItem data);
 	size_t GetUserCount() {
 		return _UserList.size();
 	}
@@ -52,5 +62,7 @@ public:
 	}
 	int DataQueueSize() const { return _DataQueueSize; }
 	void DataQueueSize(int val) { _DataQueueSize = val; }
+	size_t CycleDataSize() const { return _CycleDataSize; }
+	void CycleDataSize(size_t val) { _CycleDataSize = val; }
 };
 

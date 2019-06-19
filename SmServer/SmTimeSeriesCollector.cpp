@@ -53,12 +53,6 @@ void SmTimeSeriesCollector::OnChartDataItem(SmChartDataItem data_item)
 	dbMgr->OnChartDataItem(data_item);
 }
 
-void SmTimeSeriesCollector::OnCompleteChartData(SmChartDataRequest&& data_req)
-{
-	SmTimeSeriesServiceManager* tsSvcMgr = SmTimeSeriesServiceManager::GetInstance();
-	tsSvcMgr->OnChartDataReceived(std::move(data_req));
-}
-
 void SmTimeSeriesCollector::StartCollectChartData()
 {
 	int waitTime = 2;

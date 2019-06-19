@@ -519,7 +519,7 @@ void SmHdCtrl::OnRcvdAbroadChartData(CString& sTrCode, LONG& nRqID)
 	SmChartDataRequest req = it->second;
 	SmTimeSeriesCollector* tsCol = SmTimeSeriesCollector::GetInstance();
 	SmChartDataManager* chartDataMgr = SmChartDataManager::GetInstance();
-	SmChartData* chart_data = nullptr;
+	SmChartData* chart_data = chartDataMgr->AddChartData(req);
 	// 가장 최근것이 가장 먼저 온다. 따라서 가장 과거의 데이터를 먼저 가져온다.
 	// Received the chart data first.
 	for (int i = 0; i < nRepeatCnt; ++i) {
@@ -534,7 +534,7 @@ void SmHdCtrl::OnRcvdAbroadChartData(CString& sTrCode, LONG& nRqID)
 		if (strDate.GetLength() == 0)
 			continue;
 		
-		msg.Format(_T("date = %s, t = %s, o = %s, h = %s, l = %s, c = %s, v = %s\n"), strDate, strTime, strOpen, strHigh, strLow, strClose, strVol);
+		msg.Format(_T("index = %d, date = %s, t = %s, o = %s, h = %s, l = %s, c = %s, v = %s\n"), i, strDate, strTime, strOpen, strHigh, strLow, strClose, strVol);
 		TRACE(msg);
 
 		SmChartDataItem data;
@@ -548,9 +548,7 @@ void SmHdCtrl::OnRcvdAbroadChartData(CString& sTrCode, LONG& nRqID)
 		data.o = _ttoi(strOpen);
 		data.c = _ttoi(strClose);
 		data.v = _ttoi(strVol);
-
-		chart_data = chartDataMgr->PushChartData(data);
-
+		chart_data->PushChartDataItemToBack(data);
 		// 차트 데이터 항목 도착을 알린다.
 		tsCol->OnChartDataItem(data);
 	}
@@ -559,12 +557,13 @@ void SmHdCtrl::OnRcvdAbroadChartData(CString& sTrCode, LONG& nRqID)
 	_ChartDataReqMap.erase(it);
 	// 주기데이터가 도착했음을 알린다.
 	if (chart_data) {
-		if (nRepeatCnt <= chart_data->DataQueueSize()) {
+		if (nRepeatCnt == chart_data->CycleDataSize()) {
 			chart_data->OnChartDataUpdated();
 		}
 		else {
 			// 차트 데이터 수신 완료를 알릴다.
-			tsCol->OnCompleteChartData(std::move(req));
+			SmTimeSeriesServiceManager* tsSvcMgr = SmTimeSeriesServiceManager::GetInstance();
+			tsSvcMgr->OnCompleteChartData(std::move(req), chart_data);
 		}
 	}
 }

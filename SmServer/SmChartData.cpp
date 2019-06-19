@@ -113,16 +113,34 @@ void SmChartData::OnChartDataUpdated()
 	SendCyclicChartDataToUsers();
 }
 
-void SmChartData::PushChartDataItem(SmChartDataItem data)
+void SmChartData::PushChartDataItemToBack(SmChartDataItem data)
 {
 	CString msg;
-	msg.Format(_T("pushed data :: date = %s, o = %d, h = %d, l = %d, c = %d, v = %d\n"), data.date.c_str(), data.o, data.h, data.l, data.c, data.v);
-	TRACE(msg);
+	
 
 	_DataItemList.push_back(data);
 	if (_DataItemList.size() > _DataQueueSize) {
 		_DataItemList.pop_front();
 	}
+
+	msg.Format(_T("pushed data :: size = %d, code = %s, date = %s, time = %s, o = %d, h = %d, l = %d, c = %d, v = %d\n"), _DataItemList.size(), SymbolCode().c_str(), data.date.c_str(), data.time.c_str(), data.o, data.h, data.l, data.c, data.v);
+	TRACE(msg);
+
+	GetCycleByTimeDif();
+}
+
+void SmChartData::PushChartDataItemToFront(SmChartDataItem data)
+{
+	CString msg;
+
+
+	_DataItemList.push_front(data);
+	if (_DataItemList.size() > _DataQueueSize) {
+		_DataItemList.pop_back();
+	}
+
+	msg.Format(_T("pushed data :: size = %d, code = %s, date = %s, time = %s, o = %d, h = %d, l = %d, c = %d, v = %d\n"), _DataItemList.size(), SymbolCode().c_str(), data.date.c_str(), data.time.c_str(), data.o, data.h, data.l, data.c, data.v);
+	TRACE(msg);
 
 	GetCycleByTimeDif();
 }

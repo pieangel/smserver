@@ -71,6 +71,9 @@
     <Filter Include="Time">
       <UniqueIdentifier>{f889f12f-f153-4a2e-8824-1e4676df6c90}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Utf">
+      <UniqueIdentifier>{9aa686b7-bfa1-448c-affc-8167fbd80d59}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SmChartServer.h">
@@ -316,9 +319,6 @@
     <ClInclude Include="SmUtil.h">
       <Filter>Util</Filter>
     </ClInclude>
-    <ClInclude Include="SmProtocolManager.h">
-      <Filter>Server</Filter>
-    </ClInclude>
     <ClInclude Include="Util\UtfConverter.h">
       <Filter>Util</Filter>
     </ClInclude>
@@ -328,7 +328,12 @@
     <ClInclude Include="Util\tinyutf8.hpp">
       <Filter>Util</Filter>
     </ClInclude>
-    <ClInclude Include="SmUtfUtil.h" />
+    <ClInclude Include="SmUtfUtil.h">
+      <Filter>Utf</Filter>
+    </ClInclude>
+    <ClInclude Include="SmProtocolManager.h">
+      <Filter>Service</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SmChartServer.cpp">
@@ -472,16 +477,18 @@
     <ClCompile Include="SmUtil.cpp">
       <Filter>Util</Filter>
     </ClCompile>
-    <ClCompile Include="SmProtocolManager.cpp">
-      <Filter>Server</Filter>
-    </ClCompile>
     <ClCompile Include="Util\UtfConverter.cpp">
       <Filter>Util</Filter>
     </ClCompile>
     <ClCompile Include="Util\tinyutf8.cpp">
       <Filter>Util</Filter>
     </ClCompile>
-    <ClCompile Include="SmUtfUtil.cpp" />
+    <ClCompile Include="SmUtfUtil.cpp">
+      <Filter>Utf</Filter>
+    </ClCompile>
+    <ClCompile Include="SmProtocolManager.cpp">
+      <Filter>Service</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="SmServer.rc">

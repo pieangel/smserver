@@ -10,7 +10,6 @@ public:
 	~SmTimeSeriesCollector();
 	void CollectRecentMonthSymbolChartData();
 	void OnChartDataItem(SmChartDataItem data_item);
-	void OnCompleteChartData(SmChartDataRequest&& data_req);
 	void StartCollectChartData();
 	void StartCollectSiseData();
 	void StartCollectHogaData();

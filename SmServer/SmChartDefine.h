@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+const size_t ChartDataSize = 300;
 enum class SmChartType
 {
 	NONE = 0,
@@ -29,6 +30,7 @@ struct SmSymbolMasterRequest {
 
 struct SmChartDataRequest
 {
+	std::string chart_id;
 	std::string user_id;
 	std::string symbolCode;
 	SmChartType chartType;
