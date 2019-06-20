@@ -207,7 +207,7 @@ void SmTimeSeriesServiceManager::SendChartData(std::vector<SmSimpleChartDataItem
 		};
 	}
 
-	std::string content = send_object.dump(4);
+	std::string content = send_object.dump();
 	SmUserManager* userMgr = SmUserManager::GetInstance();
 	userMgr->SendResultMessage(req.user_id, content);
 }

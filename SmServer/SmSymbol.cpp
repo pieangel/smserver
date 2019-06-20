@@ -27,7 +27,7 @@ std::string SmSymbol::GetQuoteByJson()
 	quote["gap_from_preday"] = Quote.GapFromPreDay;
 	quote["ratio_to_preday"] = Quote.RatioToPreday;
 
-	return quote.dump(4);
+	return quote.dump();
 }
 
 std::string SmSymbol::GetHogaByJson()
@@ -52,5 +52,5 @@ std::string SmSymbol::GetHogaByJson()
 		hoga["hoga_items"][i]["sell_qty"] = Hoga.Ary[i].SellQty;
 	}
 
-	return hoga.dump(4);
+	return hoga.dump();
 }

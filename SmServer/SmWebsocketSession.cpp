@@ -4,6 +4,7 @@
 #include <iostream>
 #include "SmSessionManager.h"
 #include "SmProtocolManager.h"
+#include "Log/loguru.hpp"
 void
 SmWebsocketSession::
 on_send(boost::shared_ptr<std::string const> const& ss)
@@ -34,13 +35,20 @@ void SmWebsocketSession::send(boost::shared_ptr<std::string const> const& ss)
 	// Post our work to the strand, this ensures
 	// that the members of `this` will not be
 	// accessed concurrently.
+	try {
+		if (!ws_.get_executor())
+			return;
 
-	net::post(
-		ws_.get_executor(),
-		beast::bind_front_handler(
-			&SmWebsocketSession::on_send,
-			shared_from_this(),
-			ss));
+		net::post(
+			ws_.get_executor(),
+			beast::bind_front_handler(
+				&SmWebsocketSession::on_send,
+				shared_from_this(),
+				ss));
+	}
+	catch (std::exception e) {
+		LOG_F(INFO, "send error msg = %s", e.what());
+	}
 }
 
 void SmWebsocketSession::close_socket()

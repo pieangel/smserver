@@ -376,9 +376,9 @@ void SmTimeSeriesDBManager::GetSymbolMaster(std::string symCode)
 			std::string time = val[0];
 			int h = 0, l = 0, o = 0, c = 0, v = 0;
 			h = val[1];
-			l = val[4];
+			l = val[2];
 			o = val[5];
-			c = val[6];
+			c = val[8];
 			//v = val[7];
 
 			std::string local_time = VtStringUtil::GetLocalTime(time);
