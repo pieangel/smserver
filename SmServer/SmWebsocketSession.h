@@ -34,6 +34,7 @@ public:
 	template<class Body, class Allocator>
 	void do_accept(http::request<Body, http::basic_fields<Allocator>> req)
 	{
+		ws_.write_buffer_bytes(8192);
 		// Set suggested timeout settings for the websocket
 		ws_.set_option(
 			websocket::stream_base::timeout::suggested(

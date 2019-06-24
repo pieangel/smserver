@@ -5,6 +5,8 @@
 #include "SmSessionManager.h"
 #include "SmProtocolManager.h"
 #include "Log/loguru.hpp"
+
+
 void
 SmWebsocketSession::
 on_send(boost::shared_ptr<std::string const> const& ss)
@@ -13,8 +15,10 @@ on_send(boost::shared_ptr<std::string const> const& ss)
 	queue_.push_back(ss);
 
 	// Are we already writing?
-	if (queue_.size() > 1)
+	if (queue_.size() > 1) {
+		LOG_F(INFO, "on_send qsize = %d", queue_.size());
 		return;
+	}
 
 	// We are not currently writing, so send this immediately
 	ws_.async_write(
@@ -32,19 +36,20 @@ SmWebsocketSession::~SmWebsocketSession()
 
 void SmWebsocketSession::send(boost::shared_ptr<std::string const> const& ss)
 {
+	if (queue_.size() > 20000) {
+		return;
+	}
 	// Post our work to the strand, this ensures
 	// that the members of `this` will not be
 	// accessed concurrently.
 	try {
-		if (!ws_.get_executor())
-			return;
-
-		net::post(
+		boost::asio::post(
 			ws_.get_executor(),
 			beast::bind_front_handler(
 				&SmWebsocketSession::on_send,
 				shared_from_this(),
 				ss));
+
 	}
 	catch (std::exception e) {
 		LOG_F(INFO, "send error msg = %s", e.what());

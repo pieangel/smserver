@@ -18,7 +18,7 @@ SmScheduler::~SmScheduler()
 
 void SmScheduler::RepeatSymbolService()
 {
-	std::chrono::milliseconds milSec(1000);
+	std::chrono::milliseconds milSec(100);
 	_Scheduler->every(milSec, [this]() { this->SendRealtimeSymbol(); });
 }
 
@@ -26,5 +26,5 @@ void SmScheduler::SendRealtimeSymbol()
 {
 	SmRealtimeSymbolServiceManager* rtlSymServiceMgr = SmRealtimeSymbolServiceManager::GetInstance();
 	rtlSymServiceMgr->BroadcastSise();
-	//rtlSymServiceMgr->BroadcastHoga();
+	rtlSymServiceMgr->BroadcastHoga();
 }

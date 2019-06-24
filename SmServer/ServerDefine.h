@@ -8,6 +8,7 @@
 #include <boost/asio/strand.hpp>
 #include <boost/make_unique.hpp>
 #include <boost/optional.hpp>
+#include <boost/asio/dispatch.hpp>
 #include <algorithm>
 #include <cstdlib>
 #include <functional>

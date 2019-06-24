@@ -395,7 +395,7 @@ void CMainFrame::InitHdClient()
 void CMainFrame::RegisterProduct()
 {
 	SmRealtimeRegisterManager* realRegMgr = SmRealtimeRegisterManager::GetInstance();
-	realRegMgr->RegisterProduct("CLN19");
+	realRegMgr->RegisterProduct("CLQ19");
 }
 
 void CMainFrame::ClearAllResource()
@@ -450,12 +450,6 @@ void CMainFrame::ReadSymbols()
 	std::string appPath = configMgr->GetApplicationPath();
 
 	mrktMgr->ReadSymbolsFromFile();
-
-	SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
-	SmSymbol* sym = symMgr->FindSymbol("LGG");
-
-	SmTimeSeriesDBManager* dbMgr = SmTimeSeriesDBManager::GetInstance();
-	dbMgr->GetSymbolMaster("VXM19");
 }
 
 

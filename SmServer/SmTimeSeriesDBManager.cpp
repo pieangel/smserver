@@ -172,7 +172,7 @@ std::pair<std::string, std::string> SmTimeSeriesDBManager::GetUserInfo(std::stri
 {
 	// 태크가 있을 때는 반드시 태그외에 필드를 하나는 포함해야 한다.
 	//The query selects the level description field, the location tag, and the water_level field. Note that the SELECT clause must specify at least one field when it includes a tag.
-	std::string query_string = "select \"id\"  , \"pwd\" from \"user_info\" where  \"id\" = \'angelpie\'";
+	std::string query_string = "select \"id\"  , \"pwd\" from \"user_info\" where  \"id\" = \'" + id + "\'";
 	std::string resp = ExecQuery(query_string);
 	std::string str_id = "";
 	std::string str_pwd = "";

@@ -79,8 +79,12 @@ void SmTimeSeriesServiceManager::OnChartDataRequest(SmChartDataRequest&& data_re
 		SendChartDataFromDB(std::move(data_req));
 	} 
 	else {
-		// 차트 데이터 관리자에서 직접 보낸다.
-		SendChartData(std::move(data_req), chart_data);
+		if (data_req.count > chart_data->GetChartDataCount())
+			SendChartDataFromDB(std::move(data_req));
+		else {
+			// 차트 데이터 관리자에서 직접 보낸다.
+			SendChartData(std::move(data_req), chart_data);
+		}
 	}
 }
 
@@ -294,8 +298,12 @@ void SmTimeSeriesServiceManager::SendChartDataFromDB(SmChartDataRequest&& data_r
 			item.l = val[3];
 			item.o = val[4];
 			item.v = val[5];
-			std::string local_date = val[6];
-			std::string local_time = val[7];
+			std::string local_date = "";
+			std::string local_time = "";
+			if (!val[6].is_null())
+				local_date = val[6];
+			if (!val[7].is_null())
+				local_time = val[7];
 			msg.Format(_T("index = %d, datetime = %s, o = %d, h = %d, l = %d, c = %d, v = %d\n"), i, local_date_time.c_str(), item.o, item.h, item.l, item.c, item.v);
 			TRACE(msg);
 
