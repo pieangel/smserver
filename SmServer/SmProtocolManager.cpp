@@ -15,6 +15,7 @@
 #include "SmMarketManager.h"
 #include "SmChartDataManager.h"
 #include "SmChartData.h"
+#include "SmMarketManager.h"
 using namespace nlohmann;
 SmProtocolManager::SmProtocolManager()
 {
@@ -96,6 +97,12 @@ void SmProtocolManager::ParseMessage(std::string message, SmWebsocketSession* so
 			break;
 		case SmProtocol::req_register_recent_realtime_sise_all:
 			OnReqRegisterRecentRealtimeSiseAll(json_object);
+			break;
+		case SmProtocol::req_market_list:
+			OnReqMarketList(json_object);
+			break;
+		case SmProtocol::req_symbol_list_by_category:
+			OnReqSymbolListByCategory(json_object);
 			break;
 		default:
 			break;
@@ -388,6 +395,30 @@ void SmProtocolManager::OnReqRegisterRecentRealtimeSiseAll(nlohmann::json& obj)
 			SmRealtimeSymbolServiceManager* rtlSymMgr = SmRealtimeSymbolServiceManager::GetInstance();
 			rtlSymMgr->RegisterSymbol(id, symCode);
 		}
+	}
+	catch (std::exception e) {
+		std::string error = e.what();
+	}
+}
+
+void SmProtocolManager::OnReqMarketList(nlohmann::json& obj)
+{
+	try {
+		SmMarketManager* marketMgr = SmMarketManager::GetInstance();
+		std::string id = obj["user_id"];
+		marketMgr->SendMarketList(id);
+	}
+	catch (std::exception e) {
+		std::string error = e.what();
+	}
+}
+
+void SmProtocolManager::OnReqSymbolListByCategory(nlohmann::json& obj)
+{
+	try {
+		SmMarketManager* marketMgr = SmMarketManager::GetInstance();
+		std::string id = obj["user_id"];
+		marketMgr->SendSymbolListByCategory(id);
 	}
 	catch (std::exception e) {
 		std::string error = e.what();

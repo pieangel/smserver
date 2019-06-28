@@ -33,7 +33,11 @@ public:
 	void TickValue(double val) { _TickValue = val; }
 	double TickSize() const { return _TickSize; }
 	void TickSize(double val) { _TickSize = val; }
+	int Index() const { return _Index; }
+	void Index(int val) { _Index = val; }
 private:
+	// 품목에서 차지하는 인덱스
+	int _Index = 0;
 	/// <summary>
 	/// 종목 코드 - 종목을 구분하는 키가 된다.
 	/// </summary>

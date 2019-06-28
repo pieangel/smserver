@@ -431,6 +431,7 @@ void SmSymbolReader::ReadJmFile(std::string fullPath)
 		SmCategory* cat = marketMgr->FindCategory(MrktCd);
 		if (cat) {
 			SmSymbol* sym = cat->AddSymbol(Series);
+			sym->Index(std::stoi(IndexCode));
 			sym->Name(SeriesNmKor);
 			sym->NameEn(SeriesNm);
 			symMgr->AddSymbol(sym);
@@ -446,7 +447,7 @@ void SmSymbolReader::ReadJmFile(std::string fullPath)
 			//dbMgr->SaveSymbol(sym);
 
 			double profit = sym->TickSize() * sym->CtrUnit();
-			if (Series.compare("CLN19") == 0) {
+			if (Series.compare("CLQ19") == 0) {
 				int k = 0;
 			}
 		}

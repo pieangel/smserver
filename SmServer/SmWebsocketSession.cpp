@@ -36,9 +36,6 @@ SmWebsocketSession::~SmWebsocketSession()
 
 void SmWebsocketSession::send(boost::shared_ptr<std::string const> const& ss)
 {
-	if (queue_.size() > 20000) {
-		return;
-	}
 	// Post our work to the strand, this ensures
 	// that the members of `this` will not be
 	// accessed concurrently.

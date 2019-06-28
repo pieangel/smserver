@@ -30,6 +30,7 @@ public:
 	bool IsExistUser(std::string id);
 	void OnLogin(std::string id, std::string pwd, SmWebsocketSession* socket);
 	void OnLogout(std::string id);
+	int GetSendBufferQueueSize(std::string user_id);
 private:
 	void AddUserToDatabase(std::string id, std::string pwd);
 	void RemoveUser(std::string id);

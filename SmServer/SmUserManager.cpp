@@ -74,6 +74,7 @@ SmUser* SmUserManager::AddUser(std::string id, std::string pwd, SmWebsocketSessi
 std::string SmUserManager::CheckUserInfo(std::string id, std::string pwd, SmWebsocketSession* socket)
 {
 	std::string result_msg = "";
+	/*
 	if (!IsExistUser(id)) {
 		AddUser(id, pwd, socket);
 		result_msg = "User registered successfully!";
@@ -89,7 +90,7 @@ std::string SmUserManager::CheckUserInfo(std::string id, std::string pwd, SmWebs
 		result_msg = "Password error!";
 		return result_msg;
 	}
-
+	*/
 	AddUser(id, pwd, socket);
 	result_msg = "Login success!";
 	return result_msg;
@@ -258,4 +259,15 @@ void SmUserManager::OnLogout(std::string id)
 {
 	RemoveUser(id);
 	SendLogoutResult(id);
+}
+
+int SmUserManager::GetSendBufferQueueSize(std::string user_id)
+{
+	SmUser* user = FindUser(user_id);
+	if (!user)
+		return -1;
+	if (user->Socket())
+		return user->Socket()->GetSendBufferQueueSize();
+	else
+		return -1;
 }

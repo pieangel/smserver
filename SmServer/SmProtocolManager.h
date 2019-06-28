@@ -31,6 +31,8 @@ private:
 	void OnReqSiseDataAll(nlohmann::json& obj);
 	void OnReqRecentSiseDataAll(nlohmann::json& obj);
 	void OnReqRegisterRecentRealtimeSiseAll(nlohmann::json& obj);
+	void OnReqMarketList(nlohmann::json& obj);
+	void OnReqSymbolListByCategory(nlohmann::json& obj);
 	void SendResult(std::string user_id, SmProtocol protocol, int result_code, std::string result_msg);
 };
 
