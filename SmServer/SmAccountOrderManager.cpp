@@ -33,12 +33,22 @@ void SmAccountOrderManager::OnOrderFilled(SmOrder* order)
 	SmOrderManager::OnOrderFilled(order);
 }
 
+void SmAccountOrderManager::OnOrder(SmOrder* order)
+{
+	if (!order)
+		return;
+	SmSymbolOrderManager* orderMgr = FindAddOrderManager(order->SymbolCode);
+	orderMgr->OnOrder(order);
+	SmOrderManager::OnOrder(order);
+}
+
 SmSymbolOrderManager* SmAccountOrderManager::FindAddOrderManager(std::string symCode)
 {
 	SmSymbolOrderManager* acntMgr = nullptr;
 	auto it = _OrderManagerMap.find(symCode);
 	if (it == _OrderManagerMap.end()) {
 		acntMgr = new SmSymbolOrderManager();
+		acntMgr->SymbolCode(symCode);
 		_OrderManagerMap[symCode] = acntMgr;
 		return acntMgr;
 	}

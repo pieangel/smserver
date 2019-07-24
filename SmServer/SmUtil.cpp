@@ -206,7 +206,7 @@ double SmUtil::GetDifTimeForNow(std::string srcTime)
 	new_time.tm_sec = newVec[5];          //seconds after the minute - [0,59]
 
 
-	seconds = difftime(now, mktime(&new_time));
+	seconds = difftime(mktime(&new_time), now);
 
 	return seconds;
 }

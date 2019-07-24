@@ -7,6 +7,8 @@
 class SmChartData
 {
 private:
+	// 차트데이터를 이미 받았음을 표시한다.
+	bool _Received = false;
 	std::string _SymbolCode;
 	SmChartType _ChartType = SmChartType::MIN;
 	int _Cycle = 0;
@@ -17,6 +19,7 @@ private:
 	std::set<std::string> _UserList;
 	void GetChartDataFromDB();
 	void GetChartDataFromServer();
+	void GetCyclicDataFromServer();
 	size_t _DataQueueSize = ChartDataSize;
 	size_t _CycleDataSize = 3;
 	// 등록된 사용자들에게 차트 정기 데이터를 보내준다.
@@ -34,12 +37,14 @@ public:
 	void OnChartDataUpdated();
 	void PushChartDataItemToBack(SmChartDataItem data);
 	void PushChartDataItemToFront(SmChartDataItem data);
+	void UpdateChartData(SmChartDataItem data);
 	size_t GetUserCount() {
 		return _UserList.size();
 	}
 	void RemoveUser(std::string user_id);
 	void AddUser(std::string user_id) {
-		_UserList.insert(user_id);
+		if (user_id.length() > 0)
+			_UserList.insert(user_id);
 	}
 	std::string SymbolCode() const { return _SymbolCode; }
 	void SymbolCode(std::string val) { _SymbolCode = val; }
@@ -64,5 +69,7 @@ public:
 	void DataQueueSize(int val) { _DataQueueSize = val; }
 	size_t CycleDataSize() const { return _CycleDataSize; }
 	void CycleDataSize(size_t val) { _CycleDataSize = val; }
+	bool Received() const { return _Received; }
+	void Received(bool val) { _Received = val; }
 };
 

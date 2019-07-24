@@ -1,16 +1,20 @@
 #pragma once
 #include <string>
-const size_t ChartDataSize = 300;
+const size_t ChartDataSize = 1500;
 enum class SmChartType
 {
 	NONE = 0,
+	TICK,
+	MIN,
 	DAY,
 	WEEK,
-	MONTH,
-	HOUR,
-	MIN,
-	TICK,
+	MON,
 	YEAR
+};
+
+enum class SmChartDataReqestType {
+	FIRST = 0, // 최초 요구
+	CYCLE // 주기 데이터 요구
 };
 
 struct SmSiseDataRequest {
@@ -30,6 +34,7 @@ struct SmSymbolMasterRequest {
 
 struct SmChartDataRequest
 {
+	SmChartDataReqestType reqType = SmChartDataReqestType::FIRST;
 	std::string chart_id;
 	std::string user_id;
 	std::string symbolCode;

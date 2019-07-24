@@ -27,8 +27,6 @@ void SmOrderManager::OnOrderFilled(SmOrder* order)
 	if (it != _AcceptedOrderMap.end()) {
 		_AcceptedOrderMap.erase(it);
 	}
-
-	_FilledOrderMap[order->OrderNo] = order;
 }
 
 SmOrder* SmOrderManager::AddOrder(int orderNo)
@@ -37,8 +35,6 @@ SmOrder* SmOrderManager::AddOrder(int orderNo)
 	auto it = _OrderMap.find(orderNo);
 	if (it != _OrderMap.end())
 		return it->second;
-	order = new SmOrder();
-	order->OrderNo = orderNo;
 	_OrderMap[orderNo] = order;
 	return order;
 }
@@ -47,5 +43,25 @@ void SmOrderManager::AddOrder(SmOrder* order)
 {
 	if (!order)
 		return;
+	auto it = _OrderMap.find(order->OrderNo);
+	if (it != _OrderMap.end())
+		return;
 	_OrderMap[order->OrderNo] = order;
+}
+
+SmOrder* SmOrderManager::FindOrder(int order_no)
+{
+	auto it = _OrderMap.find(order_no);
+	if (it != _OrderMap.end()) {
+		return it->second;
+	}
+
+	return nullptr;
+}
+
+void SmOrderManager::OnOrder(SmOrder* order)
+{
+	if (!order)
+		return;
+	AddOrder(order);
 }

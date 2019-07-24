@@ -68,6 +68,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_COMMAND(ID_SERVER_GETHOGA, &CMainFrame::OnServerGethoga)
 	ON_COMMAND(ID_SERVER_REGISTERALLRECENTSYMBOL, &CMainFrame::OnServerRegisterallrecentsymbol)
 	ON_COMMAND(ID_SERVER_DELETEMEASURE, &CMainFrame::OnServerDeletemeasure)
+	ON_COMMAND(ID_SERVER_CREATEDATABASE, &CMainFrame::OnServerCreatedatabase)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -395,7 +396,7 @@ void CMainFrame::InitHdClient()
 void CMainFrame::RegisterProduct()
 {
 	SmRealtimeRegisterManager* realRegMgr = SmRealtimeRegisterManager::GetInstance();
-	realRegMgr->RegisterProduct("CLQ19");
+	realRegMgr->RegisterProduct("HSIN19");
 }
 
 void CMainFrame::ClearAllResource()
@@ -420,10 +421,10 @@ void CMainFrame::ClearAllResource()
 void CMainFrame::GetChartData()
 {
 	SmChartDataRequest req;
-	req.symbolCode = "CLN19";
+	req.symbolCode = "HSIN19";
 	//req.symbolCode = "";
-	req.chartType = SmChartType::MIN;
-	req.cycle = 1;
+	req.chartType = SmChartType::MON;
+	req.cycle = 12;
 	req.count = ChartDataSize;
 	req.next = 0;
 	SmHdClient* client = SmHdClient::GetInstance();
@@ -584,4 +585,11 @@ void CMainFrame::OnServerDeletemeasure()
 {
 	SmTimeSeriesDBManager* dbMgr = SmTimeSeriesDBManager::GetInstance();
 	dbMgr->DeleteMeasurement("CLN19:5:1");
+}
+
+
+void CMainFrame::OnServerCreatedatabase()
+{
+	SmTimeSeriesDBManager* dbMgr = SmTimeSeriesDBManager::GetInstance();
+	dbMgr->CreateDataBase("abroad_future");
 }

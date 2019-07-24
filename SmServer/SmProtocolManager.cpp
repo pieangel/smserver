@@ -66,13 +66,9 @@ void SmProtocolManager::ParseMessage(std::string message, SmWebsocketSession* so
 			OnRegisterChartCycleData(json_object);
 			break;
 		case SmProtocol::req_order_new:
-			OnOrderNew(json_object);
-			break;
 		case SmProtocol::req_order_modify:
-			OnOrderModify(json_object);
-			break;
 		case SmProtocol::req_order_cancel:
-			OnOrderCancel(json_object);
+			OnOrder(json_object);
 			break;
 		case SmProtocol::req_chart_data:
 			OnReqChartData(json_object);
@@ -202,6 +198,7 @@ void SmProtocolManager::OnRegisterChartCycleData(nlohmann::json& obj)
 		std::string cycle = obj["cycle"];
 		std::string count = obj["count"];
 		SmChartDataRequest req;
+		req.reqType = SmChartDataReqestType::CYCLE;
 		req.user_id = id;
 		req.symbolCode = symCode;
 		req.chartType = (SmChartType)std::stoi(chart_type);
@@ -231,25 +228,47 @@ void SmProtocolManager::OnUnregisterChartCycleData(nlohmann::json& obj)
 	}
 }
 
-void SmProtocolManager::OnOrderNew(nlohmann::json& obj)
+void SmProtocolManager::OnOrder(nlohmann::json& obj)
 {
-	SmOrderRequest req;
-	SmTotalOrderManager* totOrderMgr = SmTotalOrderManager::GetInstance();
-	totOrderMgr->OnOrder(std::move(req));
-}
+	try {
+		std::string id = obj["user_id"];
+		std::string account_no = obj["account_no"];
+		std::string password = obj["password"];
+		std::string symbol_code = obj["symbol_code"];
+		SmPositionType position_type = (SmPositionType)obj["position_type"];
+		SmPriceType price_type = (SmPriceType)obj["price_type"];
+		SmFilledCondition filled_condition = (SmFilledCondition)obj["filled_condition"];
+		int order_price = obj["order_price"];
+		int order_amount = obj["order_amount"];
+		int ori_order_no = obj["ori_order_no"];
+		int request_id = obj["request_id"];
+		SmOrderType order_type = (SmOrderType)obj["order_type"];
+		std::string fund_name = obj["fund_name"];
+		std::string system_name = obj["system_name"];
+		std::string strategy_name = obj["strategy_name"];
 
-void SmProtocolManager::OnOrderModify(nlohmann::json& obj)
-{
-	SmOrderRequest req;
-	SmTotalOrderManager* totOrderMgr = SmTotalOrderManager::GetInstance();
-	totOrderMgr->OnOrder(std::move(req));
-}
-
-void SmProtocolManager::OnOrderCancel(nlohmann::json& obj)
-{
-	SmOrderRequest req;
-	SmTotalOrderManager* totOrderMgr = SmTotalOrderManager::GetInstance();
-	totOrderMgr->OnOrder(std::move(req));
+		SmOrderRequest request;
+		request.UserID = id;
+		request.AccountNo = account_no;
+		request.SymbolCode = symbol_code;
+		request.Password = password;
+		request.Position = position_type;
+		request.PriceType = price_type;
+		request.FillCondition = filled_condition;
+		request.OrderPrice = order_price;
+		request.OrderAmount = order_amount;
+		request.OriOrderNo = ori_order_no;
+		request.RequestID = request_id;
+		request.OrderType = order_type;
+		request.FundName = fund_name;
+		request.SystemName = system_name;
+		request.StrategyName = strategy_name;
+		SmTotalOrderManager* totOrderMgr = SmTotalOrderManager::GetInstance();
+		totOrderMgr->OnRequestOrder(std::move(request));
+	}
+	catch (std::exception e) {
+		std::string error = e.what();
+	}
 }
 
 void SmProtocolManager::OnReqChartData(nlohmann::json& obj)
@@ -262,6 +281,7 @@ void SmProtocolManager::OnReqChartData(nlohmann::json& obj)
 		int cycle = obj["cycle"];
 		int count = obj["count"];
 		SmChartDataRequest req;
+		req.reqType = SmChartDataReqestType::FIRST;
 		req.user_id = id;
 		req.symbolCode = symCode;
 		req.chartType = (SmChartType)chart_type;

@@ -1,6 +1,13 @@
 #pragma once
 #include <string>
 
+enum class SmOrderError {
+	None,
+	BadAccount,
+	BadSymbol,
+	BadPriceType,
+};
+
 enum class SmPositionType
 {
 	None = 0,
@@ -40,25 +47,11 @@ enum class SmOrderState
 {
 	None,
 	/// <summary>
-	/// 예약 주문이 만들어 졌음.
-	/// </summary>
-	Preordered,
-	/// <summary>
-	/// 서버에서 주문이 왔음
-	/// </summary>
-	OrderReceived,
-	/// <summary>
 	/// 원장접수
 	/// </summary>
 	Ledger,
-	/// <summary>
-	/// 주문접수
-	/// </summary>
-	Accepted,
-	/// <summary>
-	/// 체결
-	/// </summary>
-	Filled,
+	/// 신규 확인
+	ConfirmNew,
 	/// <summary>
 	/// 정정 확인
 	/// </summary>
@@ -67,6 +60,14 @@ enum class SmOrderState
 	/// 취소 확인
 	/// </summary>
 	ConfirmCancel,
+	/// <summary>
+	/// 주문접수
+	/// </summary>
+	Accepted,
+	/// <summary>
+	/// 체결
+	/// </summary>
+	Filled,
 	/// <summary>
 	/// 신규주문거부
 	/// </summary>
@@ -79,26 +80,6 @@ enum class SmOrderState
 	/// 취소 거부
 	/// </summary>
 	RejectCancel,
-	/// <summary>
-	/// Response from server before the order is accepted.
-	/// </summary>
-	NewOrderFromServer,
-	/// <summary>
-	/// Response from server before the order is accepted.
-	/// </summary>
-	ModifyOrderFromServer,
-	/// <summary>
-	/// Response from server before the order is accepted.
-	/// </summary>
-	CancelOrderFromServer,
-	/// <summary>
-	/// Reserved state
-	/// </summary>
-	Reserved,
-	/// <summary>
-	/// Canceled the reserved
-	/// </summary>
-	CancelReserved,
 	// 청산됨 - 다른 주문에 의해서 혹은 잔고를 청산하는 용도로
 	Settled
 };

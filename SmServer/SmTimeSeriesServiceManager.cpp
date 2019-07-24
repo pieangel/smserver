@@ -22,7 +22,7 @@ using namespace nlohmann;
 
 SmTimeSeriesServiceManager::SmTimeSeriesServiceManager()
 {
-
+	
 }
 
 SmTimeSeriesServiceManager::~SmTimeSeriesServiceManager()
@@ -67,7 +67,7 @@ void SmTimeSeriesServiceManager::OnRegisterCycleDataRequest(SmChartDataRequest&&
 	SmHdClient* client = SmHdClient::GetInstance();
 	client->GetChartData(data_req);
 	// 차트 데이터 타이머 서비스를 등록해 준다.
-	//RegisterTimer(chart_data);
+	RegisterTimer(chart_data);
 }
 
 void SmTimeSeriesServiceManager::OnChartDataRequest(SmChartDataRequest&& data_req)
@@ -76,19 +76,32 @@ void SmTimeSeriesServiceManager::OnChartDataRequest(SmChartDataRequest&& data_re
 	SmChartData* chart_data = chartDataMgr->FindChartData(data_req.GetDataKey());
 	// 차트 데이터를 찾아봐서 차트 데이터가 없을 경우 혹은 요청 갯수가 클 때만 요청을 한다.
 	if (!chart_data) {
-		SendChartDataFromDB(std::move(data_req));
+		// 차트데이터를 요청한다.
+		GetChartDataFromSourceServer(std::move(data_req));
 	} 
 	else {
-		if (data_req.count > chart_data->GetChartDataCount())
-			SendChartDataFromDB(std::move(data_req));
-		else {
-			// 차트 데이터 관리자에서 직접 보낸다.
-			SendChartData(std::move(data_req), chart_data);
-		}
+		// 주기데이터를 등록해 준다.
+		RegisterCycleChartDataRequest(data_req);
+		// 차트 데이터 관리자에서 직접 보낸다.
+		SendChartData(std::move(data_req), chart_data);
 	}
 }
 
-void SmTimeSeriesServiceManager::SendChartData(SmChartDataRequest&& data_req, SmChartData* chart_data)
+void SmTimeSeriesServiceManager::RegisterCycleChartDataRequest(SmChartDataRequest data_req)
+{
+	auto it = _CycleDataReqMap.find(data_req.GetDataKey());
+	// 이미 차트 데이터에 대한 요청이 있는 경우에는 그 차트데이터에 사용자 아이디만 추가한다.
+	if (it != _CycleDataReqMap.end()) {
+		it->second->AddUser(data_req.user_id);
+		return;
+	}
+	// 차트 데이터를 등록해 준다.
+	SmChartData* chart_data = AddCycleDataReq(data_req);
+	// 차트 데이터 타이머 서비스를 등록해 준다.
+	RegisterTimer(chart_data);
+}
+
+void SmTimeSeriesServiceManager::SendChartData(SmChartDataRequest data_req, SmChartData* chart_data)
 {
 	if (!chart_data)
 		return;
@@ -177,10 +190,15 @@ void SmTimeSeriesServiceManager::OnSymbolMasterRequest(SmSymbolMasterRequest&& m
 	userMgr->SendResultMessage(master_req.user_id, content);
 }
 
-void SmTimeSeriesServiceManager::OnCompleteChartData(SmChartDataRequest&& data_req, SmChartData* chart_data)
+void SmTimeSeriesServiceManager::OnCompleteChartData(SmChartDataRequest data_req, SmChartData* chart_data)
 {
 	if (!chart_data)
 		return;
+	// 차트데이터를 받았음을 표시해 준다.
+	chart_data->Received(true);
+	// 주기데이터를 먼저 등록해 준다.
+	RegisterCycleChartDataRequest(data_req);
+	// 차트데이터를 보낸다.
 	SendChartData(std::move(data_req), chart_data);
 }
 
@@ -188,6 +206,8 @@ void SmTimeSeriesServiceManager::SendChartData(std::vector<SmSimpleChartDataItem
 {
 	if (dataVec.size() == 0)
 		return;
+
+	CString msg;
 	json send_object;
 	send_object["res_id"] = SmProtocol::res_chart_data;
 	send_object["chart_id"] = req.chart_id;
@@ -209,6 +229,9 @@ void SmTimeSeriesServiceManager::SendChartData(std::vector<SmSimpleChartDataItem
 			{ "close",  item.c },
 			{ "volume",  item.v }
 		};
+		
+		msg.Format("SendChartData :: date_time = %s\n", date.c_str());
+		//TRACE(msg);
 	}
 
 	std::string content = send_object.dump();
@@ -230,18 +253,19 @@ void SmTimeSeriesServiceManager::RegisterTimer(SmChartData* chartData)
 {
 	if (!chartData)
 		return;
+	// 주기 데이터 목록에서 찾아 봐서 없으면 수행하지 않는다.
 	auto it = _CycleDataReqTimerMap.find(chartData->GetDataKey());
 	if (it != _CycleDataReqTimerMap.end())
 		return;
 	std::pair<int, int> timer_times = chartData->GetCycleByTimeDif();
 	// 주기가 0이면 오류 이므로 처리하지 않는다.
-	if (timer_times.second == 0)
+	if (timer_times.first == 0)
 		return;
 	// 대기시간 
-	int waitTime = timer_times.first;
+	int waitTime = timer_times.second;
 	// 주기를 초로 환산해서 대입한다.
 	// Add to the timer.
-	auto id = _Timer.add(seconds(waitTime), std::bind(&SmChartData::OnTimer, chartData), seconds(timer_times.second));
+	auto id = _Timer.add(seconds(waitTime), std::bind(&SmChartData::OnTimer, chartData), seconds(timer_times.first));
 	// Add to the request map.
 	_CycleDataReqTimerMap[chartData->GetDataKey()] = id;
 }
@@ -340,7 +364,7 @@ void SmTimeSeriesServiceManager::SendChartDataFromDB(SmChartDataRequest&& data_r
 	}
 }
 
-void SmTimeSeriesServiceManager::GetChartDataFromAnotherServer(SmChartDataRequest&& data_req)
+void SmTimeSeriesServiceManager::GetChartDataFromSourceServer(SmChartDataRequest&& data_req)
 {
 	SmHdClient* client = SmHdClient::GetInstance();
 	client->GetChartData(data_req);

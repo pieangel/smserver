@@ -87,4 +87,6 @@ struct SmOrder
 	/// </summary>
 	std::string FundName;
 	std::string SystemName;
+	/// 접수된 가격
+	int AcceptedPrice;
 };

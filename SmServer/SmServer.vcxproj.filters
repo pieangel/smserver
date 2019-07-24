@@ -334,6 +334,12 @@
     <ClInclude Include="SmProtocolManager.h">
       <Filter>Service</Filter>
     </ClInclude>
+    <ClInclude Include="SmAccountPositionManager.h">
+      <Filter>Position</Filter>
+    </ClInclude>
+    <ClInclude Include="SmTotalPositionManager.h">
+      <Filter>Position</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SmChartServer.cpp">
@@ -488,6 +494,12 @@
     </ClCompile>
     <ClCompile Include="SmProtocolManager.cpp">
       <Filter>Service</Filter>
+    </ClCompile>
+    <ClCompile Include="SmAccountPositionManager.cpp">
+      <Filter>Position</Filter>
+    </ClCompile>
+    <ClCompile Include="SmTotalPositionManager.cpp">
+      <Filter>Position</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -76,5 +76,9 @@ enum class SmProtocol {
 	// 마켓 목록 응답
 	res_market_list,
 	// 카테고리별 종목 리스트 요청
-	req_symbol_list_by_category
+	req_symbol_list_by_category,
+	// 종목 잔고 정보
+	res_symbol_position,
+	// 주문 관련 오류
+	res_order_error
 };

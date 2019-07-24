@@ -193,6 +193,10 @@ void SmHdCtrl::GetChartData(SmChartDataRequest req)
 		reqString.append("2");
 	else if (req.chartType == SmChartType::DAY)
 		reqString.append("3");
+	else if (req.chartType == SmChartType::WEEK)
+		reqString.append("4");
+	else if (req.chartType == SmChartType::MON)
+		reqString.append("5");
 	else
 		reqString.append("2");
 
@@ -368,7 +372,7 @@ void SmHdCtrl::OnRcvdAbroadSise(CString& strKey, LONG& nRealType)
 	sym->Quote.SignToPreDay = strSignToPreDay;
 
 	CString msg;
-	msg.Format(_T("time = %s, h=%s, l=%s, o=%s, c=%s, v=%s, ratio = %s\n"), strTime, strHigh, strLow, strOpen, strClose, strVolume, strRatioToPreDay);
+	msg.Format(_T("symbol = %s, time = %s, h=%s, l=%s, o=%s, c=%s, v=%s, ratio = %s\n"), strSymCode, strTime, strHigh, strLow, strOpen, strClose, strVolume, strRatioToPreDay);
 	//TRACE(msg);
 }
 
@@ -420,6 +424,10 @@ void SmHdCtrl::OnRcvdAbroadSiseByReq(CString& sTrCode, LONG& nRqID)
 		quoteItem.Low = _ttoi(strLow);
 		quoteItem.Volume = 0;
 		quoteItem.Sign = "";
+
+		//CString msg;
+		msg.Format(_T("symbol = %s, time = %s, h=%s, l=%s, o=%s, c=%s, ratio = %s\n"), strSymCode, strTime, strHigh, strLow, strOpen, strClose, strRatioToPreDay);
+		TRACE(msg);
 
 
 		SmTimeSeriesDBManager* dbMgr = SmTimeSeriesDBManager::GetInstance();
@@ -534,7 +542,7 @@ void SmHdCtrl::OnRcvdAbroadChartData(CString& sTrCode, LONG& nRqID)
 		if (strDate.GetLength() == 0)
 			continue;
 		
-		msg.Format(_T("index = %d, date = %s, t = %s, o = %s, h = %s, l = %s, c = %s, v = %s\n"), i, strDate, strTime, strOpen, strHigh, strLow, strClose, strVol);
+		msg.Format(_T("OnRcvdAbroadChartData :: index = %d, date = %s, t = %s, o = %s, h = %s, l = %s, c = %s, v = %s\n"), i, strDate, strTime, strOpen, strHigh, strLow, strClose, strVol);
 		TRACE(msg);
 
 		SmChartDataItem data;
@@ -548,9 +556,13 @@ void SmHdCtrl::OnRcvdAbroadChartData(CString& sTrCode, LONG& nRqID)
 		data.o = _ttoi(strOpen);
 		data.c = _ttoi(strClose);
 		data.v = _ttoi(strVol);
-		chart_data->PushChartDataItemToBack(data);
-		// 차트 데이터 항목 도착을 알린다.
-		tsCol->OnChartDataItem(data);
+		if (req.reqType == SmChartDataReqestType::FIRST)
+			chart_data->PushChartDataItemToFront(data);
+		else
+			chart_data->UpdateChartData(data);
+		// 차트 데이터를 데이터 베이스에 저장한다.
+		// 이 부분은 일단 주석처리한다. - 시스템 리소스를 너무 많이 잡아 먹어서 따로 비동기로 수행해야 한다. 
+		//tsCol->OnChartDataItem(data);
 	}
 
 	// 차트 데이터 수신 요청 목록에서 제거한다.
@@ -563,7 +575,7 @@ void SmHdCtrl::OnRcvdAbroadChartData(CString& sTrCode, LONG& nRqID)
 		else {
 			// 차트 데이터 수신 완료를 알릴다.
 			SmTimeSeriesServiceManager* tsSvcMgr = SmTimeSeriesServiceManager::GetInstance();
-			tsSvcMgr->OnCompleteChartData(std::move(req), chart_data);
+			tsSvcMgr->OnCompleteChartData(req, chart_data);
 		}
 	}
 }

@@ -21,8 +21,9 @@ public:
 	void OnSymbolMasterRequest(SmSymbolMasterRequest&& master_req);
 	int SendDataSplitSize() const { return _SendDataSplitSize; }
 	void SendDataSplitSize(int val) { _SendDataSplitSize = val; }
-	void OnCompleteChartData(SmChartDataRequest&& data_req, SmChartData* chart_data);
+	void OnCompleteChartData(SmChartDataRequest data_req, SmChartData* chart_data);
 private:
+	void RegisterCycleChartDataRequest(SmChartDataRequest data_req);
 	void SendChartData(std::vector<SmSimpleChartDataItem>& dataVec, SmChartDataRequest req, int totalCount, int startIndex, int endIndex);
 	std::map<std::string, SmChartDataRequest> _HistoryDataReqMap;
 	std::map<std::string, CppTime::timer_id> _CycleDataReqTimerMap;
@@ -32,7 +33,8 @@ private:
 	SmChartData* AddCycleDataReq(SmChartDataRequest data_req);
 	void RegisterTimer(SmChartData* chartData);
 	void SendChartDataFromDB(SmChartDataRequest&& data_req);
-	void GetChartDataFromAnotherServer(SmChartDataRequest&& data_req);
-	void SendChartData(SmChartDataRequest&& data_req, SmChartData* chart_data);
+	// 증권사나 데이터 제공 업체에 직접 데이터를 요청한다.
+	void GetChartDataFromSourceServer(SmChartDataRequest&& data_req);
+	void SendChartData(SmChartDataRequest data_req, SmChartData* chart_data);
 };
 

@@ -10,6 +10,8 @@ private:
 	std::string _AccountName;
 	std::string _OwnerName;
 	std::map<std::string, SmPosition*> _PositionMap;
+	// 총자산 - 기초자산은 1억원
+	double _TotalBalance = 100000000;
 public:
 	std::string AccountNo() const { return _AccountNo; }
 	void AccountNo(std::string val) { _AccountNo = val; }

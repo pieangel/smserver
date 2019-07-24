@@ -34,3 +34,14 @@ SmAccount* SmAccountManager::FindAccount(std::string accountNo)
 
 	return nullptr;
 }
+
+SmAccount* SmAccountManager::FindAddAccount(std::string accountNo)
+{
+	auto it = _AccountMap.find(accountNo);
+	if (it != _AccountMap.end())
+		return it->second;
+	SmAccount* acnt = new SmAccount();
+	acnt->AccountNo(accountNo);
+	_AccountMap[accountNo] = acnt;
+	return acnt;
+}

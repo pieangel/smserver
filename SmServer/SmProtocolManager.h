@@ -20,9 +20,7 @@ private:
 	void OnUnregisterSymbol(nlohmann::json& obj);
 	void OnRegisterChartCycleData(nlohmann::json& obj);
 	void OnUnregisterChartCycleData(nlohmann::json& obj);
-	void OnOrderNew(nlohmann::json& obj);
-	void OnOrderModify(nlohmann::json& obj);
-	void OnOrderCancel(nlohmann::json& obj);
+	void OnOrder(nlohmann::json& obj);
 	void OnReqChartData(nlohmann::json& obj);
 	void OnReqSiseData(nlohmann::json& obj);
 	void OnReqHogaData(nlohmann::json& obj);

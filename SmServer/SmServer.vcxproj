@@ -221,6 +221,7 @@
     <ClInclude Include="ServerDefine.h" />
     <ClInclude Include="SmAccount.h" />
     <ClInclude Include="SmAccountManager.h" />
+    <ClInclude Include="SmAccountPositionManager.h" />
     <ClInclude Include="SmCategory.h" />
     <ClInclude Include="SmChartData.h" />
     <ClInclude Include="SmChartDataManager.h" />
@@ -259,6 +260,7 @@
     <ClInclude Include="SmSymbolReader.h" />
     <ClInclude Include="SmTimeSeriesServiceManager.h" />
     <ClInclude Include="SmTotalOrderManager.h" />
+    <ClInclude Include="SmTotalPositionManager.h" />
     <ClInclude Include="SmUser.h" />
     <ClInclude Include="SmUserManager.h" />
     <ClInclude Include="SmUtfUtil.h" />
@@ -309,6 +311,7 @@
     </ClCompile>
     <ClCompile Include="SmAccount.cpp" />
     <ClCompile Include="SmAccountManager.cpp" />
+    <ClCompile Include="SmAccountPositionManager.cpp" />
     <ClCompile Include="SmCategory.cpp" />
     <ClCompile Include="SmChartData.cpp" />
     <ClCompile Include="SmChartDataManager.cpp" />
@@ -384,6 +387,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="SmTotalOrderManager.cpp" />
+    <ClCompile Include="SmTotalPositionManager.cpp" />
     <ClCompile Include="SmUser.cpp" />
     <ClCompile Include="SmUserManager.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
