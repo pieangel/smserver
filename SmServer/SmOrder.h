@@ -1,5 +1,7 @@
 #pragma once
 #include "SmOrderDefine.h"
+#include <vector>
+
 // 서브계좌 주문은 accountNo는 부모의 계좌번호를 사용하고
 // SubAccountNo 에 계좌 번호를 따로 저장해서 사용한다.
 // 일반계좌 주문이든 서브계좌 주문이든  accountNo에는 실제 계좌의 번호가 들어있다.
@@ -89,4 +91,6 @@ struct SmOrder
 	std::string SystemName;
 	/// 접수된 가격
 	int AcceptedPrice;
+	// 이 주문이 청산 시킨 주문 목록
+	std::vector<int> SettledOrders;
 };

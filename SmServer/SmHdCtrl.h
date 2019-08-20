@@ -68,6 +68,7 @@ const CString DEF_HW_MSTINFO = "o51211";
 const CString DefAbChartData = "o51200";
 const CString DefAbSiseData = "o51000";
 const CString DefAbHogaData = "o51010";
+const CString DefAbsChartData2 = "o44005";
 
 // FX마진	//@lhe 2012.06.22
 const CString DEF_FX_JANGO = "g11004.AQ0901%";		// 자산내역
@@ -139,6 +140,7 @@ private:
 	void OnRcvdAbroadSiseByReq(CString& sTrCode, LONG& nRqID);
 	void OnRcvdAbroadHogaByReq(CString& sTrCode, LONG& nRqID);
 	void OnRcvdAbroadChartData(CString& sTrCode, LONG& nRqID);
+	void OnRcvdAbroadChartData2(CString& sTrCode, LONG& nRqID);
 	/// <summary>
 	/// 차트 데이터 요청 맵 
 	/// 키 : 요청 번호

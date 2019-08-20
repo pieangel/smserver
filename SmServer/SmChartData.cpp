@@ -149,8 +149,8 @@ void SmChartData::PushChartDataItemToBack(SmChartDataItem data)
 		_DataItemList.pop_front();
 	}
 
-	msg.Format(_T("pushed data :: size = %d, code = %s, date = %s, time = %s, o = %d, h = %d, l = %d, c = %d, v = %d\n"), _DataItemList.size(), SymbolCode().c_str(), data.date.c_str(), data.time.c_str(), data.o, data.h, data.l, data.c, data.v);
-	TRACE(msg);
+	//msg.Format(_T("pushed data :: size = %d, code = %s, date = %s, time = %s, o = %d, h = %d, l = %d, c = %d, v = %d\n"), _DataItemList.size(), SymbolCode().c_str(), data.date.c_str(), data.time.c_str(), data.o, data.h, data.l, data.c, data.v);
+	//TRACE(msg);
 
 	GetCycleByTimeDif();
 }
@@ -165,8 +165,8 @@ void SmChartData::PushChartDataItemToFront(SmChartDataItem data)
 		_DataItemList.pop_back();
 	}
 
-	msg.Format(_T("pushed data :: size = %d, code = %s, date = %s, time = %s, o = %d, h = %d, l = %d, c = %d, v = %d\n"), _DataItemList.size(), SymbolCode().c_str(), data.date.c_str(), data.time.c_str(), data.o, data.h, data.l, data.c, data.v);
-	TRACE(msg);
+	//msg.Format(_T("pushed data :: size = %d, code = %s, date = %s, time = %s, o = %d, h = %d, l = %d, c = %d, v = %d\n"), _DataItemList.size(), SymbolCode().c_str(), data.date.c_str(), data.time.c_str(), data.o, data.h, data.l, data.c, data.v);
+	//TRACE(msg);
 
 	GetCycleByTimeDif();
 }

@@ -180,6 +180,8 @@ int SmSymbolOrderManager::CalcRemain(SmOrder* newOrder)
 			newOrder->RemainQty = 0;
 			oldOrder->RemainQty = 0;
 			newOrder->OrderState = SmOrderState::Settled;
+			// 새로운 주문이 청산 시킨 주문은 목록에 넣어 준다.
+			newOrder->SettledOrders.push_back(oldOrder->OrderNo);
 			oldOrder->OrderState = SmOrderState::Settled;
 			// 잔고에서 지워준다.
 			_RemainOrderMap.erase(it);
@@ -190,6 +192,8 @@ int SmSymbolOrderManager::CalcRemain(SmOrder* newOrder)
 		else if (std::abs(newOrder->RemainQty) > std::abs(oldOrder->RemainQty)) {
 			newOrder->RemainQty += oldOrder->RemainQty;
 			oldOrder->RemainQty = 0;
+			// 새로운 주문이 청산 시킨 주문은 목록에 넣어 준다.
+			newOrder->SettledOrders.push_back(oldOrder->OrderNo);
 			oldOrder->OrderState = SmOrderState::Settled;
 			// 기존 주문을 목록에서 지워준다.
 			it = _RemainOrderMap.erase(it);

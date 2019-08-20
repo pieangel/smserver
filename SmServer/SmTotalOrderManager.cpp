@@ -173,6 +173,9 @@ void SmTotalOrderManager::SendResponse(SmOrder* order)
 	send_object["strategy_name"] = order->StrategyName;
 	send_object["system_name"] = order->SystemName;
 	send_object["fund_name"] = order->FundName;
+	for (size_t i = 0; i < order->SettledOrders.size(); ++i) {
+		send_object["settled_orders"][i] = order->SettledOrders[i];
+	}
 
 	std::string content = send_object.dump();
 	SmUserManager* userMgr = SmUserManager::GetInstance();
@@ -207,6 +210,9 @@ void SmTotalOrderManager::SendResponse(SmOrder* order, SmProtocol protocol)
 	send_object["strategy_name"] = order->StrategyName;
 	send_object["system_name"] = order->SystemName;
 	send_object["fund_name"] = order->FundName;
+	for (size_t i = 0; i < order->SettledOrders.size(); ++i) {
+		send_object["settled_orders"][i] = order->SettledOrders[i];
+	}
 
 	std::string content = send_object.dump();
 	SmUserManager* userMgr = SmUserManager::GetInstance();
