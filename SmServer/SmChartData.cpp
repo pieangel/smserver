@@ -135,6 +135,18 @@ std::pair<int, int> SmChartData::GetCycleByTimeDif()
 
 void SmChartData::OnChartDataUpdated()
 {
+	int k = 0;
+	CString msg;
+	for (auto it = _DataItemList.rbegin(); it != _DataItemList.rend(); ++it) {
+		SmChartDataItem item = *it;
+		msg.Format(_T(">>>>>>>>>>>>>>>>>>> size = %d, code = %s, date = %s, time = %s, o = %d, h = %d, l = %d, c = %d, v = %d\n"), _DataItemList.size(), SymbolCode().c_str(), item.date.c_str(), item.time.c_str(), item.o, item.h, item.l, item.c, item.v);
+		//TRACE(msg);
+
+		k++;
+
+		if (k == _CycleDataSize)
+			break;
+	}
 	// 여기서 새로운 데이터를 보낸다.
 	SendCyclicChartDataToUsers();
 }
@@ -178,18 +190,47 @@ void SmChartData::UpdateChartData(SmChartDataItem data)
 		return;
 
 	CString msg;
-	//msg.Format(_T("UpdateChartData:: size = %d, code = %s, date = %s, time = %s, o = %d, h = %d, l = %d, c = %d, v = %d\n"), _DataItemList.size(), SymbolCode().c_str(), data.date.c_str(), data.time.c_str(), data.o, data.h, data.l, data.c, data.v);
+	msg.Format(_T("UpdateChartData:: size = %d, code = %s, date = %s, time = %s, o = %d, h = %d, l = %d, c = %d, v = %d\n"), _DataItemList.size(), SymbolCode().c_str(), data.date.c_str(), data.time.c_str(), data.o, data.h, data.l, data.c, data.v);
 	//TRACE(msg);
+	int count = 0;
 	for (auto it = _DataItemList.rbegin(); it != _DataItemList.rend(); ++it) {
 		SmChartDataItem& item = *it;
+		std::string old_date_time = item.date + item.time;
+		std::string new_date_time = data.date + data.time;
 		// 데이터가 있으면 값을 갱신하고 빠져 나간다.
-		if (item.date.compare(data.date) == 0 && item.time.compare(data.time) == 0) {
+		if (old_date_time.compare(new_date_time) == 0) {
 			item.h = data.h;
 			item.l = data.l;
 			item.o = data.o;
 			item.c = data.c;
 			item.v = data.v;
 			return;
+		}
+		count++;
+		if (count == _CycleDataSize)
+			break;
+	}
+
+	//SmChartDataItem last = _DataItemList.back();
+	//std::string last_date_time = last.date + last.time;
+	//std::string new_date_time = data.date + data.time;
+	//if (new_date_time.compare(last_date_time) <= 0)
+	//	return;
+
+
+	for (auto it = _DataItemList.end(); it != _DataItemList.begin(); --it) {
+		auto index = it;
+		if (index == _DataItemList.begin())
+			break;
+
+		--index;
+		SmChartDataItem& item = *index;
+		std::string old_date_time = item.date + item.time;
+		std::string new_date_time = data.date + data.time;
+		// 날짜가 더 큰 경우 삽입하고 빠져 나간다.
+		if (new_date_time.compare(new_date_time) > 0) {
+			_DataItemList.insert(it, data);
+			break;
 		}
 	}
 
@@ -198,15 +239,7 @@ void SmChartData::UpdateChartData(SmChartDataItem data)
 	if (_DataItemList.size() > _DataQueueSize) {
 		_DataItemList.pop_front();
 	}
-	int k = 0;
-	for (auto it = _DataItemList.rbegin(); it != _DataItemList.rend(); ++it) {
-		SmChartDataItem item = *it;
-		msg.Format(_T(">>>>>>>>>>>>>>>>>>> size = %d, code = %s, date = %s, time = %s, o = %d, h = %d, l = %d, c = %d, v = %d\n"), _DataItemList.size(), SymbolCode().c_str(), item.date.c_str(), item.time.c_str(), item.o, item.h, item.l, item.c, item.v);
-		//TRACE(msg);
-		if (k == 3)
-			break;
-		k++;
-	}
+	
 }
 
 void SmChartData::RemoveUser(std::string user_id)

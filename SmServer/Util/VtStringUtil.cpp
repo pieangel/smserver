@@ -41,6 +41,16 @@ std::string VtStringUtil::getTimeStr()
 	return ss.str();
 }
 
+std::string VtStringUtil::getCurentDate()
+{
+	auto now = std::chrono::system_clock::now();
+	auto in_time_t = std::chrono::system_clock::to_time_t(now);
+
+	std::stringstream ss;
+	ss << std::put_time(std::localtime(&in_time_t), "%Y%m%d");
+	return ss.str();
+}
+
 bool VtStringUtil::endsWith(const std::string& s, const std::string& suffix)
 {
 	return s.size() >= suffix.size() &&

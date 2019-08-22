@@ -141,6 +141,8 @@ private:
 	void OnRcvdAbroadHogaByReq(CString& sTrCode, LONG& nRqID);
 	void OnRcvdAbroadChartData(CString& sTrCode, LONG& nRqID);
 	void OnRcvdAbroadChartData2(CString& sTrCode, LONG& nRqID);
+	void GetChartDataShortCycle(SmChartDataRequest req);
+	void GetChartDataLongCycle(SmChartDataRequest req);
 	/// <summary>
 	/// 차트 데이터 요청 맵 
 	/// 키 : 요청 번호

@@ -159,7 +159,79 @@ void SmHdCtrl::UnregisterProduct(std::string symCode)
 	m_CommAgent.CommRemoveBroad(symCode.c_str(), nRealType);
 }
 
+
+
 void SmHdCtrl::GetChartData(SmChartDataRequest req)
+{
+	if (req.chartType == SmChartType::TICK)
+		GetChartDataShortCycle(req);
+	else if (req.chartType == SmChartType::MIN)
+		GetChartDataShortCycle(req);
+	else if (req.chartType == SmChartType::DAY)
+		GetChartDataLongCycle(req);
+	else if (req.chartType == SmChartType::WEEK)
+		GetChartDataLongCycle(req);
+	else if (req.chartType == SmChartType::MON)
+		GetChartDataLongCycle(req);
+	else
+		GetChartDataShortCycle(req);
+}
+
+
+
+void SmHdCtrl::GetChartDataShortCycle(SmChartDataRequest req)
+{
+	std::string temp;
+	std::string reqString;
+	// 종목 코드 32 자리
+	temp = VtStringUtil::PadRight(req.symbolCode, ' ', 32);
+	reqString.append(temp);
+
+	std::string str = VtStringUtil::getCurentDate();
+	CString msg;
+	msg.Format("%s \n", str.c_str());
+	//TRACE(msg);
+	reqString.append(str);
+	reqString.append(str);
+	reqString.append(_T("9999999999"));
+
+	if (req.next == 0)
+		reqString.append(_T("0"));
+	else
+		reqString.append(_T("1"));
+
+	if (req.chartType == SmChartType::TICK)
+		reqString.append("1");
+	else if (req.chartType == SmChartType::MIN)
+		reqString.append("2");
+	else if (req.chartType == SmChartType::DAY)
+		reqString.append("3");
+	else if (req.chartType == SmChartType::WEEK)
+		reqString.append("4");
+	else if (req.chartType == SmChartType::MON)
+		reqString.append("5");
+	else
+		reqString.append("2");
+
+	temp = VtStringUtil::PadLeft(req.cycle, '0', 2);
+	reqString.append(temp);
+
+	temp = VtStringUtil::PadLeft(req.count, '0', 5);
+	reqString.append(temp);
+
+	CString sTrCode = "o51200";
+	CString sInput = reqString.c_str();
+	CString strNextKey = _T("");
+	//int nRqID = m_CommAgent.CommRqData(sTrCode, sInput, sInput.GetLength(), "");
+
+	CString sReqFidInput = "000001002003004005006007008009010011012013014015";
+	int nRqID = m_CommAgent.CommFIDRqData(sTrCode, sInput, sReqFidInput, sInput.GetLength(), strNextKey);
+	
+	//TRACE(sInput);
+	_ChartDataReqMap[nRqID] = req;
+}
+
+void SmHdCtrl::GetChartDataLongCycle(SmChartDataRequest req)
 {
 	std::string temp;
 	std::string reqString;
@@ -540,7 +612,7 @@ void SmHdCtrl::OnRcvdAbroadChartData(CString& sTrCode, LONG& nRqID)
 	SmChartData* chart_data = chartDataMgr->AddChartData(req);
 	// 가장 최근것이 가장 먼저 온다. 따라서 가장 과거의 데이터를 먼저 가져온다.
 	// Received the chart data first.
-	for (int i = 0; i < nRepeatCnt; ++i) {
+	for (int i = nRepeatCnt - 1; i >= 0; --i) {
 		CString strDate = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "국내일자");
 		CString strTime = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "국내시간");
 		CString strOpen = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "시가");
@@ -567,7 +639,7 @@ void SmHdCtrl::OnRcvdAbroadChartData(CString& sTrCode, LONG& nRqID)
 		data.c = _ttoi(strClose);
 		data.v = _ttoi(strVol);
 		if (req.reqType == SmChartDataReqestType::FIRST)
-			chart_data->PushChartDataItemToFront(data);
+			chart_data->PushChartDataItemToBack(data);
 		else
 			chart_data->UpdateChartData(data);
 		// 차트 데이터를 데이터 베이스에 저장한다.
@@ -608,8 +680,8 @@ void SmHdCtrl::OnRcvdAbroadChartData2(CString& sTrCode, LONG& nRqID)
 	// 가장 최근것이 가장 먼저 온다. 따라서 가장 과거의 데이터를 먼저 가져온다.
 	// Received the chart data first.
 	for (int i = 0; i < nRepeatCnt; ++i) {
-		CString strDate = m_CommAgent.CommGetData(sTrCode, -1, "OutRec2", i, "일자");
-		CString strTime = m_CommAgent.CommGetData(sTrCode, -1, "OutRec2", i, "시간");
+		CString strDate = m_CommAgent.CommGetData(sTrCode, -1, "OutRec2", i, "국내일자");
+		CString strTime = m_CommAgent.CommGetData(sTrCode, -1, "OutRec2", i, "국내시간");
 		CString strOpen = m_CommAgent.CommGetData(sTrCode, -1, "OutRec2", i, "시가");
 		CString strHigh = m_CommAgent.CommGetData(sTrCode, -1, "OutRec2", i, "고가");
 		CString strLow = m_CommAgent.CommGetData(sTrCode, -1, "OutRec2", i, "저가");
