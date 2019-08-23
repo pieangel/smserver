@@ -93,7 +93,7 @@ void SmChartData::SendCyclicChartDataToUsers()
 		std::string time = item.date + item.time;
 		CString msg;
 		msg.Format("send cycle data ::symbol = %s, dt = %s , o = %d, h = %d, l= %d, c = %d\n", _SymbolCode.c_str(), time.c_str(), item.o, item.h, item.l, item.c);
-		TRACE(msg);
+		//TRACE(msg);
 		std::string date_time = VtStringUtil::GetLocalTimeByDatetimeString(time);
 		send_object["data"][k++] = {
 			{ "date_time",  date_time },

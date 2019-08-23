@@ -13,6 +13,7 @@ public:
 	std::string SymbolCode() const { return _SymbolCode; }
 	void SymbolCode(std::string val) { _SymbolCode = val; }
 private:
+	double _TotalFee = 0.0;
 	std::string _SymbolCode;
 	void CalcPosition(SmOrder* order);
 	int CalcRemain(SmOrder* newOrder);

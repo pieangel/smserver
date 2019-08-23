@@ -625,7 +625,7 @@ void SmHdCtrl::OnRcvdAbroadChartData(CString& sTrCode, LONG& nRqID)
 			continue;
 		
 		msg.Format(_T("OnRcvdAbroadChartData :: index = %d, date = %s, t = %s, o = %s, h = %s, l = %s, c = %s, v = %s\n"), i, strDate, strTime, strOpen, strHigh, strLow, strClose, strVol);
-		TRACE(msg);
+		//TRACE(msg);
 
 		SmChartDataItem data;
 		data.symbolCode = req.symbolCode;
