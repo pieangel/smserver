@@ -80,5 +80,6 @@ enum class SmProtocol {
 	// 종목 잔고 정보
 	res_symbol_position,
 	// 주문 관련 오류
-	res_order_error
+	res_order_error,
+	req_position_list
 };
