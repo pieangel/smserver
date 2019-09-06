@@ -340,9 +340,6 @@
     <ClInclude Include="SmTotalPositionManager.h">
       <Filter>Position</Filter>
     </ClInclude>
-    <ClInclude Include="SmMongoDBManager.h">
-      <Filter>Database</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SmChartServer.cpp">
@@ -503,9 +500,6 @@
     </ClCompile>
     <ClCompile Include="SmTotalPositionManager.cpp">
       <Filter>Position</Filter>
-    </ClCompile>
-    <ClCompile Include="SmMongoDBManager.cpp">
-      <Filter>Database</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

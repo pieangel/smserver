@@ -39,7 +39,6 @@
 #include "SmTimeSeriesCollector.h"
 #include "SmTotalOrderManager.h"
 #include "SmTimeSeriesServiceManager.h"
-#include "SmMongoDBManager.h"
 #include "SmUtil.h"
 
 using namespace std;
@@ -402,7 +401,6 @@ void CMainFrame::RegisterProduct()
 
 void CMainFrame::ClearAllResource()
 {
-	SmMongoDBManager::DestroyInstance();
 	SmTimeSeriesServiceManager::DestroyInstance();
 	SmTotalOrderManager::DestroyInstance();
 	SmTimeSeriesCollector::DestroyInstance();
@@ -460,7 +458,7 @@ void CMainFrame::OnShowWindow(BOOL bShow, UINT nStatus)
 {
 	CFrameWnd::OnShowWindow(bShow, nStatus);
 
-	/*
+
 	SmSymbolReader* symReader = SmSymbolReader::GetInstance();
 	SmConfigManager* configMgr = SmConfigManager::GetInstance();
 	std::string appPath = configMgr->GetApplicationPath();
@@ -482,10 +480,6 @@ void CMainFrame::OnShowWindow(BOOL bShow, UINT nStatus)
 	}
 
 	hdClient->DownloadMasterFiles("futures");
-	*/
-	SmMongoDBManager* mongoMgr = SmMongoDBManager::GetInstance();
-	mongoMgr->LoadMarketList();
-	mongoMgr->LoadSymbolList();
 }
 
 

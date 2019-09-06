@@ -144,13 +144,13 @@ void SmMarketManager::SendMarketList(std::string user_id)
 
 void SmMarketManager::SendSymbolListByCategory(std::string user_id)
 {
-	for (size_t i = 0; i < _MarketList.size(); ++i) {
+	for (int i = 0; i < _MarketList.size(); ++i) {
 		SmMarket* market = _MarketList[i];
 		std::vector<SmCategory*>& cat_list = market->GetCategoryList();
-		for (size_t j = 0; j < cat_list.size(); ++j) {
+		for (int j = 0; j < cat_list.size(); ++j) {
 			SmCategory* cat = cat_list[j];
 			std::vector<SmSymbol*>& sym_list = cat->GetSymbolList();
-			for (size_t k = 0; k < sym_list.size(); ++k) {
+			for (int k = 0; k < sym_list.size(); ++k) {
 				SendSymbolMaster(user_id, sym_list[k]);
 			}
 		}
@@ -171,10 +171,10 @@ int SmMarketManager::GetTotalCategoryCount()
 int SmMarketManager::GetTotalSymbolCount()
 {
 	int total = 0;
-	for (size_t i = 0; i < _MarketList.size(); ++i) {
+	for (int i = 0; i < _MarketList.size(); ++i) {
 		SmMarket* market = _MarketList[i];
 		std::vector<SmCategory*>& cat_list = market->GetCategoryList();
-		for (size_t j = 0; j < cat_list.size(); ++j) {
+		for (int j = 0; j < cat_list.size(); ++j) {
 			total += cat_list[j]->GetSymbolList().size();
 		}
 	}
