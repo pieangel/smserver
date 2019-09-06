@@ -230,6 +230,7 @@
     <ClInclude Include="SmCommon.h" />
     <ClInclude Include="SmConfigManager.h" />
     <ClInclude Include="SmHogaDefine.h" />
+    <ClInclude Include="SmMongoDBManager.h" />
     <ClInclude Include="SmOrder.h" />
     <ClInclude Include="SmOrderDefine.h" />
     <ClInclude Include="SmOrderManager.h" />
@@ -326,6 +327,9 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="SmConfigManager.cpp" />
+    <ClCompile Include="SmMongoDBManager.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="SmOrderManager.cpp" />
     <ClCompile Include="SmAccountOrderManager.cpp" />
     <ClCompile Include="SmOrderNumberGenerator.cpp" />
