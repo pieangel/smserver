@@ -22,6 +22,7 @@
 #include "SmSymbol.h"
 #include <codecvt>
 #include <locale>
+#include "SmSymbolManager.h"
 
 #include "Json/json.hpp"
 
@@ -181,17 +182,20 @@ void SmMongoDBManager::LoadMarketList()
 		auto db = (*_Client)["andromeda"];
 		using namespace bsoncxx;
 
-		// 먼저 시장이 있는지 검색한다. 
-		// 그리고 시장 속에 상품이 있는지 검색한다.
 		mongocxx::collection coll = db["market_list"];
-
+		SmMarketManager* marketMgr = SmMarketManager::GetInstance();
 		mongocxx::cursor cursor = coll.find({});
 		for (auto doc : cursor) {
 			std::string object = bsoncxx::to_json(doc);
 			auto json_object = json::parse(object);
 			std::string market_name = json_object["market_name"];
 			market_name = SmUtfUtil::Utf8ToAnsi(market_name);
+
+			SmMarket* newMarket = marketMgr->AddMarket(market_name);
 			int market_index = json_object["market_index"];
+			newMarket->Name(market_name);
+			newMarket->Index(market_index);
+			// Get the product list
 			auto product_list = json_object["product_list"];
 			int count = product_list.size();
 			for (int i = 0; i < count; ++i) {
@@ -205,6 +209,15 @@ void SmMongoDBManager::LoadMarketList()
 				std::string exchange_code = product["exchange_code"];
 				std::string market_name2 = product["market_name"];
 				market_name2 = SmUtfUtil::Utf8ToAnsi(market_name2);
+				
+				SmCategory* category = newMarket->AddCategory(product_code);
+				category->Code(product_code);
+				category->Name(product_name_en);
+				category->NameKr(product_name_kr);
+				category->Exchange(exchange_name);
+				category->ExchangeCode(exchange_code);
+				category->MarketName(market_name2);
+				marketMgr->AddCategoryMarket(product_code, market_name2);
 			}
 		}
 	}
@@ -216,7 +229,52 @@ void SmMongoDBManager::LoadMarketList()
 
 void SmMongoDBManager::LoadSymbolList()
 {
+	try
+	{
+		auto db = (*_Client)["andromeda"];
+		using namespace bsoncxx;
 
+		mongocxx::collection coll = db["symbol_list"];
+		SmMarketManager* marketMgr = SmMarketManager::GetInstance();
+		mongocxx::cursor cursor = coll.find({});
+		for (auto doc : cursor) {
+			std::string object = bsoncxx::to_json(doc);
+			auto json_object = json::parse(object);
+			std::string market_name = json_object["market_name"];
+			market_name = SmUtfUtil::Utf8ToAnsi(market_name);
+			std::string product_code = json_object["product_code"];
+			SmCategory* foundCategory = marketMgr->FindCategory(market_name, product_code);
+			if (!foundCategory)
+				continue;
+
+			std::string symbol_code = json_object["symbol_code"];
+			std::string symbol_name_kr = json_object["symbol_name_kr"];
+			symbol_name_kr = SmUtfUtil::Utf8ToAnsi(symbol_name_kr);
+			std::string symbol_name_en = json_object["symbol_name_en"];
+			int symbol_index = json_object["symbol_index"];
+			int decimal = json_object["decimal"];
+			double contract_unit = json_object["contract_unit"];
+			int seungsu = json_object["seungsu"];
+			double tick_size = json_object["tick_size"];
+			double tick_value = json_object["tick_value"];
+			SmSymbol* symbol = foundCategory->AddSymbol(symbol_code);
+			symbol->Index(symbol_index);
+			symbol->SymbolCode(symbol_code);
+			symbol->CategoryCode(product_code);
+			symbol->Name(symbol_name_kr);
+			symbol->NameEn(symbol_name_en);
+			symbol->CtrUnit(contract_unit);
+			symbol->TickSize(tick_size);
+			symbol->TickValue(tick_value);
+			symbol->Decimal(decimal);
+			symbol->Seungsu(seungsu);
+			symbol->MarketName(market_name);
+		}
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
 }
 
 void SmMongoDBManager::SaveMarketsToDatabase()

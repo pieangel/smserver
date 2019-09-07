@@ -18,7 +18,7 @@ SmCategory* SmMarket::AddCategory(std::string code)
 {
 	SmCategory* cat = new SmCategory();
 	cat->Code(code);
-	_CategoryList.emplace_back(cat);
+	_CategoryList.push_back(cat);
 	return cat;
 }
 

@@ -37,8 +37,7 @@ std::string SmUtfUtil::Utf8ToAnsi(std::string utf8)
 {
 	std::wstring_convert<std::codecvt_utf8<wchar_t>> utf8conv;
 	std::wstring cv = utf8conv.from_bytes(utf8);
-	std::string value;
-	value = SmUtfUtil::unicode2ansi(cv);
+	std::string value = SmUtfUtil::unicode2ansi(cv);
 	return value;
 }
 

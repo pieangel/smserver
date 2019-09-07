@@ -19,8 +19,11 @@ public:
 	std::vector<SmCategory*>& GetCategoryList() {
 		return _CategoryList;
 	}
+	int Index() const { return _Index; }
+	void Index(int val) { _Index = val; }
 private:
 	std::string _Name;
+	int _Index;
 	std::vector<SmCategory*> _CategoryList;
 };
 

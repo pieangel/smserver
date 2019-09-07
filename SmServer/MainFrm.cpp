@@ -41,6 +41,7 @@
 #include "SmTimeSeriesServiceManager.h"
 #include "SmMongoDBManager.h"
 #include "SmUtil.h"
+#include "SmMarket.h"
 
 using namespace std;
 
@@ -485,7 +486,14 @@ void CMainFrame::OnShowWindow(BOOL bShow, UINT nStatus)
 	*/
 	SmMongoDBManager* mongoMgr = SmMongoDBManager::GetInstance();
 	mongoMgr->LoadMarketList();
+	
 	mongoMgr->LoadSymbolList();
+
+	SmMarketManager* marketMgr = SmMarketManager::GetInstance();
+	SmCategory* cat = marketMgr->FindCategory("");
+
+	SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
+	SmSymbol* sym = symMgr->FindSymbol("ss");
 }
 
 
