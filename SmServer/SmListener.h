@@ -1,5 +1,6 @@
 #pragma once
 #include "SmHttpSession.h"
+#include "SmGlobal.h"
 
 class SmSessionManager;
 class SmListener : public std::enable_shared_from_this<SmListener>
@@ -18,6 +19,9 @@ public:
 		, acceptor_(net::make_strand(ioc))
 		, session_mgr_(session_mgr)
 	{
+		SmGlobal* global = SmGlobal::GetInstance();
+		global->SetSessionManager(session_mgr);
+
 		beast::error_code ec;
 
 		// Open the acceptor

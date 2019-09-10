@@ -344,7 +344,7 @@ void SmMongoDBManager::SendChartData(SmChartDataRequest data_req)
 		//opts.sort(make_document(kvp("date_time", 1)));
 		opts.limit(data_req.count);
 		mongocxx::cursor cursor = coll.find({}, opts);
-		int total_count = std::distance(cursor.begin(), cursor.end());
+		//int total_count = std::distance(cursor.begin(), cursor.end());
 		SmChartDataManager* chartDataMgr = SmChartDataManager::GetInstance();
 		SmChartData* chart_data = chartDataMgr->AddChartData(data_req);
 		for (auto&& doc : cursor) {
@@ -370,7 +370,7 @@ void SmMongoDBManager::SendChartData(SmChartDataRequest data_req)
 			data.o = o;
 			data.c = c;
 			data.v = v;
-			chart_data->PushChartDataItemToBack(data);	
+			chart_data->PushChartDataItemToFront(data);	
 		}
 
 		SmTimeSeriesServiceManager* tsMgr = SmTimeSeriesServiceManager::GetInstance();

@@ -73,7 +73,7 @@ void SmProtocolManager::ParseMessage(std::string message, SmWebsocketSession* so
 			OnOrder(json_object);
 			break;
 		case SmProtocol::req_chart_data:
-			OnReqChartData(json_object);
+			OnReqChartData(json_object, socket);
 			break;
 		case SmProtocol::req_sise_data:
 			OnReqSiseData(json_object);
@@ -332,8 +332,6 @@ void SmProtocolManager::OnReqChartData(nlohmann::json& obj, SmWebsocketSession* 
 		req.cycle = cycle;
 		req.count = count;
 		req.next = 0;
-		//SmTimeSeriesServiceManager* timeSvcMgr = SmTimeSeriesServiceManager::GetInstance();
-		//timeSvcMgr->OnChartDataRequest(std::move(req));
 		SmMongoDBManager* mongoMgr = SmMongoDBManager::GetInstance();
 		mongoMgr->SendChartDataFromDB(std::move(req));
 	}
@@ -494,7 +492,21 @@ void SmProtocolManager::OnReqSymbolListByCategory(nlohmann::json& obj)
 void SmProtocolManager::OnReqChartDataResend(nlohmann::json& obj)
 {
 	int service_req_id = obj["service_req_id"];
+	int session_id = obj["session_id"];
+	std::string user_id = obj["user_id"];
 	std::string symbol_code = obj["symbol_code"];
 	SmChartType chart_type = (SmChartType)obj["chart_type"];
 	int cycle = obj["cycle"];
+	int count = obj["count"];
+	SmChartDataRequest req;
+	req.reqType = SmChartDataReqestType::FIRST;
+	req.user_id = user_id;
+	req.session_id = session_id;
+	req.symbolCode = symbol_code;
+	req.chartType = (SmChartType)chart_type;
+	req.cycle = cycle;
+	req.count = count;
+	req.next = 0;
+	SmMongoDBManager* mongoMgr = SmMongoDBManager::GetInstance();
+	mongoMgr->SendChartData(std::move(req));
 }

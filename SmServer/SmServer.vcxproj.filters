@@ -347,6 +347,7 @@
       <Filter>Server</Filter>
     </ClInclude>
     <ClInclude Include="SmServieReqNumGenerator.h" />
+    <ClInclude Include="SmGlobal.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SmChartServer.cpp">
@@ -515,6 +516,7 @@
       <Filter>Server</Filter>
     </ClCompile>
     <ClCompile Include="SmServieReqNumGenerator.cpp" />
+    <ClCompile Include="SmGlobal.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="SmServer.rc">
