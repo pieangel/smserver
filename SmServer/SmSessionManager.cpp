@@ -5,6 +5,7 @@
 #include "SmSymbolManager.h"
 #include "SmSymbol.h"
 #include "SmUser.h"
+#include "SmTimeSeriesServiceManager.h"
 
 SmSessionManager::
 SmSessionManager(std::string doc_root)
@@ -17,7 +18,10 @@ SmSessionManager::
 join(SmWebsocketSession* session)
 {
 	std::lock_guard<std::mutex> lock(mutex_);
-	sessions_.insert(session);
+	//sessions_.insert(session);
+	int session_id = _SessionIDGen.GetID();
+	session->SessionID(session_id);
+	_session_map[session_id] = session;
 }
 
 void
@@ -27,7 +31,14 @@ leave(SmWebsocketSession* session)
 	std::lock_guard<std::mutex> lock(mutex_);
 	SmUserManager* userMgr = SmUserManager::GetInstance();
 	userMgr->ResetUserBySocket(session);
-	sessions_.erase(session);
+	//sessions_.erase(session);
+	auto it = _session_map.find(session->SessionID());
+	if (it != _session_map.end()) {
+		SmTimeSeriesServiceManager* tsMgr = SmTimeSeriesServiceManager::GetInstance();
+		// Set the nullptr to the sise socket if this socket is the sise socket.
+		tsMgr->ClearSiseSocket(session);
+		_session_map.erase(it);
+	}
 }
 
 // Broadcast a message to all websocket client sessions
@@ -44,9 +55,13 @@ send(std::string message)
 	std::vector<std::weak_ptr<SmWebsocketSession>> v;
 	{
 		std::lock_guard<std::mutex> lock(mutex_);
-		v.reserve(sessions_.size());
-		for (auto p : sessions_)
-			v.emplace_back(p->weak_from_this());
+		//v.reserve(sessions_.size());
+		v.reserve(_session_map.size());
+		//for (auto p : sessions_)
+		//	v.emplace_back(p->weak_from_this());
+		for (auto it = _session_map.begin(); it != _session_map.end(); ++it) {
+			v.emplace_back(it->second->weak_from_this());
+		}
 	}
 
 	// For each session in our local list, try to acquire a strong
@@ -88,9 +103,12 @@ void SmSessionManager::CloseAllSocket()
 	std::vector<std::weak_ptr<SmWebsocketSession>> v;
 	{
 		std::lock_guard<std::mutex> lock(mutex_);
-		v.reserve(sessions_.size());
-		for (auto p : sessions_)
-			v.emplace_back(p->weak_from_this());
+		v.reserve(_session_map.size());
+		//for (auto p : sessions_)
+		//	v.emplace_back(p->weak_from_this());
+		for (auto it = _session_map.begin(); it != _session_map.end(); ++it) {
+			v.emplace_back(it->second->weak_from_this());
+		}
 	}
 
 	// For each session in our local list, try to acquire a strong

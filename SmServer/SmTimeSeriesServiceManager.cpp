@@ -1,4 +1,4 @@
-#include "pch.h"
+//#include "pch.h"
 #include "SmTimeSeriesServiceManager.h"
 #include "SmTimeSeriesDBManager.h"
 #include "Util/VtStringUtil.h"
@@ -16,6 +16,7 @@
 #include "SmSymbol.h"
 #include "SmServiceDefine.h"
 #include "SmUtfUtil.h"
+#include "SmWebsocketSession.h"
 
 using namespace std::chrono;
 using namespace nlohmann;
@@ -72,19 +73,7 @@ void SmTimeSeriesServiceManager::OnRegisterCycleDataRequest(SmChartDataRequest&&
 
 void SmTimeSeriesServiceManager::OnChartDataRequest(SmChartDataRequest&& data_req)
 {
-	SmChartDataManager* chartDataMgr = SmChartDataManager::GetInstance();
-	SmChartData* chart_data = chartDataMgr->FindChartData(data_req.GetDataKey());
-	// 차트 데이터를 찾아봐서 차트 데이터가 없을 경우 혹은 요청 갯수가 클 때만 요청을 한다.
-	if (!chart_data) {
-		// 차트데이터를 요청한다.
-		GetChartDataFromSourceServer(std::move(data_req));
-	} 
-	else {
-		// 주기데이터를 등록해 준다.
-		RegisterCycleChartDataRequest(data_req);
-		// 차트 데이터 관리자에서 직접 보낸다.
-		SendChartData(std::move(data_req), chart_data);
-	}
+	SendChartDataFromDB(std::move(data_req));
 }
 
 void SmTimeSeriesServiceManager::RegisterCycleChartDataRequest(SmChartDataRequest data_req)
@@ -137,6 +126,26 @@ void SmTimeSeriesServiceManager::SendChartData(SmChartDataRequest data_req, SmCh
 	if (data.size() % split_size != 0) {
 		SendChartData(dataVec, data_req, data.size(), start_index, end_index);
 	}
+}
+
+void SmTimeSeriesServiceManager::ResendChartDataRequest(SmChartDataRequest req)
+{
+	int service_req_id = _SvcNoGen.GetID();
+	_HistoryDataReqMap[service_req_id] = req;
+	json send_object;
+	send_object["req_id"] = (int)SmProtocol::req_chart_data_from_main_server;
+	send_object["service_req_id"] = service_req_id;
+	send_object["symbol_code"] = req.symbolCode;
+	send_object["chart_type"] = (int)req.chartType;
+	send_object["cycle"] = req.cycle;
+	send_object["count"] = req.count;
+	std::string content = send_object.dump(4);
+	char buffer[50];
+	int n, a = 5, b = 3;
+	n = sprintf(buffer, "%d plus %d is %d", a, b, a + b);
+
+	OutputDebugString(buffer);
+	SendRequestToSiseServer(content);
 }
 
 void SmTimeSeriesServiceManager::OnChartDataReceived(SmChartDataRequest&& data_req)
@@ -207,7 +216,7 @@ void SmTimeSeriesServiceManager::SendChartData(std::vector<SmSimpleChartDataItem
 	if (dataVec.size() == 0)
 		return;
 
-	CString msg;
+	//CString msg;
 	json send_object;
 	send_object["res_id"] = SmProtocol::res_chart_data;
 	send_object["chart_id"] = req.chart_id;
@@ -230,7 +239,7 @@ void SmTimeSeriesServiceManager::SendChartData(std::vector<SmSimpleChartDataItem
 			{ "volume",  item.v }
 		};
 		
-		msg.Format("SendChartData :: date_time = %s\n", date.c_str());
+		//msg.Format("SendChartData :: date_time = %s\n", date.c_str());
 		//TRACE(msg);
 	}
 
@@ -281,8 +290,8 @@ void SmTimeSeriesServiceManager::SendChartDataFromDB(SmChartDataRequest&& data_r
 	query_string.append(std::to_string(data_req.count));
 	//query_string.append("where time >= '2019-06-05T07:12:00Z'");
 	std::string resp = dbMgr->ExecQuery(query_string);
-	CString msg;
-	msg.Format("resp len = %d", resp.length());
+	//CString msg;
+	//msg.Format("resp len = %d", resp.length());
 	//TRACE(msg);
 	SmChartDataManager* chartDataMgr = SmChartDataManager::GetInstance();
 	SmChartData* chart_data = chartDataMgr->AddChartData(data_req);
@@ -298,9 +307,7 @@ void SmTimeSeriesServiceManager::SendChartDataFromDB(SmChartDataRequest&& data_r
 		}
 		auto series = json_object["results"][0]["series"];
 		if (series.is_null()) {
-			_HistoryDataReqMap[data_req.GetDataKey()] = data_req;
-			SmHdClient* client = SmHdClient::GetInstance();
-			client->GetChartData(data_req);
+			ResendChartDataRequest(data_req);
 			return;
 		}
 		auto a = json_object["results"][0]["series"][0]["values"];
@@ -328,8 +335,8 @@ void SmTimeSeriesServiceManager::SendChartDataFromDB(SmChartDataRequest&& data_r
 				local_date = val[6];
 			if (!val[7].is_null())
 				local_time = val[7];
-			msg.Format(_T("index = %d, datetime = %s, o = %d, h = %d, l = %d, c = %d, v = %d\n"), i, local_date_time.c_str(), item.o, item.h, item.l, item.c, item.v);
-			TRACE(msg);
+			//msg.Format(_T("index = %d, datetime = %s, o = %d, h = %d, l = %d, c = %d, v = %d\n"), i, local_date_time.c_str(), item.o, item.h, item.l, item.c, item.v);
+			//TRACE(msg);
 
 			SmChartDataItem data;
 			data.symbolCode = data_req.symbolCode;
@@ -368,4 +375,57 @@ void SmTimeSeriesServiceManager::GetChartDataFromSourceServer(SmChartDataRequest
 {
 	SmHdClient* client = SmHdClient::GetInstance();
 	client->GetChartData(data_req);
+}
+
+
+void SmTimeSeriesServiceManager::ClearSiseSocket(SmWebsocketSession* session)
+{
+	if (!session || !_SisiSocket)
+		return;
+	if (session->SessionID() == _SisiSocket->SessionID()) {
+		_SisiSocket = nullptr;
+	}
+}
+
+
+void SmTimeSeriesServiceManager::SendRequestToSiseServer(std::string message)
+{
+	if (!_SisiSocket)
+		return;
+
+	// Put the message in a shared pointer so we can re-use it for each client
+	auto const ss = boost::make_shared<std::string const>(std::move(message));
+
+	// Make a local list of all the weak pointers representing
+	// the sessions, so we can do the actual sending without
+	// holding the mutex:
+	std::vector<std::weak_ptr<SmWebsocketSession>> v;
+	{
+		std::lock_guard<std::mutex> lock(_mutex);
+		v.reserve(1);
+		v.emplace_back(_SisiSocket->weak_from_this());
+	}
+
+	// For each session in our local list, try to acquire a strong
+	// pointer. If successful, then send the message on that session.
+	for (auto const& wp : v)
+		if (auto sp = wp.lock())
+			sp->send(ss);
+}
+
+void SmTimeSeriesServiceManager::OnReqRegisterSiseSocket(SmWebsocketSession* socket)
+{
+	if (!socket)
+		return;
+	_SisiSocket = socket;
+	std::string result_message = "sise socket registered successfully!";
+
+	json res = {
+		{"res_id", (int)SmProtocol::res_register_sise_socket},
+		{"result_msg", result_message}
+	};
+
+	std::string message = res.dump(4);
+
+	SendRequestToSiseServer(message);
 }

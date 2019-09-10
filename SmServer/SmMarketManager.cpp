@@ -160,7 +160,7 @@ void SmMarketManager::SendSymbolListByCategory(std::string user_id)
 int SmMarketManager::GetTotalCategoryCount()
 {
 	int total = 0;
-	for (int i = 0; i < _MarketList.size(); ++i) {
+	for (size_t i = 0; i < _MarketList.size(); ++i) {
 		SmMarket* market = _MarketList[i];
 		total += market->GetCategoryList().size();
 	}

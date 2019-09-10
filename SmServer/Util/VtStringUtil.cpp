@@ -31,6 +31,20 @@ std::pair<std::string, std::string> VtStringUtil::GetCurrentDateTime()
 	return std::make_pair(date, time);
 }
 
+std::pair<std::string, std::string> VtStringUtil::GetCurrentDateTimeNoSecond()
+{
+	auto now = std::chrono::system_clock::now();
+	auto in_time_t = std::chrono::system_clock::to_time_t(now);
+
+	std::stringstream ss;
+	ss << std::put_time(std::localtime(&in_time_t), "%Y%m%d");
+	std::string date = ss.str();
+	ss.str("");
+	ss << std::put_time(std::localtime(&in_time_t), "%H%M00");
+	std::string time = ss.str();
+	return std::make_pair(date, time);
+}
+
 std::string VtStringUtil::getTimeStr()
 {
 	auto now = std::chrono::system_clock::now();

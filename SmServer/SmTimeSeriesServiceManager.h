@@ -5,8 +5,10 @@
 #include <map>
 #include <string>
 #include "Timer/cpptime.h"
+#include "SmServieReqNumGenerator.h"
 
 class SmChartData;
+class SmWebsocketSession;
 class SmTimeSeriesServiceManager : public TemplateSingleton<SmTimeSeriesServiceManager>
 {
 public:
@@ -22,10 +24,17 @@ public:
 	int SendDataSplitSize() const { return _SendDataSplitSize; }
 	void SendDataSplitSize(int val) { _SendDataSplitSize = val; }
 	void OnCompleteChartData(SmChartDataRequest data_req, SmChartData* chart_data);
+	SmWebsocketSession* SisiSocket() const { return _SisiSocket; }
+	void SisiSocket(SmWebsocketSession* val) { _SisiSocket = val; }
+	void ClearSiseSocket(SmWebsocketSession* session);
+	void OnReqRegisterSiseSocket(SmWebsocketSession* socket);
+	void ResendChartDataRequest(SmChartDataRequest req);
+	void SendChartData(SmChartDataRequest data_req, SmChartData* chart_data);
 private:
+	SmServieReqNumGenerator _SvcNoGen;
 	void RegisterCycleChartDataRequest(SmChartDataRequest data_req);
 	void SendChartData(std::vector<SmSimpleChartDataItem>& dataVec, SmChartDataRequest req, int totalCount, int startIndex, int endIndex);
-	std::map<std::string, SmChartDataRequest> _HistoryDataReqMap;
+	std::map<int, SmChartDataRequest> _HistoryDataReqMap;
 	std::map<std::string, CppTime::timer_id> _CycleDataReqTimerMap;
 	int _SendDataSplitSize = 20;
 	CppTime::Timer _Timer;
@@ -35,6 +44,9 @@ private:
 	void SendChartDataFromDB(SmChartDataRequest&& data_req);
 	// 증권사나 데이터 제공 업체에 직접 데이터를 요청한다.
 	void GetChartDataFromSourceServer(SmChartDataRequest&& data_req);
-	void SendChartData(SmChartDataRequest data_req, SmChartData* chart_data);
+	
+	SmWebsocketSession* _SisiSocket = nullptr;
+	void SendRequestToSiseServer(std::string message);
+	std::mutex _mutex;
 };
 

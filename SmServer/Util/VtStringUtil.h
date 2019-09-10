@@ -11,6 +11,7 @@ public:
 	VtStringUtil();
 	~VtStringUtil();
 	static std::pair<std::string, std::string> GetCurrentDateTime();
+	static std::pair<std::string, std::string> GetCurrentDateTimeNoSecond();
 	static std::string getTimeStr();
 	static std::string getCurentDate();
 	static bool endsWith(const std::string& s, const std::string& suffix);

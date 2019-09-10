@@ -238,6 +238,8 @@
     <ClInclude Include="SmOrderNumberGenerator.h" />
     <ClInclude Include="SmPosition.h" />
     <ClInclude Include="SmQuoteDefine.h" />
+    <ClInclude Include="SmServieReqNumGenerator.h" />
+    <ClInclude Include="SmSessionNumberGenerator.h" />
     <ClInclude Include="SmSymbolOrderManager.h" />
     <ClInclude Include="SmTimeSeriesCollector.h" />
     <ClInclude Include="SmTimeSeriesDBManager.h" />
@@ -333,6 +335,10 @@
     <ClCompile Include="SmOrderManager.cpp" />
     <ClCompile Include="SmAccountOrderManager.cpp" />
     <ClCompile Include="SmOrderNumberGenerator.cpp" />
+    <ClCompile Include="SmServieReqNumGenerator.cpp" />
+    <ClCompile Include="SmSessionNumberGenerator.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="SmSymbolOrderManager.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
@@ -355,7 +361,9 @@
     </ClCompile>
     <ClCompile Include="SmMarket.cpp" />
     <ClCompile Include="SmMarketManager.cpp" />
-    <ClCompile Include="SmProtocolManager.cpp" />
+    <ClCompile Include="SmProtocolManager.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="SmRealtimeRegisterManager.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
@@ -388,7 +396,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="SmTimeSeriesServiceManager.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="SmTotalOrderManager.cpp" />
     <ClCompile Include="SmTotalPositionManager.cpp" />

@@ -23,6 +23,10 @@
 #include <codecvt>
 #include <locale>
 #include "SmSymbolManager.h"
+#include "SmTimeSeriesServiceManager.h"
+#include "Util/VtStringUtil.h"
+#include "SmChartDataManager.h"
+#include "SmChartData.h"
 
 #include "Json/json.hpp"
 
@@ -233,7 +237,6 @@ void SmMongoDBManager::LoadSymbolList()
 	{
 		auto db = (*_Client)["andromeda"];
 		using namespace bsoncxx;
-
 		mongocxx::collection coll = db["symbol_list"];
 		SmMarketManager* marketMgr = SmMarketManager::GetInstance();
 		mongocxx::cursor cursor = coll.find({});
@@ -270,6 +273,108 @@ void SmMongoDBManager::LoadSymbolList()
 			symbol->Seungsu(seungsu);
 			symbol->MarketName(market_name);
 		}
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+}
+
+void SmMongoDBManager::SendChartDataFromDB(SmChartDataRequest&& data_req)
+{
+	try
+	{
+		auto db = (*_Client)["andromeda"];
+		using namespace bsoncxx;
+
+		mongocxx::collection coll = db[data_req.GetDataKey()];
+		
+		// @begin: cpp-query-sort
+		mongocxx::options::find opts;
+		// 최신것이 앞에 오도록 한다.
+		opts.sort(make_document(kvp("date_time", -1)));
+		// 과거의 것이 앞에 오도록 한다.
+		//opts.sort(make_document(kvp("date_time", 1)));
+		opts.limit(data_req.count);
+		SmTimeSeriesServiceManager* tsMgr = SmTimeSeriesServiceManager::GetInstance();
+		int data_count = coll.count_documents({});
+		// 데이터가 없거나 요청한 갯수보다 적으면 서버에 요청을 한다.
+		if (data_count == 0 || data_count < data_req.count) {
+			if (tsMgr->SisiSocket()) {
+				tsMgr->ResendChartDataRequest(data_req);
+				return;
+			}
+		} 
+
+		auto dt = VtStringUtil::GetCurrentDateTimeNoSecond();
+		std::string d_t = dt.first + dt.second;
+
+		bsoncxx::stdx::optional<bsoncxx::document::value> found_symbol =
+			coll.find_one(bsoncxx::builder::stream::document{} << "date_time" << d_t << finalize);
+		// 최신 데이터가 현재 날짜와 같지 않으면 서버에 요청한다.
+		if (!found_symbol) {
+			if (tsMgr->SisiSocket()) {
+				tsMgr->ResendChartDataRequest(data_req);
+				return;
+			}
+		}
+		
+		SendChartData(data_req);
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+}
+
+void SmMongoDBManager::SendChartData(SmChartDataRequest data_req)
+{
+	try
+	{
+		auto db = (*_Client)["andromeda"];
+		using namespace bsoncxx;
+
+		mongocxx::collection coll = db[data_req.GetDataKey()];
+
+		// @begin: cpp-query-sort
+		mongocxx::options::find opts;
+		// 최신것이 앞에 오도록 한다.
+		opts.sort(make_document(kvp("date_time", -1)));
+		// 과거의 것이 앞에 오도록 한다.
+		//opts.sort(make_document(kvp("date_time", 1)));
+		opts.limit(data_req.count);
+		mongocxx::cursor cursor = coll.find({}, opts);
+		int total_count = std::distance(cursor.begin(), cursor.end());
+		SmChartDataManager* chartDataMgr = SmChartDataManager::GetInstance();
+		SmChartData* chart_data = chartDataMgr->AddChartData(data_req);
+		for (auto&& doc : cursor) {
+			std::string object = bsoncxx::to_json(doc);
+			auto json_object = json::parse(object);
+			std::string date_time = json_object["date_time"];
+			std::string date = json_object["local_date"];
+			std::string time = json_object["local_time"];
+			int o = json_object["o"];
+			int h = json_object["h"];
+			int l = json_object["l"];
+			int c = json_object["c"];
+			int v = json_object["v"];
+
+			SmChartDataItem data;
+			data.symbolCode = data_req.symbolCode;
+			data.chartType = data_req.chartType;
+			data.cycle = data_req.cycle;
+			data.date = date;
+			data.time = time;
+			data.h = h;
+			data.l = l;
+			data.o = o;
+			data.c = c;
+			data.v = v;
+			chart_data->PushChartDataItemToBack(data);	
+		}
+
+		SmTimeSeriesServiceManager* tsMgr = SmTimeSeriesServiceManager::GetInstance();
+		tsMgr->SendChartData(data_req, chart_data);
 	}
 	catch (std::exception e) {
 		std::string error;

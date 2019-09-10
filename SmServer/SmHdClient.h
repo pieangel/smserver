@@ -2,7 +2,7 @@
 #include "Global/TemplateSingleton.h"
 #include <string>
 #include "SmChartDefine.h"
-#include <atlstr.h>
+//#include <atlstr.h>
 class SmHdCtrl;
 class SmSymbol;
 class SmHdClient : public TemplateSingleton<SmHdClient>

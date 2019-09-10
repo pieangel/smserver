@@ -35,6 +35,8 @@ struct SmSymbolMasterRequest {
 struct SmChartDataRequest
 {
 	SmChartDataReqestType reqType = SmChartDataReqestType::FIRST;
+	// Socket id
+	int session_id;
 	std::string chart_id;
 	std::string user_id;
 	std::string symbolCode;

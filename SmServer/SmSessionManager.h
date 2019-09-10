@@ -6,6 +6,8 @@
 #include <string>
 #include <unordered_set>
 #include "Global/TemplateSingleton.h"
+#include "SmSessionNumberGenerator.h"
+#include <map>
 
 // Forward declaration
 class SmWebsocketSession;
@@ -19,8 +21,10 @@ class SmSessionManager
 	std::mutex mutex_;
 
 	// Keep a list of all the connected clients
-	std::unordered_set<SmWebsocketSession*> sessions_;
+	//std::unordered_set<SmWebsocketSession*> sessions_;
+	std::map<int, SmWebsocketSession*> _session_map;
 
+	SmSessionNumberGenerator _SessionIDGen;
 
 public:
 	~SmSessionManager();

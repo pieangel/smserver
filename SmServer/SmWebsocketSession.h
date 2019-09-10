@@ -9,6 +9,7 @@ class SmWebsocketSession : public std::enable_shared_from_this<SmWebsocketSessio
 	beast::flat_buffer buffer_;
 	std::vector<boost::shared_ptr<std::string const>> queue_;
 	std::shared_ptr<SmSessionManager> session_mgr_;
+	int _SessionID = 0;
 public:
 	// Take ownership of the socket
 	explicit
@@ -61,6 +62,8 @@ public:
 	int GetSendBufferQueueSize() {
 		return queue_.size();
 	}
+	int SessionID() const { return _SessionID; }
+	void SessionID(int val) { _SessionID = val; }
 private:
 	void on_send(boost::shared_ptr<std::string const> const& ss);
 	void on_accept(beast::error_code ec);

@@ -644,7 +644,7 @@ void SmHdCtrl::OnRcvdAbroadChartData(CString& sTrCode, LONG& nRqID)
 			chart_data->UpdateChartData(data);
 		// 차트 데이터를 데이터 베이스에 저장한다.
 		// 이 부분은 일단 주석처리한다. - 시스템 리소스를 너무 많이 잡아 먹어서 따로 비동기로 수행해야 한다. 
-		//tsCol->OnChartDataItem(data);
+		tsCol->OnChartDataItem(data);
 	}
 
 	// 차트 데이터 수신 요청 목록에서 제거한다.

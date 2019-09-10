@@ -1,6 +1,7 @@
 #pragma once
 #include "Global/TemplateSingleton.h"
 #include <mongocxx\config\config.hpp>
+#include "SmChartDefine.h"
 namespace mongocxx
 {
 	MONGOCXX_INLINE_NAMESPACE_BEGIN
@@ -18,10 +19,13 @@ public:
 	void ReadSymbol();
 	void LoadMarketList();
 	void LoadSymbolList();
+	void SendChartDataFromDB(SmChartDataRequest&& data_req);
+	void SendChartData(SmChartDataRequest data_req);
 private:
 	void SaveMarketsToDatabase();
 	void SaveSymbolsToDatabase();
 	void InitDatabase();
 	mongocxx::instance* _Instance = nullptr;
 	mongocxx::client* _Client = nullptr;
+	int _SendDataSplitSize = 20;
 };

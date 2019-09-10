@@ -461,29 +461,6 @@ void CMainFrame::OnShowWindow(BOOL bShow, UINT nStatus)
 {
 	CFrameWnd::OnShowWindow(bShow, nStatus);
 
-	/*
-	SmSymbolReader* symReader = SmSymbolReader::GetInstance();
-	SmConfigManager* configMgr = SmConfigManager::GetInstance();
-	std::string appPath = configMgr->GetApplicationPath();
-	std::string configPath = appPath;
-	configPath.append(_T("\\Config\\Config.xml"));
-	pugi::xml_document doc;
-	pugi::xml_parse_result result = doc.load_file(configPath.c_str());
-	pugi::xml_node app = doc.first_child();
-	pugi::xml_node login_info = doc.child("application").child("login_info");
-	
-	std::string id = login_info.child("id").text().as_string();
-	std::string pwd = login_info.child("pwd").text().as_string();
-	std::string cert = login_info.child("cert").text().as_string();
-
-	SmHdClient* hdClient = SmHdClient::GetInstance();
-	int loginResult = hdClient->Login(id, pwd, cert);
-	if (loginResult < 0) {
-		AfxMessageBox(_T("Login Error!"));
-	}
-
-	hdClient->DownloadMasterFiles("futures");
-	*/
 	SmMongoDBManager* mongoMgr = SmMongoDBManager::GetInstance();
 	mongoMgr->LoadMarketList();
 	

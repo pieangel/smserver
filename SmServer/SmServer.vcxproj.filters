@@ -343,6 +343,10 @@
     <ClInclude Include="SmMongoDBManager.h">
       <Filter>Database</Filter>
     </ClInclude>
+    <ClInclude Include="SmSessionNumberGenerator.h">
+      <Filter>Server</Filter>
+    </ClInclude>
+    <ClInclude Include="SmServieReqNumGenerator.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SmChartServer.cpp">
@@ -507,6 +511,10 @@
     <ClCompile Include="SmMongoDBManager.cpp">
       <Filter>Database</Filter>
     </ClCompile>
+    <ClCompile Include="SmSessionNumberGenerator.cpp">
+      <Filter>Server</Filter>
+    </ClCompile>
+    <ClCompile Include="SmServieReqNumGenerator.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="SmServer.rc">
