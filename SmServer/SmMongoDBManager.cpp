@@ -27,6 +27,9 @@
 #include "Util/VtStringUtil.h"
 #include "SmChartDataManager.h"
 #include "SmChartData.h"
+#include "SmServiceDefine.h"
+#include "SmGlobal.h"
+#include "SmSessionManager.h"
 
 #include "Json/json.hpp"
 
@@ -380,6 +383,39 @@ void SmMongoDBManager::SendChartData(SmChartDataRequest data_req)
 		std::string error;
 		error = e.what();
 	}
+}
+
+void SmMongoDBManager::SendQuote(std::string symbol_code)
+{
+	try
+	{
+		auto db = (*_Client)["andromeda"];
+		using namespace bsoncxx;
+
+		mongocxx::collection coll = db["quote"];
+
+		
+		bsoncxx::stdx::optional<bsoncxx::document::value> maybe_result =
+			coll.find_one(bsoncxx::builder::stream::document{} << "symbol_code" << symbol_code << finalize);
+		if (maybe_result) {
+			std::string message = bsoncxx::to_json(*maybe_result);
+			auto json_object = json::parse(message);
+			json_object["res_id"] = (int)SmProtocol::res_realtime_sise;
+			std::string content = json_object.dump(4);
+			SmGlobal* global = SmGlobal::GetInstance();
+			std::shared_ptr<SmSessionManager> sessMgr = global->GetSessionManager();
+			sessMgr->send(content);
+		}
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+}
+
+void SmMongoDBManager::SendHoga(std::string symbol_code)
+{
+
 }
 
 void SmMongoDBManager::SaveMarketsToDatabase()

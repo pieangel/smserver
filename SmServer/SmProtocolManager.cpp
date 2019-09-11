@@ -110,6 +110,12 @@ void SmProtocolManager::ParseMessage(std::string message, SmWebsocketSession* so
 		case SmProtocol::req_chart_data_resend:
 			OnReqChartDataResend(json_object);
 			break;
+		case SmProtocol::req_update_quote:
+			OnReqUpdateQuote(json_object);
+			break;
+		case SmProtocol::req_update_hoga:
+			OnReqUpdateHoga(json_object);
+			break;
 		default:
 			break;
 		}
@@ -509,4 +515,18 @@ void SmProtocolManager::OnReqChartDataResend(nlohmann::json& obj)
 	req.next = 0;
 	SmMongoDBManager* mongoMgr = SmMongoDBManager::GetInstance();
 	mongoMgr->SendChartData(std::move(req));
+}
+
+void SmProtocolManager::OnReqUpdateQuote(nlohmann::json& obj)
+{
+	std::string symbol_code = obj["symbol_code"];
+	SmMongoDBManager* mongoMgr = SmMongoDBManager::GetInstance();
+	mongoMgr->SendQuote(symbol_code);
+}
+
+void SmProtocolManager::OnReqUpdateHoga(nlohmann::json& obj)
+{
+	std::string symbol_code = obj["symbol_code"];
+	SmMongoDBManager* mongoMgr = SmMongoDBManager::GetInstance();
+	mongoMgr->SendHoga(symbol_code);
 }

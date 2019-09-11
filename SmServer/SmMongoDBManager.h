@@ -21,6 +21,8 @@ public:
 	void LoadSymbolList();
 	void SendChartDataFromDB(SmChartDataRequest&& data_req);
 	void SendChartData(SmChartDataRequest data_req);
+	void SendQuote(std::string symbol_code);
+	void SendHoga(std::string symbol_code);
 private:
 	void SaveMarketsToDatabase();
 	void SaveSymbolsToDatabase();

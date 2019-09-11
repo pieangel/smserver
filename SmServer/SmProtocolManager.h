@@ -35,6 +35,8 @@ private:
 	void OnReqMarketList(nlohmann::json& obj);
 	void OnReqSymbolListByCategory(nlohmann::json& obj);
 	void OnReqChartDataResend(nlohmann::json& obj);
+	void OnReqUpdateQuote(nlohmann::json& obj);
+	void OnReqUpdateHoga(nlohmann::json& obj);
 	void SendResult(std::string user_id, SmProtocol protocol, int result_code, std::string result_msg);
 };
 
