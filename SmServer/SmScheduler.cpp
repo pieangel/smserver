@@ -25,6 +25,6 @@ void SmScheduler::RepeatSymbolService()
 void SmScheduler::SendRealtimeSymbol()
 {
 	SmRealtimeSymbolServiceManager* rtlSymServiceMgr = SmRealtimeSymbolServiceManager::GetInstance();
-	rtlSymServiceMgr->BroadcastSise();
-	rtlSymServiceMgr->BroadcastHoga();
+	//rtlSymServiceMgr->BroadcastSise();
+	//rtlSymServiceMgr->BroadcastHoga();
 }

@@ -23,6 +23,7 @@ public:
 	void SendChartData(SmChartDataRequest data_req);
 	void SendQuote(std::string symbol_code);
 	void SendHoga(std::string symbol_code);
+	void SendChartCycleData(SmChartDataRequest data_req);
 private:
 	void SaveMarketsToDatabase();
 	void SaveSymbolsToDatabase();
@@ -30,4 +31,6 @@ private:
 	mongocxx::instance* _Instance = nullptr;
 	mongocxx::client* _Client = nullptr;
 	int _SendDataSplitSize = 20;
+	bool _SendingHoga = false;
+	std::mutex _mutex;
 };

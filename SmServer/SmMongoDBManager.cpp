@@ -186,6 +186,8 @@ void SmMongoDBManager::LoadMarketList()
 {
 	try
 	{
+		//std::lock_guard<std::mutex> lock(_mutex);
+
 		auto db = (*_Client)["andromeda"];
 		using namespace bsoncxx;
 
@@ -238,6 +240,8 @@ void SmMongoDBManager::LoadSymbolList()
 {
 	try
 	{
+		//std::lock_guard<std::mutex> lock(_mutex);
+
 		auto db = (*_Client)["andromeda"];
 		using namespace bsoncxx;
 		mongocxx::collection coll = db["symbol_list"];
@@ -287,6 +291,8 @@ void SmMongoDBManager::SendChartDataFromDB(SmChartDataRequest&& data_req)
 {
 	try
 	{
+		//std::lock_guard<std::mutex> lock(_mutex);
+
 		auto db = (*_Client)["andromeda"];
 		using namespace bsoncxx;
 
@@ -334,6 +340,8 @@ void SmMongoDBManager::SendChartData(SmChartDataRequest data_req)
 {
 	try
 	{
+		//std::lock_guard<std::mutex> lock(_mutex);
+
 		auto db = (*_Client)["andromeda"];
 		using namespace bsoncxx;
 
@@ -389,6 +397,8 @@ void SmMongoDBManager::SendQuote(std::string symbol_code)
 {
 	try
 	{
+		//std::lock_guard<std::mutex> lock(_mutex);
+
 		auto db = (*_Client)["andromeda"];
 		using namespace bsoncxx;
 
@@ -415,13 +425,103 @@ void SmMongoDBManager::SendQuote(std::string symbol_code)
 
 void SmMongoDBManager::SendHoga(std::string symbol_code)
 {
+	try
+	{
+		//std::lock_guard<std::mutex> lock(_mutex);
 
+		auto db = (*_Client)["andromeda"];
+		using namespace bsoncxx;
+
+		mongocxx::collection coll = db["hoga"];
+
+
+		bsoncxx::stdx::optional<bsoncxx::document::value> maybe_result =
+			coll.find_one(bsoncxx::builder::stream::document{} << "symbol_code" << symbol_code << finalize);
+		if (maybe_result) {
+			std::string message = bsoncxx::to_json(*maybe_result);
+			auto json_object = json::parse(message);
+			json_object["res_id"] = (int)SmProtocol::res_realtime_hoga;
+			std::string content = json_object.dump(4);
+			SmGlobal* global = SmGlobal::GetInstance();
+			std::shared_ptr<SmSessionManager> sessMgr = global->GetSessionManager();
+			sessMgr->send(content);
+		}
+
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+}
+
+void SmMongoDBManager::SendChartCycleData(SmChartDataRequest data_req)
+{
+	try
+	{
+		//std::lock_guard<std::mutex> lock(_mutex);
+
+		auto db = (*_Client)["andromeda"];
+		using namespace bsoncxx;
+
+		mongocxx::collection coll = db[data_req.GetDataKey()];
+
+		// @begin: cpp-query-sort
+		mongocxx::options::find opts;
+		// 최신것이 앞에 오도록 한다.
+		opts.sort(make_document(kvp("date_time", -1)));
+		// 과거의 것이 앞에 오도록 한다.
+		//opts.sort(make_document(kvp("date_time", 1)));
+		opts.limit(data_req.count);
+
+		json send_object;
+		send_object["res_id"] = SmProtocol::res_chart_cycle_data;
+		send_object["symbol_code"] = data_req.symbolCode;
+		send_object["chart_type"] = (int)data_req.chartType;
+		send_object["cycle"] = data_req.cycle;
+		send_object["total_count"] = data_req.count;
+
+		mongocxx::cursor cursor = coll.find({}, opts);
+		//int total_count = std::distance(cursor.begin(), cursor.end());
+		SmChartDataManager* chartDataMgr = SmChartDataManager::GetInstance();
+		SmChartData* chart_data = chartDataMgr->AddChartData(data_req);
+		int k = 0;
+		for (auto&& doc : cursor) {
+			std::string object = bsoncxx::to_json(doc);
+			auto json_object = json::parse(object);
+			std::string date_time = json_object["date_time"];
+			int o = json_object["o"];
+			int h = json_object["h"];
+			int l = json_object["l"];
+			int c = json_object["c"];
+			int v = json_object["v"];
+
+			send_object["data"][k++] = {
+			{ "date_time",  date_time },
+			{ "high", h },
+			{ "low",  l },
+			{ "open",  o },
+			{ "close", c },
+			{ "volume", v }
+			};
+		}
+
+		std::string content = send_object.dump(4);
+		SmGlobal* global = SmGlobal::GetInstance();
+		std::shared_ptr<SmSessionManager> sessMgr = global->GetSessionManager();
+		sessMgr->send(content);
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
 }
 
 void SmMongoDBManager::SaveMarketsToDatabase()
 {
 	try
 	{
+		//std::lock_guard<std::mutex> lock(_mutex);
+
 		auto db = (*_Client)["andromeda"];
 		using namespace bsoncxx;
 
@@ -474,6 +574,8 @@ void SmMongoDBManager::SaveSymbolsToDatabase()
 {
 	try
 	{
+		//std::lock_guard<std::mutex> lock(_mutex);
+
 		auto db = (*_Client)["andromeda"];
 		using namespace bsoncxx;
 

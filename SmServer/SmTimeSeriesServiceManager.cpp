@@ -19,6 +19,7 @@
 #include "SmWebsocketSession.h"
 #include "SmSessionManager.h"
 #include "SmGlobal.h"
+#include "SmMongoDBManager.h"
 
 using namespace std::chrono;
 using namespace nlohmann;
@@ -163,9 +164,12 @@ void SmTimeSeriesServiceManager::OnSiseDataRequest(SmSiseDataRequest&& sise_req)
 	SmSymbol* sym = symMgr->FindSymbol(sise_req.symbol_code);
 	if (!sym)
 		return;
-	std::string content = sym->GetQuoteByJson();
-	SmUserManager* userMgr = SmUserManager::GetInstance();
-	userMgr->SendResultMessage(sise_req.user_id, content);
+	//std::string content = sym->GetQuoteByJson();
+	//SmUserManager* userMgr = SmUserManager::GetInstance();
+	//userMgr->SendResultMessage(sise_req.user_id, content);
+	std::string symbol_code = sise_req.symbol_code;
+	SmMongoDBManager* mongoMgr = SmMongoDBManager::GetInstance();
+	mongoMgr->SendQuote(symbol_code);
 }
 
 void SmTimeSeriesServiceManager::OnHogaDataRequest(SmHogaDataRequest&& hoga_req)
@@ -174,9 +178,9 @@ void SmTimeSeriesServiceManager::OnHogaDataRequest(SmHogaDataRequest&& hoga_req)
 	SmSymbol* sym = symMgr->FindSymbol(hoga_req.symbol_code);
 	if (!sym)
 		return;
-	std::string content = sym->GetHogaByJson();
-	SmUserManager* userMgr = SmUserManager::GetInstance();
-	userMgr->SendResultMessage(hoga_req.user_id, content);
+	std::string symbol_code = hoga_req.symbol_code;
+	SmMongoDBManager* mongoMgr = SmMongoDBManager::GetInstance();
+	mongoMgr->SendHoga(symbol_code);
 }
 
 void SmTimeSeriesServiceManager::OnSymbolMasterRequest(SmSymbolMasterRequest&& master_req)

@@ -18,6 +18,7 @@
 #include "SmMarketManager.h"
 #include "SmWebsocketSession.h"
 #include "SmMongoDBManager.h"
+#include "SmGlobal.h"
 using namespace nlohmann;
 SmProtocolManager::SmProtocolManager()
 {
@@ -115,6 +116,9 @@ void SmProtocolManager::ParseMessage(std::string message, SmWebsocketSession* so
 			break;
 		case SmProtocol::req_update_hoga:
 			OnReqUpdateHoga(json_object);
+			break;
+		case SmProtocol::req_update_chart_data:
+			OnReqUpdateChartData(json_object);
 			break;
 		default:
 			break;
@@ -519,14 +523,34 @@ void SmProtocolManager::OnReqChartDataResend(nlohmann::json& obj)
 
 void SmProtocolManager::OnReqUpdateQuote(nlohmann::json& obj)
 {
-	std::string symbol_code = obj["symbol_code"];
-	SmMongoDBManager* mongoMgr = SmMongoDBManager::GetInstance();
-	mongoMgr->SendQuote(symbol_code);
+	obj["res_id"] = (int)SmProtocol::res_realtime_sise;
+	std::string content = obj.dump(4);
+	SmGlobal* global = SmGlobal::GetInstance();
+	std::shared_ptr<SmSessionManager> sessMgr = global->GetSessionManager();
+	sessMgr->send(content);
 }
 
 void SmProtocolManager::OnReqUpdateHoga(nlohmann::json& obj)
 {
+	obj["res_id"] = (int)SmProtocol::res_realtime_hoga;
+	std::string content = obj.dump(4);
+	SmGlobal* global = SmGlobal::GetInstance();
+	std::shared_ptr<SmSessionManager> sessMgr = global->GetSessionManager();
+	sessMgr->send(content);
+}
+
+void SmProtocolManager::OnReqUpdateChartData(nlohmann::json& obj)
+{
 	std::string symbol_code = obj["symbol_code"];
+	SmChartType chart_type = (SmChartType)obj["chart_type"];
+	int cycle = obj["cycle"];
+	int count = 3;
+	SmChartDataRequest req;
+	req.reqType = SmChartDataReqestType::FIRST;
+	req.symbolCode = symbol_code;
+	req.chartType = (SmChartType)chart_type;
+	req.cycle = cycle;
+	req.count = count;
 	SmMongoDBManager* mongoMgr = SmMongoDBManager::GetInstance();
-	mongoMgr->SendHoga(symbol_code);
+	mongoMgr->SendChartCycleData(std::move(req));
 }
