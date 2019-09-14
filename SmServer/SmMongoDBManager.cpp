@@ -11,6 +11,7 @@
 #include <mongocxx/client.hpp>
 #include <mongocxx/instance.hpp>
 #include <mongocxx/uri.hpp>
+#include <mongocxx/pool.hpp>
 #include <string>
 #include <iostream>
 #include "SmMarketManager.h"
@@ -61,6 +62,11 @@ SmMongoDBManager::~SmMongoDBManager()
 	if (_Instance) {
 		delete _Instance;
 		_Instance = nullptr;
+	}
+
+	if (_ConnPool) {
+		delete _ConnPool;
+		_ConnPool = nullptr;
 	}
 }
 
@@ -188,7 +194,9 @@ void SmMongoDBManager::LoadMarketList()
 	{
 		//std::lock_guard<std::mutex> lock(_mutex);
 
-		auto db = (*_Client)["andromeda"];
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
 		using namespace bsoncxx;
 
 		mongocxx::collection coll = db["market_list"];
@@ -242,7 +250,9 @@ void SmMongoDBManager::LoadSymbolList()
 	{
 		//std::lock_guard<std::mutex> lock(_mutex);
 
-		auto db = (*_Client)["andromeda"];
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
 		using namespace bsoncxx;
 		mongocxx::collection coll = db["symbol_list"];
 		SmMarketManager* marketMgr = SmMarketManager::GetInstance();
@@ -293,7 +303,9 @@ void SmMongoDBManager::SendChartDataFromDB(SmChartDataRequest&& data_req)
 	{
 		//std::lock_guard<std::mutex> lock(_mutex);
 
-		auto db = (*_Client)["andromeda"];
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
 		using namespace bsoncxx;
 
 		mongocxx::collection coll = db[data_req.GetDataKey()];
@@ -342,7 +354,9 @@ void SmMongoDBManager::SendChartData(SmChartDataRequest data_req)
 	{
 		//std::lock_guard<std::mutex> lock(_mutex);
 
-		auto db = (*_Client)["andromeda"];
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
 		using namespace bsoncxx;
 
 		mongocxx::collection coll = db[data_req.GetDataKey()];
@@ -399,7 +413,9 @@ void SmMongoDBManager::SendQuote(std::string symbol_code)
 	{
 		//std::lock_guard<std::mutex> lock(_mutex);
 
-		auto db = (*_Client)["andromeda"];
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
 		using namespace bsoncxx;
 
 		mongocxx::collection coll = db["quote"];
@@ -429,7 +445,9 @@ void SmMongoDBManager::SendHoga(std::string symbol_code)
 	{
 		//std::lock_guard<std::mutex> lock(_mutex);
 
-		auto db = (*_Client)["andromeda"];
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
 		using namespace bsoncxx;
 
 		mongocxx::collection coll = db["hoga"];
@@ -460,7 +478,9 @@ void SmMongoDBManager::SendChartCycleData(SmChartDataRequest data_req)
 	{
 		//std::lock_guard<std::mutex> lock(_mutex);
 
-		auto db = (*_Client)["andromeda"];
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
 		using namespace bsoncxx;
 
 		mongocxx::collection coll = db[data_req.GetDataKey()];
@@ -522,7 +542,9 @@ void SmMongoDBManager::SaveMarketsToDatabase()
 	{
 		//std::lock_guard<std::mutex> lock(_mutex);
 
-		auto db = (*_Client)["andromeda"];
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
 		using namespace bsoncxx;
 
 		// 먼저 시장이 있는지 검색한다. 
@@ -576,7 +598,9 @@ void SmMongoDBManager::SaveSymbolsToDatabase()
 	{
 		//std::lock_guard<std::mutex> lock(_mutex);
 
-		auto db = (*_Client)["andromeda"];
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
 		using namespace bsoncxx;
 
 		// 먼저 시장이 있는지 검색한다. 
@@ -628,4 +652,5 @@ void SmMongoDBManager::InitDatabase()
 {
 	_Instance = new mongocxx::instance();
 	_Client = new mongocxx::client(mongocxx::uri{});
+	_ConnPool = new mongocxx::pool(mongocxx::uri{});
 }

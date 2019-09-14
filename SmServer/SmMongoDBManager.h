@@ -7,6 +7,7 @@ namespace mongocxx
 	MONGOCXX_INLINE_NAMESPACE_BEGIN
 		class instance;
 		class client;
+		class pool;
 	MONGOCXX_INLINE_NAMESPACE_END
 };
 
@@ -30,6 +31,7 @@ private:
 	void InitDatabase();
 	mongocxx::instance* _Instance = nullptr;
 	mongocxx::client* _Client = nullptr;
+	mongocxx::pool* _ConnPool = nullptr;
 	int _SendDataSplitSize = 20;
 	bool _SendingHoga = false;
 	std::mutex _mutex;
