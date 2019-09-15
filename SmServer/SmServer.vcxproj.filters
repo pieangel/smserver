@@ -346,8 +346,15 @@
     <ClInclude Include="SmSessionNumberGenerator.h">
       <Filter>Server</Filter>
     </ClInclude>
-    <ClInclude Include="SmServieReqNumGenerator.h" />
-    <ClInclude Include="SmGlobal.h" />
+    <ClInclude Include="SmAccountNumGenerator.h">
+      <Filter>Account</Filter>
+    </ClInclude>
+    <ClInclude Include="SmServieReqNumGenerator.h">
+      <Filter>Service</Filter>
+    </ClInclude>
+    <ClInclude Include="SmGlobal.h">
+      <Filter>Server</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SmChartServer.cpp">
@@ -515,8 +522,15 @@
     <ClCompile Include="SmSessionNumberGenerator.cpp">
       <Filter>Server</Filter>
     </ClCompile>
-    <ClCompile Include="SmServieReqNumGenerator.cpp" />
-    <ClCompile Include="SmGlobal.cpp" />
+    <ClCompile Include="SmAccountNumGenerator.cpp">
+      <Filter>Account</Filter>
+    </ClCompile>
+    <ClCompile Include="SmServieReqNumGenerator.cpp">
+      <Filter>Service</Filter>
+    </ClCompile>
+    <ClCompile Include="SmGlobal.cpp">
+      <Filter>Server</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="SmServer.rc">

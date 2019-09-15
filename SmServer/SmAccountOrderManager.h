@@ -10,9 +10,11 @@ class SmAccountOrderManager : public SmOrderManager
 public:
 	SmAccountOrderManager();
 	~SmAccountOrderManager();
-	virtual void OnOrderAccepted(SmOrder* order);
-	virtual void OnOrderFilled(SmOrder* order);
-	virtual void OnOrder(SmOrder* order);
+	virtual void AddFilledOrder(std::shared_ptr<SmOrder> order);
+	virtual void AddAcceptedOrder(std::shared_ptr<SmOrder> order);
+	virtual void OnOrderAccepted(std::shared_ptr<SmOrder> order);
+	virtual void OnOrderFilled(std::shared_ptr<SmOrder> order);
+	virtual void OnOrder(std::shared_ptr<SmOrder> order);
 	SmSymbolOrderManager* FindAddOrderManager(std::string symCode);
 	std::string AccountNo() const { return _AccountNo; }
 	void AccountNo(std::string val) { _AccountNo = val; }

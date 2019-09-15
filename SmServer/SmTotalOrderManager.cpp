@@ -22,10 +22,6 @@ SmTotalOrderManager::SmTotalOrderManager()
 
 SmTotalOrderManager::~SmTotalOrderManager()
 {
-	for (auto it = _OrderMap.begin(); it != _OrderMap.end(); ++it) {
-		delete it->second;
-	}
-
 	for (auto it = _OrderManagerMap.begin(); it != _OrderManagerMap.end(); ++it) {
 		delete it->second;
 	}
@@ -34,7 +30,7 @@ SmTotalOrderManager::~SmTotalOrderManager()
 void SmTotalOrderManager::OnRequestOrder(SmOrderRequest&& req)
 {
 	SmAccountManager* acntMgr = SmAccountManager::GetInstance();
-	SmAccount* acnt = acntMgr->FindAddAccount(req.AccountNo);
+	std::shared_ptr<SmAccount> acnt = acntMgr->FindAddAccount(req.AccountNo);
 	if (!acnt) {
 		SendError(SmOrderError::BadAccount, req);
 		return;
@@ -45,7 +41,7 @@ void SmTotalOrderManager::OnRequestOrder(SmOrderRequest&& req)
 		SendError(SmOrderError::BadSymbol, req);
 		return;
 	}
-	SmOrder* order = CreateOrder();
+	std::shared_ptr<SmOrder> order = CreateOrder();
 	order->AccountNo = req.AccountNo;
 	order->SymbolCode = req.SymbolCode;
 	order->UserID = req.UserID;
@@ -78,22 +74,43 @@ void SmTotalOrderManager::OnRequestOrder(SmOrderRequest&& req)
 	}
 }
 
-SmOrder* SmTotalOrderManager::CreateOrder()
+void SmTotalOrderManager::AddFilledOrder(std::shared_ptr<SmOrder> order)
+{
+	if (!order)
+		return;
+
+	SmAccountOrderManager* acntOrderMgr = FindAddOrderManager(order->AccountNo);
+	acntOrderMgr->AddFilledOrder(order);
+	SmOrderManager::AddFilledOrder(order);
+}
+
+void SmTotalOrderManager::AddAcceptedOrder(std::shared_ptr<SmOrder> order)
+{
+	if (!order)
+		return;
+
+	SmAccountOrderManager* acntOrderMgr = FindAddOrderManager(order->AccountNo);
+	// 주문상태 접수
+	acntOrderMgr->AddAcceptedOrder(order);
+	SmOrderManager::AddAcceptedOrder(order);
+}
+
+std::shared_ptr<SmOrder> SmTotalOrderManager::CreateOrder()
 {
 	int order_no = SmOrderNumberGenerator::GetID();
-	SmOrder* order = new SmOrder();
+	std::shared_ptr<SmOrder> order = std::make_shared<SmOrder>();
 	order->OrderNo = order_no;
 	return order;
 }
 
-void SmTotalOrderManager::OnOrderNew(SmOrder* order)
+void SmTotalOrderManager::OnOrderNew(std::shared_ptr<SmOrder> order)
 {
 	if (!order)
 		return;
 	CheckFilled(order);
 }
 
-void SmTotalOrderManager::OnOrderModify(SmOrder* order)
+void SmTotalOrderManager::OnOrderModify(std::shared_ptr<SmOrder> order)
 {
 	if (!order)
 		return;
@@ -101,14 +118,14 @@ void SmTotalOrderManager::OnOrderModify(SmOrder* order)
 	SendConfirmModify(order);
 }
 
-void SmTotalOrderManager::OnOrderCancel(SmOrder* order)
+void SmTotalOrderManager::OnOrderCancel(std::shared_ptr<SmOrder> order)
 {
 	if (!order)
 		return;
 	SendConfirmCancel(order);
 }
 
-void SmTotalOrderManager::CheckFilled(SmOrder* order)
+void SmTotalOrderManager::CheckFilled(std::shared_ptr<SmOrder> order)
 {
 	if (!order)
 		return;
@@ -142,7 +159,7 @@ void SmTotalOrderManager::CheckFilled(SmOrder* order)
 	}
 }
 
-void SmTotalOrderManager::SendResponse(SmOrder* order)
+void SmTotalOrderManager::SendResponse(std::shared_ptr<SmOrder> order)
 {
 	if (!order)
 		return;
@@ -163,7 +180,10 @@ void SmTotalOrderManager::SendResponse(SmOrder* order)
 	send_object["order_no"] = order->OrderNo;
 	send_object["order_amount"] = order->OrderAmount;
 	send_object["ori_order_no"] = order->OriOrderNo;
-	send_object["trade_date"] = order->TradeDate;
+	send_object["filled_date"] = order->FilledDate;
+	send_object["filled_time"] = order->FilledTime;
+	send_object["order_date"] = order->OrderDate;
+	send_object["order_time"] = order->OrderTime;
 	send_object["filled_qty"] = order->FilledQty;
 	send_object["filled_price"] = order->FilledPrice;
 	send_object["order_state"] = (int)order->OrderState;
@@ -182,7 +202,7 @@ void SmTotalOrderManager::SendResponse(SmOrder* order)
 	userMgr->SendResultMessage(order->UserID, content);
 }
 
-void SmTotalOrderManager::SendResponse(SmOrder* order, SmProtocol protocol)
+void SmTotalOrderManager::SendResponse(std::shared_ptr<SmOrder> order, SmProtocol protocol)
 {
 	if (!order)
 		return;
@@ -193,14 +213,17 @@ void SmTotalOrderManager::SendResponse(SmOrder* order, SmProtocol protocol)
 	send_object["request_id"] = order->RequestID;
 	send_object["account_no"] = order->AccountNo;
 	send_object["order_type"] = (int)order->OrderType;
-	send_object["position_type"] = order->Position;
+	send_object["position_type"] = (int)order->Position;
 	send_object["price_type"] = (int)order->PriceType;
 	send_object["symbol_code"] = order->SymbolCode;
 	send_object["order_price"] = order->OrderPrice;
 	send_object["order_no"] = order->OrderNo;
 	send_object["order_amount"] = order->OrderAmount;
 	send_object["ori_order_no"] = order->OriOrderNo;
-	send_object["trade_date"] = order->TradeDate;
+	send_object["filled_date"] = order->FilledDate;
+	send_object["filled_time"] = order->FilledTime;
+	send_object["order_date"] = order->OrderDate;
+	send_object["order_time"] = order->OrderTime;
 	send_object["filled_qty"] = order->FilledQty;
 	send_object["filled_price"] = order->FilledPrice;
 	send_object["order_state"] = (int)order->OrderState;
@@ -219,16 +242,18 @@ void SmTotalOrderManager::SendResponse(SmOrder* order, SmProtocol protocol)
 	userMgr->SendResultMessage(order->UserID, content);
 }
 
-void SmTotalOrderManager::SendRemain(SmOrder* order)
+void SmTotalOrderManager::SendRemain(std::shared_ptr<SmOrder> order)
 {
 	if (!order)
 		return;
 	SmTotalPositionManager* totalPosiMgr = SmTotalPositionManager::GetInstance();
-	SmPosition* posi = totalPosiMgr->FindPosition(order->AccountNo, order->SymbolCode);
+	std::shared_ptr<SmPosition> posi = totalPosiMgr->FindPosition(order->AccountNo, order->SymbolCode);
 
 	CString msg;
 	json send_object;
 	send_object["res_id"] = SmProtocol::res_symbol_position;
+	send_object["created_date"] = posi->CreatedDate;
+	send_object["created_time"] = posi->CreatedTime;
 	send_object["symbol_code"] = posi->SymbolCode;
 	send_object["fund_name"] = posi->FundName;
 	send_object["account_no"] = posi->AccountNo;
@@ -282,7 +307,7 @@ void SmTotalOrderManager::SendError(SmOrderError ErrorCode, SmOrder& order)
 	userMgr->SendResultMessage(order.UserID, content);
 }
 
-void SmTotalOrderManager::OnOrderAccepted(SmOrder* order)
+void SmTotalOrderManager::OnOrderAccepted(std::shared_ptr<SmOrder> order)
 {
 	if (!order)
 		return;
@@ -294,7 +319,7 @@ void SmTotalOrderManager::OnOrderAccepted(SmOrder* order)
 	SendResponse(order, SmProtocol::res_order_accepted);
 }
 
-void SmTotalOrderManager::OnOrderFilled(SmOrder* order)
+void SmTotalOrderManager::OnOrderFilled(std::shared_ptr<SmOrder> order)
 {
 	if (!order)
 		return;
@@ -306,7 +331,7 @@ void SmTotalOrderManager::OnOrderFilled(SmOrder* order)
 	SendRemain(order);
 }
 
-void SmTotalOrderManager::OnOrder(SmOrder* order)
+void SmTotalOrderManager::OnOrder(std::shared_ptr<SmOrder> order)
 {
 	if (!order)
 		return;
@@ -335,23 +360,23 @@ SmAccountOrderManager* SmTotalOrderManager::FindAddOrderManager(std::string acnt
 	return it->second;
 }
 
-void SmTotalOrderManager::SendConfirmModify(SmOrder* order)
+void SmTotalOrderManager::SendConfirmModify(std::shared_ptr<SmOrder> order)
 {
 	if (!order)
 		return;
 	// 원래 주문을 찾는다.
-	SmOrder* oriOrder = FindOrder(order->OriOrderNo);
+	std::shared_ptr<SmOrder> oriOrder = FindOrder(order->OriOrderNo);
 	// 원래 주문 상태를 변경한다.
 	oriOrder->OrderState = SmOrderState::ConfirmModify;
 	SendResponse(order);
 }
 
-void SmTotalOrderManager::SendConfirmCancel(SmOrder* order)
+void SmTotalOrderManager::SendConfirmCancel(std::shared_ptr<SmOrder> order)
 {
 	if (!order)
 		return;
 	// 원래 주문을 찾는다.
-	SmOrder* oriOrder = FindOrder(order->OriOrderNo);
+	std::shared_ptr<SmOrder> oriOrder = FindOrder(order->OriOrderNo);
 	// 원래 주문 상태를 변경한다.
 	oriOrder->OrderState = SmOrderState::ConfirmCancel;
 	SendResponse(order);

@@ -55,7 +55,11 @@ struct SmOrder
 	/// <summary>
 	/// 거래 날짜
 	/// </summary>
-	std::string TradeDate;
+	std::string FilledDate;
+	std::string FilledTime;
+	// 주문을 넣은 날짜
+	std::string OrderDate;
+	std::string OrderTime;
 	/// <summary>
 	/// 체결 수량
 	/// </summary>

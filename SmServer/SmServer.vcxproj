@@ -221,6 +221,7 @@
     <ClInclude Include="ServerDefine.h" />
     <ClInclude Include="SmAccount.h" />
     <ClInclude Include="SmAccountManager.h" />
+    <ClInclude Include="SmAccountNumGenerator.h" />
     <ClInclude Include="SmAccountPositionManager.h" />
     <ClInclude Include="SmCategory.h" />
     <ClInclude Include="SmChartData.h" />
@@ -315,6 +316,7 @@
     </ClCompile>
     <ClCompile Include="SmAccount.cpp" />
     <ClCompile Include="SmAccountManager.cpp" />
+    <ClCompile Include="SmAccountNumGenerator.cpp" />
     <ClCompile Include="SmAccountPositionManager.cpp" />
     <ClCompile Include="SmCategory.cpp" />
     <ClCompile Include="SmChartData.cpp" />

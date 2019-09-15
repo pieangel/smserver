@@ -18,7 +18,7 @@ SmSymbolOrderManager::~SmSymbolOrderManager()
 {
 
 }
-void SmSymbolOrderManager::OnOrderAccepted(SmOrder* order)
+void SmSymbolOrderManager::OnOrderAccepted(std::shared_ptr<SmOrder> order)
 {
 	if (!order)
 		return;
@@ -35,7 +35,7 @@ void SmSymbolOrderManager::OnOrderAccepted(SmOrder* order)
 	// 접수 확인 목록에 넣어 준다.
 	SmOrderManager::OnOrderAccepted(order);
 }
-void SmSymbolOrderManager::OnOrderFilled(SmOrder* order)
+void SmSymbolOrderManager::OnOrderFilled(std::shared_ptr<SmOrder> order)
 {
 	if (!order)
 		return;
@@ -46,7 +46,8 @@ void SmSymbolOrderManager::OnOrderFilled(SmOrder* order)
 		return;
 	// 체결 날짜를 넣어 준다.
 	std::pair<std::string, std::string> date_time = VtStringUtil::GetCurrentDateTime();
-	order->TradeDate = date_time.first + "T" + date_time.second + "Z";
+	order->FilledDate = date_time.first;
+	order->FilledTime = date_time.second;
 	// 체결 가격을 넣어 준다. 체결 가격은 현재 가격이다.
 	order->FilledPrice = sym->Quote.Close;
 	// 신규 주문상태 체결
@@ -61,21 +62,25 @@ void SmSymbolOrderManager::OnOrderFilled(SmOrder* order)
 	SmOrderManager::OnOrderFilled(order);
 }
 
-void SmSymbolOrderManager::OnOrder(SmOrder* order)
+void SmSymbolOrderManager::OnOrder(std::shared_ptr<SmOrder> order)
 {
 	if (!order)
 		return;
 	// 원장 접수 상태
 	order->OrderState = SmOrderState::Ledger;
+	std::pair<std::string, std::string> date_time = VtStringUtil::GetCurrentDateTime();
+	// 주문 날짜를 넣어 준다.
+	order->OrderDate = date_time.first;
+	order->OrderTime = date_time.second;
 	SmOrderManager::OnOrder(order);
 }
 
-void SmSymbolOrderManager::CalcPosition(SmOrder* order)
+void SmSymbolOrderManager::CalcPosition(std::shared_ptr<SmOrder> order)
 {
 	if (!order)
 		return;
 	SmAccountManager* acntMgr = acntMgr->GetInstance();
-	SmAccount* acnt = acntMgr->FindAccount(order->AccountNo);
+	std::shared_ptr<SmAccount> acnt = acntMgr->FindAccount(order->AccountNo);
 	if (!acnt)
 		return;
 	SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
@@ -85,7 +90,7 @@ void SmSymbolOrderManager::CalcPosition(SmOrder* order)
 
 	SmTotalPositionManager* posiMgr = SmTotalPositionManager::GetInstance();
 	// 계좌에서 현재 포지션을 가져온다.
-	SmPosition* posi = posiMgr->FindPosition(order->AccountNo, order->SymbolCode);
+	std::shared_ptr<SmPosition> posi = posiMgr->FindPosition(order->AccountNo, order->SymbolCode);
 
 	double curClose = sym->Quote.Close / pow(10, sym->Decimal());
 	// 주문 포지션에 따른 부호 결정
@@ -159,7 +164,7 @@ void SmSymbolOrderManager::CalcPosition(SmOrder* order)
 		error = error;
 	}
 }
-int SmSymbolOrderManager::CalcRemain(SmOrder* newOrder)
+int SmSymbolOrderManager::CalcRemain(std::shared_ptr<SmOrder> newOrder)
 {
 	// 잔고 주문이 없다면 맨뒤에 추가하고 나간다.
 	// 잔고 주문은 오래된 주문이 맨 앞에 있다.
@@ -169,7 +174,7 @@ int SmSymbolOrderManager::CalcRemain(SmOrder* newOrder)
 	}
 	// 잔고 주문이 남아 있을 경우 처리
 	for (auto it = _RemainOrderMap.begin(); it != _RemainOrderMap.end(); ++it) {
-		SmOrder* oldOrder = *it;
+		std::shared_ptr<SmOrder> oldOrder = *it;
 		
 		// 현재 들어온 주문이 맨 마지막 주문과 같으면 바로 나간다.
 		if (oldOrder->Position == newOrder->Position) {

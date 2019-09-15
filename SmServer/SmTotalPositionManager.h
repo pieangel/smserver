@@ -5,15 +5,16 @@
 struct SmPosition;
 class SmAccountPositionManager;
 struct SmOrder;
+class SmAccount;
 class SmTotalPositionManager : public TemplateSingleton<SmTotalPositionManager>
 {
 public:
 	~SmTotalPositionManager();
-	SmPosition* CreatePosition(SmOrder* order);
-	SmPosition* FindPosition(std::string acntNo, std::string symbolCode);
+	std::shared_ptr<SmPosition> CreatePosition(std::shared_ptr<SmOrder> order);
+	std::shared_ptr<SmPosition> FindPosition(std::string acntNo, std::string symbolCode);
+	void AddPosition(std::shared_ptr<SmPosition> posi);
 private:
 	std::map<std::string, SmAccountPositionManager*> _AccountPositionManagerMap;
-	void AddPosition(SmPosition* posi);
 	SmAccountPositionManager* FindAddAccountPositionManager(std::string accountNo);
 };
 

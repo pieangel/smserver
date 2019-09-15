@@ -38,6 +38,9 @@ private:
 	void OnReqUpdateQuote(nlohmann::json& obj);
 	void OnReqUpdateHoga(nlohmann::json& obj);
 	void OnReqUpdateChartData(nlohmann::json& obj);
+	void OnReqRegisterUser(nlohmann::json& obj);
+	void OnReqUnregisterUser(nlohmann::json& obj);
+	void OnReqChartDataOneByOne(nlohmann::json& obj, SmWebsocketSession* socket);
 	void SendResult(std::string user_id, SmProtocol protocol, int result_code, std::string result_msg);
 };
 

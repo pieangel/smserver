@@ -11,15 +11,7 @@ SmOrderManager::~SmOrderManager()
 
 }
 
-void SmOrderManager::OnOrderAccepted(SmOrder* order)
-{
-	if (!order)
-		return;
-
-	_AcceptedOrderMap[order->OrderNo] = order;
-}
-
-void SmOrderManager::OnOrderFilled(SmOrder* order)
+void SmOrderManager::AddFilledOrder(std::shared_ptr<SmOrder> order)
 {
 	if (!order)
 		return;
@@ -29,9 +21,35 @@ void SmOrderManager::OnOrderFilled(SmOrder* order)
 	}
 }
 
-SmOrder* SmOrderManager::AddOrder(int orderNo)
+void SmOrderManager::AddAcceptedOrder(std::shared_ptr<SmOrder> order)
 {
-	SmOrder* order = nullptr;
+	if (!order)
+		return;
+
+	_AcceptedOrderMap[order->OrderNo] = order;
+}
+
+void SmOrderManager::OnOrderAccepted(std::shared_ptr<SmOrder> order)
+{
+	if (!order)
+		return;
+
+	_AcceptedOrderMap[order->OrderNo] = order;
+}
+
+void SmOrderManager::OnOrderFilled(std::shared_ptr<SmOrder> order)
+{
+	if (!order)
+		return;
+	auto it = _AcceptedOrderMap.find(order->OrderNo);
+	if (it != _AcceptedOrderMap.end()) {
+		_AcceptedOrderMap.erase(it);
+	}
+}
+
+std::shared_ptr<SmOrder> SmOrderManager::AddOrder(int orderNo)
+{
+	std::shared_ptr<SmOrder> order = nullptr;
 	auto it = _OrderMap.find(orderNo);
 	if (it != _OrderMap.end())
 		return it->second;
@@ -39,7 +57,7 @@ SmOrder* SmOrderManager::AddOrder(int orderNo)
 	return order;
 }
 
-void SmOrderManager::AddOrder(SmOrder* order)
+void SmOrderManager::AddOrder(std::shared_ptr<SmOrder> order)
 {
 	if (!order)
 		return;
@@ -49,7 +67,7 @@ void SmOrderManager::AddOrder(SmOrder* order)
 	_OrderMap[order->OrderNo] = order;
 }
 
-SmOrder* SmOrderManager::FindOrder(int order_no)
+std::shared_ptr<SmOrder> SmOrderManager::FindOrder(int order_no)
 {
 	auto it = _OrderMap.find(order_no);
 	if (it != _OrderMap.end()) {
@@ -59,7 +77,7 @@ SmOrder* SmOrderManager::FindOrder(int order_no)
 	return nullptr;
 }
 
-void SmOrderManager::OnOrder(SmOrder* order)
+void SmOrderManager::OnOrder(std::shared_ptr<SmOrder> order)
 {
 	if (!order)
 		return;

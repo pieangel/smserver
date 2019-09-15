@@ -42,7 +42,7 @@ void SmTimeSeriesServiceManager::OnUnregisterCycleDataRequest(SmChartDataRequest
 		return;
 	}
 
-	SmChartData* chart_data = it->second;
+	std::shared_ptr<SmChartData> chart_data = it->second;
 	chart_data->RemoveUser(data_req.user_id);
 	size_t user_count = chart_data->GetUserCount();
 	if (user_count == 0) {
@@ -67,7 +67,7 @@ void SmTimeSeriesServiceManager::OnRegisterCycleDataRequest(SmChartDataRequest&&
 		return;
 	}
 	// 차트 데이터를 등록해 준다.
-	SmChartData* chart_data = AddCycleDataReq(data_req);
+	std::shared_ptr<SmChartData> chart_data = AddCycleDataReq(data_req);
 	SmHdClient* client = SmHdClient::GetInstance();
 	client->GetChartData(data_req);
 	// 차트 데이터 타이머 서비스를 등록해 준다.
@@ -88,12 +88,12 @@ void SmTimeSeriesServiceManager::RegisterCycleChartDataRequest(SmChartDataReques
 		return;
 	}
 	// 차트 데이터를 등록해 준다.
-	SmChartData* chart_data = AddCycleDataReq(data_req);
+	std::shared_ptr<SmChartData> chart_data = AddCycleDataReq(data_req);
 	// 차트 데이터 타이머 서비스를 등록해 준다.
 	RegisterTimer(chart_data);
 }
 
-void SmTimeSeriesServiceManager::SendChartData(SmChartDataRequest data_req, SmChartData* chart_data)
+void SmTimeSeriesServiceManager::SendChartData(SmChartDataRequest data_req, std::shared_ptr<SmChartData> chart_data)
 {
 	if (!chart_data)
 		return;
@@ -129,6 +129,24 @@ void SmTimeSeriesServiceManager::SendChartData(SmChartDataRequest data_req, SmCh
 	if (data.size() % split_size != 0) {
 		SendChartData(dataVec, data_req, data.size(), start_index, end_index);
 	}
+}
+
+void SmTimeSeriesServiceManager::SendChartData(SmChartDataRequest data_req, SmChartDataItem item)
+{
+	json send_object;
+	send_object["res_id"] = SmProtocol::res_chart_data_onebyone;
+	send_object["data_key"] = data_req.GetDataKey();
+	send_object["date_time"] = item.date + item.time;
+	send_object["o"] = item.o;
+	send_object["h"] = item.h;
+	send_object["l"] = item.l;
+	send_object["c"] = item.c;
+	send_object["v"] = item.v;
+	
+	std::string content = send_object.dump();
+	SmGlobal* global = SmGlobal::GetInstance();
+	std::shared_ptr<SmSessionManager> sessMgr = global->GetSessionManager();
+	sessMgr->send(data_req.session_id, content);
 }
 
 void SmTimeSeriesServiceManager::ResendChartDataRequest(SmChartDataRequest req)
@@ -207,7 +225,7 @@ void SmTimeSeriesServiceManager::OnSymbolMasterRequest(SmSymbolMasterRequest&& m
 	userMgr->SendResultMessage(master_req.user_id, content);
 }
 
-void SmTimeSeriesServiceManager::OnCompleteChartData(SmChartDataRequest data_req, SmChartData* chart_data)
+void SmTimeSeriesServiceManager::OnCompleteChartData(SmChartDataRequest data_req, std::shared_ptr<SmChartData> chart_data)
 {
 	if (!chart_data)
 		return;
@@ -259,17 +277,17 @@ void SmTimeSeriesServiceManager::SendChartData(std::vector<SmSimpleChartDataItem
 	sessMgr->send(req.session_id, content);
 }
 
-SmChartData* SmTimeSeriesServiceManager::AddCycleDataReq(SmChartDataRequest data_req)
+std::shared_ptr<SmChartData> SmTimeSeriesServiceManager::AddCycleDataReq(SmChartDataRequest data_req)
 {
 	SmChartDataManager* chrartDataMgr = SmChartDataManager::GetInstance();
-	SmChartData* chartData = chrartDataMgr->AddChartData(data_req);
+	std::shared_ptr<SmChartData> chartData = chrartDataMgr->AddChartData(data_req);
 	chartData->AddUser(data_req.user_id);
 	_CycleDataReqMap[data_req.GetDataKey()] = chartData;
 
 	return chartData;
 }
 
-void SmTimeSeriesServiceManager::RegisterTimer(SmChartData* chartData)
+void SmTimeSeriesServiceManager::RegisterTimer(std::shared_ptr<SmChartData> chartData)
 {
 	if (!chartData)
 		return;
@@ -305,7 +323,7 @@ void SmTimeSeriesServiceManager::SendChartDataFromDB(SmChartDataRequest&& data_r
 	//msg.Format("resp len = %d", resp.length());
 	//TRACE(msg);
 	SmChartDataManager* chartDataMgr = SmChartDataManager::GetInstance();
-	SmChartData* chart_data = chartDataMgr->AddChartData(data_req);
+	std::shared_ptr<SmChartData> chart_data = chartDataMgr->AddChartData(data_req);
 	try
 	{
 		auto json_object = json::parse(resp);

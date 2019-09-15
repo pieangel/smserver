@@ -14,7 +14,26 @@ SmAccountOrderManager::~SmAccountOrderManager()
 	}
 }
 
-void SmAccountOrderManager::OnOrderAccepted(SmOrder* order)
+void SmAccountOrderManager::AddFilledOrder(std::shared_ptr<SmOrder> order)
+{
+	if (!order)
+		return;
+	SmSymbolOrderManager* orderMgr = FindAddOrderManager(order->SymbolCode);
+	orderMgr->AddFilledOrder(order);
+	SmOrderManager::AddFilledOrder(order);
+}
+
+void SmAccountOrderManager::AddAcceptedOrder(std::shared_ptr<SmOrder> order)
+{
+	if (!order)
+		return;
+
+	SmSymbolOrderManager* orderMgr = FindAddOrderManager(order->SymbolCode);
+	orderMgr->AddAcceptedOrder(order);
+	SmOrderManager::AddAcceptedOrder(order);
+}
+
+void SmAccountOrderManager::OnOrderAccepted(std::shared_ptr<SmOrder> order)
 {
 	if (!order)
 		return;
@@ -24,7 +43,7 @@ void SmAccountOrderManager::OnOrderAccepted(SmOrder* order)
 	SmOrderManager::OnOrderAccepted(order);
 }
 
-void SmAccountOrderManager::OnOrderFilled(SmOrder* order)
+void SmAccountOrderManager::OnOrderFilled(std::shared_ptr<SmOrder> order)
 {
 	if (!order)
 		return;
@@ -33,7 +52,7 @@ void SmAccountOrderManager::OnOrderFilled(SmOrder* order)
 	SmOrderManager::OnOrderFilled(order);
 }
 
-void SmAccountOrderManager::OnOrder(SmOrder* order)
+void SmAccountOrderManager::OnOrder(std::shared_ptr<SmOrder> order)
 {
 	if (!order)
 		return;

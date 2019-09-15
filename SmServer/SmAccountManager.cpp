@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "SmAccountManager.h"
 #include "SmAccount.h"
+#include "SmMongoDBManager.h"
 SmAccountManager::SmAccountManager()
 {
 
@@ -11,21 +12,29 @@ SmAccountManager::~SmAccountManager()
 
 }
 
-SmAccount* SmAccountManager::AddAccount(std::string accountNo, std::string accountName, std::string userID)
+std::shared_ptr<SmAccount> SmAccountManager::AddAccount(std::string accountNo, std::string accountName, std::string userID)
 {
-	SmAccount* acnt = FindAccount(accountNo);
+	std::shared_ptr<SmAccount> acnt = FindAccount(accountNo);
 	if (acnt)
 		return acnt;
 
-	acnt = new SmAccount();
+	acnt = std::make_shared<SmAccount>();
 	acnt->AccountNo(accountNo);
 	acnt->AccountName(accountName);
-	acnt->OwnerName(userID);
+	acnt->UserID(userID);
 	_AccountMap[accountNo] = acnt;
 	return acnt;
 }
 
-SmAccount* SmAccountManager::FindAccount(std::string accountNo)
+void SmAccountManager::AddAccount(std::shared_ptr<SmAccount> account)
+{
+	if (!account)
+		return;
+	_AccountMap[account->AccountNo()] = account;
+
+}
+
+std::shared_ptr<SmAccount> SmAccountManager::FindAccount(std::string accountNo)
 {
 	auto it = _AccountMap.find(accountNo);
 	if (it != _AccountMap.end()) {
@@ -35,13 +44,24 @@ SmAccount* SmAccountManager::FindAccount(std::string accountNo)
 	return nullptr;
 }
 
-SmAccount* SmAccountManager::FindAddAccount(std::string accountNo)
+std::shared_ptr<SmAccount> SmAccountManager::FindAddAccount(std::string accountNo)
 {
 	auto it = _AccountMap.find(accountNo);
 	if (it != _AccountMap.end())
 		return it->second;
-	SmAccount* acnt = new SmAccount();
+	std::shared_ptr<SmAccount> acnt = std::make_shared<SmAccount>();
 	acnt->AccountNo(accountNo);
 	_AccountMap[accountNo] = acnt;
 	return acnt;
+}
+
+std::string SmAccountManager::GenAccountNo()
+{
+	return _NumGen.GetNewAccountNumber();
+}
+
+void SmAccountManager::LoadAccountFromDB()
+{
+	SmMongoDBManager* mongoMgr = SmMongoDBManager::GetInstance();
+	mongoMgr->LoadAccountList();
 }

@@ -4,11 +4,9 @@
 
 SmAccountPositionManager::~SmAccountPositionManager()
 {
-	for (auto it = _PositionMap.begin(); it != _PositionMap.end(); ++it)
-		delete it->second;
 }
 
-SmPosition* SmAccountPositionManager::FindPosition(std::string symbolCode)
+std::shared_ptr<SmPosition> SmAccountPositionManager::FindPosition(std::string symbolCode)
 {
 	auto it = _PositionMap.find(symbolCode);
 	if (it != _PositionMap.end()) {
@@ -18,7 +16,7 @@ SmPosition* SmAccountPositionManager::FindPosition(std::string symbolCode)
 	return nullptr;
 }
 
-void SmAccountPositionManager::AddPosition(SmPosition* posi)
+void SmAccountPositionManager::AddPosition(std::shared_ptr<SmPosition> posi)
 {
 	if (!posi)
 		return;

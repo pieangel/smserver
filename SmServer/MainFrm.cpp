@@ -42,6 +42,7 @@
 #include "SmMongoDBManager.h"
 #include "SmUtil.h"
 #include "SmMarket.h"
+#include "SmAccountManager.h"
 
 using namespace std;
 
@@ -403,6 +404,7 @@ void CMainFrame::RegisterProduct()
 
 void CMainFrame::ClearAllResource()
 {
+	SmAccountManager::DestroyInstance();
 	SmMongoDBManager::DestroyInstance();
 	SmTimeSeriesServiceManager::DestroyInstance();
 	SmTotalOrderManager::DestroyInstance();
@@ -471,6 +473,9 @@ void CMainFrame::OnShowWindow(BOOL bShow, UINT nStatus)
 
 	SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
 	SmSymbol* sym = symMgr->FindSymbol("ss");
+
+	SmAccountManager* acntMgr = SmAccountManager::GetInstance();
+	std::string acnt = acntMgr->GenAccountNo();
 }
 
 

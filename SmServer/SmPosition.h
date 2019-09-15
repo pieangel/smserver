@@ -3,6 +3,12 @@
 #include "SmOrderDefine.h"
 struct SmPosition
 {
+	// 포지션이 만들어진 날짜
+	std::string CreatedDate;
+	/// <summary>
+	/// 포지션이 만들어진 시간
+	/// </summary>
+	std::string CreatedTime;
 	// 심볼 코드
 	std::string SymbolCode;
 	// 펀드 이름

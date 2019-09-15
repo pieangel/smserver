@@ -609,7 +609,7 @@ void SmHdCtrl::OnRcvdAbroadChartData(CString& sTrCode, LONG& nRqID)
 	SmChartDataRequest req = it->second;
 	SmTimeSeriesCollector* tsCol = SmTimeSeriesCollector::GetInstance();
 	SmChartDataManager* chartDataMgr = SmChartDataManager::GetInstance();
-	SmChartData* chart_data = chartDataMgr->AddChartData(req);
+	std::shared_ptr<SmChartData> chart_data = chartDataMgr->AddChartData(req);
 	// 가장 최근것이 가장 먼저 온다. 따라서 가장 과거의 데이터를 먼저 가져온다.
 	// Received the chart data first.
 	for (int i = nRepeatCnt - 1; i >= 0; --i) {
@@ -676,7 +676,7 @@ void SmHdCtrl::OnRcvdAbroadChartData2(CString& sTrCode, LONG& nRqID)
 	SmChartDataRequest req = it->second;
 	SmTimeSeriesCollector* tsCol = SmTimeSeriesCollector::GetInstance();
 	SmChartDataManager* chartDataMgr = SmChartDataManager::GetInstance();
-	SmChartData* chart_data = chartDataMgr->AddChartData(req);
+	std::shared_ptr<SmChartData> chart_data = chartDataMgr->AddChartData(req);
 	// 가장 최근것이 가장 먼저 온다. 따라서 가장 과거의 데이터를 먼저 가져온다.
 	// Received the chart data first.
 	for (int i = 0; i < nRepeatCnt; ++i) {

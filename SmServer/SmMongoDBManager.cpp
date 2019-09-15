@@ -30,7 +30,13 @@
 #include "SmChartData.h"
 #include "SmServiceDefine.h"
 #include "SmGlobal.h"
+#include "SmAccount.h"
 #include "SmSessionManager.h"
+#include "SmPosition.h"
+#include "SmOrder.h"
+#include "SmAccountManager.h"
+#include "SmTotalOrderManager.h"
+#include "SmTotalPositionManager.h"
 
 #include "Json/json.hpp"
 
@@ -301,8 +307,6 @@ void SmMongoDBManager::SendChartDataFromDB(SmChartDataRequest&& data_req)
 {
 	try
 	{
-		//std::lock_guard<std::mutex> lock(_mutex);
-
 		auto c = _ConnPool->acquire();
 
 		auto db = (*c)["andromeda"];
@@ -371,7 +375,7 @@ void SmMongoDBManager::SendChartData(SmChartDataRequest data_req)
 		mongocxx::cursor cursor = coll.find({}, opts);
 		//int total_count = std::distance(cursor.begin(), cursor.end());
 		SmChartDataManager* chartDataMgr = SmChartDataManager::GetInstance();
-		SmChartData* chart_data = chartDataMgr->AddChartData(data_req);
+		std::shared_ptr<SmChartData> chart_data = chartDataMgr->AddChartData(data_req);
 		for (auto&& doc : cursor) {
 			std::string object = bsoncxx::to_json(doc);
 			auto json_object = json::parse(object);
@@ -395,7 +399,64 @@ void SmMongoDBManager::SendChartData(SmChartDataRequest data_req)
 			data.o = o;
 			data.c = c;
 			data.v = v;
-			chart_data->PushChartDataItemToFront(data);	
+			SmTimeSeriesServiceManager* tsMgr = SmTimeSeriesServiceManager::GetInstance();
+			tsMgr->SendChartData(data_req, data);
+		}
+
+		
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+}
+
+void SmMongoDBManager::SendChartDataOneByOne(SmChartDataRequest data_req)
+{
+	try
+	{
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		mongocxx::collection coll = db[data_req.GetDataKey()];
+
+		// @begin: cpp-query-sort
+		mongocxx::options::find opts;
+		// 최신것이 앞에 오도록 한다.
+		opts.sort(make_document(kvp("date_time", -1)));
+		// 과거의 것이 앞에 오도록 한다.
+		//opts.sort(make_document(kvp("date_time", 1)));
+		opts.limit(data_req.count);
+		mongocxx::cursor cursor = coll.find({}, opts);
+		//int total_count = std::distance(cursor.begin(), cursor.end());
+		SmChartDataManager* chartDataMgr = SmChartDataManager::GetInstance();
+		std::shared_ptr<SmChartData> chart_data = chartDataMgr->AddChartData(data_req);
+		for (auto&& doc : cursor) {
+			std::string object = bsoncxx::to_json(doc);
+			auto json_object = json::parse(object);
+			std::string date_time = json_object["date_time"];
+			std::string date = json_object["local_date"];
+			std::string time = json_object["local_time"];
+			int o = json_object["o"];
+			int h = json_object["h"];
+			int l = json_object["l"];
+			int c = json_object["c"];
+			int v = json_object["v"];
+
+			SmChartDataItem data;
+			data.symbolCode = data_req.symbolCode;
+			data.chartType = data_req.chartType;
+			data.cycle = data_req.cycle;
+			data.date = date;
+			data.time = time;
+			data.h = h;
+			data.l = l;
+			data.o = o;
+			data.c = c;
+			data.v = v;
+			chart_data->PushChartDataItemToFront(data);
 		}
 
 		SmTimeSeriesServiceManager* tsMgr = SmTimeSeriesServiceManager::GetInstance();
@@ -503,7 +564,7 @@ void SmMongoDBManager::SendChartCycleData(SmChartDataRequest data_req)
 		mongocxx::cursor cursor = coll.find({}, opts);
 		//int total_count = std::distance(cursor.begin(), cursor.end());
 		SmChartDataManager* chartDataMgr = SmChartDataManager::GetInstance();
-		SmChartData* chart_data = chartDataMgr->AddChartData(data_req);
+		std::shared_ptr<SmChartData> chart_data = chartDataMgr->AddChartData(data_req);
 		int k = 0;
 		for (auto&& doc : cursor) {
 			std::string object = bsoncxx::to_json(doc);
@@ -529,6 +590,1291 @@ void SmMongoDBManager::SendChartCycleData(SmChartDataRequest data_req)
 		SmGlobal* global = SmGlobal::GetInstance();
 		std::shared_ptr<SmSessionManager> sessMgr = global->GetSessionManager();
 		sessMgr->send(content);
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+}
+
+std::tuple<int, int, int> SmMongoDBManager::GetAccountNo()
+{
+	try
+	{
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		mongocxx::collection coll = db["account_no"];
+
+
+		bsoncxx::stdx::optional<bsoncxx::document::value> maybe_result =
+			coll.find_one(bsoncxx::builder::stream::document{} << "current_no" << "current_no" << finalize);
+		if (maybe_result) {
+			std::string message = bsoncxx::to_json(*maybe_result);
+			auto json_object = json::parse(message);
+			int first = json_object["first"];
+			int second = json_object["second"];
+			int last = json_object["last"];
+			return std::make_tuple(first, second, last);
+		}
+		else {
+			return std::make_tuple(100, 1000, 1000);
+		}
+
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+
+	return std::make_tuple(100, 1000, 1000);
+}
+
+void SmMongoDBManager::SaveUserInfo(std::string user_id, std::string pwd)
+{
+	try
+	{
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		mongocxx::collection coll = db["user_info"];
+
+		builder::stream::document builder{};
+
+		bsoncxx::stdx::optional<bsoncxx::document::value> found_user =
+			coll.find_one(bsoncxx::builder::stream::document{} << "user_id" << user_id << finalize);
+		if (found_user) {
+			coll.update_one(bsoncxx::builder::stream::document{} << "user_id" << user_id << finalize,
+				bsoncxx::builder::stream::document{} << "$set"
+				<< open_document
+				<< "password" << pwd
+				<< close_document << finalize);
+		}
+		else {
+			bsoncxx::document::value doc_value = builder
+				<< "user_id" << user_id
+				<< "password" << pwd
+				<< bsoncxx::builder::stream::finalize;
+			auto res = db["user_info"].insert_one(std::move(doc_value));
+		}
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+}
+
+std::pair<std::string, std::string> SmMongoDBManager::GetUserInfo(std::string user_id)
+{
+	try
+	{
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		mongocxx::collection coll = db["user_info"];
+
+
+		bsoncxx::stdx::optional<bsoncxx::document::value> maybe_result =
+			coll.find_one(bsoncxx::builder::stream::document{} << "user_id" << user_id << finalize);
+		if (maybe_result) {
+			std::string message = bsoncxx::to_json(*maybe_result);
+			auto json_object = json::parse(message);
+			std::string pwd = json_object["password"];
+			return std::make_pair(user_id, pwd);
+		}
+		else {
+			return std::make_pair("", "");
+		}
+
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+
+	return std::make_pair("", "");
+}
+
+bool SmMongoDBManager::RemoveUserInfo(std::string user_id)
+{
+	try
+	{
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		mongocxx::collection coll = db["user_info"];
+
+
+		bsoncxx::stdx::optional<bsoncxx::document::value> maybe_result =
+			coll.find_one(bsoncxx::builder::stream::document{} << "user_id" << user_id << finalize);
+		if (maybe_result) {
+			coll.delete_one(bsoncxx::builder::stream::document{} << "user_id" << user_id << finalize);
+			return true;
+		}
+		else {
+			return false;
+		}
+
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+
+	return false;
+}
+
+
+void SmMongoDBManager::SaveAccountInfo(SmAccount* acnt)
+{
+	if (!acnt)
+		return;
+
+	try
+	{
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		mongocxx::collection coll = db["account_list"];
+
+		builder::stream::document builder{};
+
+		bsoncxx::stdx::optional<bsoncxx::document::value> fount_acnt =
+			coll.find_one(bsoncxx::builder::stream::document{} << "account_no" << acnt->AccountNo() << finalize);
+		if (fount_acnt) {
+			coll.update_one(bsoncxx::builder::stream::document{} << "account_no" << acnt->AccountNo() << finalize,
+				bsoncxx::builder::stream::document{} << "$set"
+				<< open_document
+				<< "account_no" << acnt->AccountNo()
+				<< "user_id" << acnt->UserID()
+				<< "account_name" << acnt->AccountName()
+				<< "password" << acnt->Password()
+				<< "initial_balance" << acnt->InitialBalance()
+				<< "trade_profit_loss" << acnt->TradePL()
+				<< "open_profit_loss" << acnt->OpenPL()
+				<< close_document << finalize);
+		}
+		else {
+			bsoncxx::document::value doc_value = builder
+				<< "account_no" << acnt->AccountNo()
+				<< "user_id" << acnt->UserID()
+				<< "account_name" << acnt->AccountName()
+				<< "password" << acnt->Password()
+				<< "initial_balance" << acnt->InitialBalance()
+				<< "trade_profit_loss" << acnt->TradePL()
+				<< "open_profit_loss" << acnt->OpenPL()
+				<< bsoncxx::builder::stream::finalize;
+			auto res = db["account_list"].insert_one(std::move(doc_value));
+		}
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+}
+
+// 매매수익과 평가 손익을 업데이트 한다.
+void SmMongoDBManager::UpdateAccountInfo(SmAccount* acnt)
+{
+	if (!acnt)
+		return;
+	try
+	{
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		mongocxx::collection coll = db["account_list"];
+
+		builder::stream::document builder{};
+
+		bsoncxx::stdx::optional<bsoncxx::document::value> fount_acnt =
+			coll.find_one(bsoncxx::builder::stream::document{} 
+				<< "account_no" << acnt->AccountNo() 
+				<< finalize);
+		if (fount_acnt) {
+			coll.update_one(bsoncxx::builder::stream::document{} << "account_no" << acnt->AccountNo() << finalize,
+				bsoncxx::builder::stream::document{} << "$set"
+				<< open_document
+				<< "trade_profit_loss" << acnt->TradePL()
+				<< "open_profit_loss" << acnt->OpenPL()
+				<< close_document << finalize);
+		}
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+}
+
+std::vector<std::shared_ptr<SmAccount>> SmMongoDBManager::GetAccountList(std::string user_id)
+{
+	std::vector<std::shared_ptr<SmAccount>> account_list;
+
+	try
+	{
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		mongocxx::collection coll = db["account_list"];
+
+		builder::stream::document builder{};
+
+		mongocxx::cursor cursor = coll.find(bsoncxx::builder::stream::document{} 
+			<< "user_id" << user_id << finalize);
+		for (auto doc : cursor) {
+			std::string message = bsoncxx::to_json(doc);
+			auto json_object = json::parse(message);
+			std::shared_ptr<SmAccount> acnt = std::make_shared<SmAccount>();
+			std::string account_no = json_object["account_no"];
+			std::string user_id = json_object["user_id"];
+			std::string account_name = json_object["account_name"];
+			std::string password = json_object["password"];
+			double initial_valance = json_object["initial_valance"];
+			double trade_profit_loss = json_object["trade_profit_loss"];
+			double open_profit_loss = json_object["open_profit_loss"];
+			acnt->AccountNo(account_no);
+			acnt->AccountName(account_name);
+			acnt->UserID(user_id);
+			acnt->Password(password);
+			acnt->InitialBalance(initial_valance);
+			acnt->TradePL(trade_profit_loss);
+			acnt->OpenPL(open_profit_loss);
+			account_list.push_back(acnt);
+		}
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+
+	return account_list;
+}
+
+std::shared_ptr<SmAccount> SmMongoDBManager::GetAccount(std::string account_no)
+{
+
+	try
+	{
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		mongocxx::collection coll = db["account_list"];
+
+		builder::stream::document builder{};
+
+		mongocxx::cursor cursor = coll.find(bsoncxx::builder::stream::document{}
+		<< "account_no" << account_no << finalize);
+		for (auto doc : cursor) {
+			std::string message = bsoncxx::to_json(doc);
+			auto json_object = json::parse(message);
+			std::shared_ptr<SmAccount> acnt = std::make_shared<SmAccount>();
+			std::string account_no = json_object["account_no"];
+			std::string user_id = json_object["user_id"];
+			std::string account_name = json_object["account_name"];
+			std::string password = json_object["password"];
+			double initial_valance = json_object["initial_valance"];
+			double trade_profit_loss = json_object["trade_profit_loss"];
+			double open_profit_loss = json_object["open_profit_loss"];
+			acnt->AccountNo(account_no);
+			acnt->AccountName(account_name);
+			acnt->UserID(user_id);
+			acnt->Password(password);
+			acnt->InitialBalance(initial_valance);
+			acnt->TradePL(trade_profit_loss);
+			acnt->OpenPL(open_profit_loss);
+			return acnt;
+		}
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+}
+
+void SmMongoDBManager::AddPosition(SmPosition* posi)
+{
+	if (!posi)
+		return;
+
+	try
+	{
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		mongocxx::collection coll = db["position_list"];
+
+		builder::stream::document builder{};
+
+		bsoncxx::stdx::optional<bsoncxx::document::value> found_posi =
+			coll.find_one(bsoncxx::builder::stream::document{} 
+				<< "account_no" << posi->AccountNo 
+				<< "symbol_code" << posi->SymbolCode
+				<< finalize);
+		if (found_posi) {
+			coll.update_one(bsoncxx::builder::stream::document{} 
+				<< "account_no" << posi->AccountNo
+				<< "symbol_code" << posi->SymbolCode
+				<< finalize,
+				bsoncxx::builder::stream::document{} << "$set"
+				<< open_document
+				<< "account_no" << posi->AccountNo
+				<< "symbol_code" << posi->SymbolCode
+				<< "position" << (int)posi->Position
+				<< "open_qty" << posi->OpenQty
+				<< "fee" << posi->Fee
+				<< "trade_profitloss" << posi->TradePL
+				<< "average_price" << posi->AvgPrice
+				<< "open_profitloss" << posi->OpenPL
+				<< close_document << finalize);
+		}
+		else {
+			bsoncxx::document::value doc_value = builder
+				<< "account_no" << posi->AccountNo
+				<< "symbol_code" << posi->SymbolCode
+				<< "position" << (int)posi->Position
+				<< "open_qty" << posi->OpenQty
+				<< "fee" << posi->Fee
+				<< "trade_profitloss" << posi->TradePL
+				<< "average_price" << posi->AvgPrice
+				<< "open_profitloss" << posi->OpenPL
+				<< bsoncxx::builder::stream::finalize;
+			auto res = db["position_list"].insert_one(std::move(doc_value));
+		}
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+}
+
+void SmMongoDBManager::UpdatePosition(SmPosition* posi)
+{
+	if (!posi)
+		return;
+
+	try
+	{
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		mongocxx::collection coll = db["position_list"];
+
+		builder::stream::document builder{};
+
+		bsoncxx::stdx::optional<bsoncxx::document::value> found_posi =
+			coll.find_one(bsoncxx::builder::stream::document{}
+				<< "account_no" << posi->AccountNo
+				<< "symbol_code" << posi->SymbolCode
+				<< finalize);
+		if (found_posi) {
+			// 잔고가 있을 때는 포지션을 업데이트 한다.
+			if (posi->OpenQty != 0) {
+				coll.update_one(bsoncxx::builder::stream::document{}
+					<< "account_no" << posi->AccountNo
+					<< "symbol_code" << posi->SymbolCode
+					<< finalize,
+					bsoncxx::builder::stream::document{} << "$set"
+					<< open_document
+					<< "account_no" << posi->AccountNo
+					<< "symbol_code" << posi->SymbolCode
+					<< "position" << (int)posi->Position
+					<< "open_qty" << posi->OpenQty
+					<< "fee" << posi->Fee
+					<< "trade_profitloss" << posi->TradePL
+					<< "average_price" << posi->AvgPrice
+					<< "open_profitloss" << posi->OpenPL
+					<< close_document << finalize);
+			}
+			else { // 잔고가 없을 때는 포지션을 없앤다.
+				coll.delete_one(bsoncxx::builder::stream::document{} 
+					<< "account_no" << posi->AccountNo
+					<< "symbol_code" << posi->SymbolCode
+					<< finalize);
+			}
+		}
+		else { // 포지션이 없을 때는 삽입해 준다.
+			bsoncxx::document::value doc_value = builder
+				<< "account_no" << posi->AccountNo
+				<< "symbol_code" << posi->SymbolCode
+				<< "position" << (int)posi->Position
+				<< "open_qty" << posi->OpenQty
+				<< "fee" << posi->Fee
+				<< "trade_profitloss" << posi->TradePL
+				<< "average_price" << posi->AvgPrice
+				<< "open_profitloss" << posi->OpenPL
+				<< bsoncxx::builder::stream::finalize;
+			auto res = db["position_list"].insert_one(std::move(doc_value));
+		}
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+}
+
+
+void SmMongoDBManager::AddOrder(SmOrder* order)
+{
+	if (!order)
+		return;
+
+	try
+	{
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		mongocxx::collection coll = db["order_list"];
+
+		builder::stream::document builder{};
+		// 주문은 날짜와 주문번호로 구분을 한다.
+		// 날짜가 변경되면 주문은 다시 시작된다.
+		bsoncxx::stdx::optional<bsoncxx::document::value> found_order =
+			coll.find_one(bsoncxx::builder::stream::document{}
+				<< "order_date" << order->OrderDate
+				<< "order_no" << order->OrderNo
+				<< finalize);
+		if (found_order) {
+			coll.update_one(bsoncxx::builder::stream::document{}
+				<< "order_date" << order->OrderDate
+				<< "order_no" << order->OrderNo
+				<< finalize,
+				bsoncxx::builder::stream::document{} << "$set"
+				<< open_document
+				<< "order_date" << order->OrderDate
+				<< "order_time" << order->OrderTime
+				<< "order_no" << order->OrderNo
+				<< "account_no" << order->AccountNo
+				<< "symbol_code" << order->SymbolCode
+				<< "order_amount" << order->OrderAmount
+				<< "price_type" << (int)order->PriceType
+				<< "order_price" << order->OrderPrice
+				<< "position" << (int)order->Position
+				<< "order_type" << (int)order->OrderType
+				<< "ori_order_no" << order->OriOrderNo
+				<< "filled_date" << order->FilledDate
+				<< "filled_time" << order->FilledTime
+				<< "filled_condition" << (int)order->FilledCondition
+				<< "filled_price" << order->FilledPrice
+				<< "filled_qty" << order->FilledQty
+				<< "order_state" << (int)order->OrderState
+				<< "symbol_decimal" << order->SymbolDecimal 
+				<< "remain_qty" << order->RemainQty
+				<< "strategy_name" << order->StrategyName
+				<< "system_name" << order->SystemName
+				<< "fund_name" << order->FundName
+				<< close_document << finalize);
+		}
+		else {
+			bsoncxx::document::value doc_value = builder
+				<< "order_date" << order->OrderDate
+				<< "order_time" << order->OrderTime
+				<< "order_no" << order->OrderNo
+				<< "account_no" << order->AccountNo
+				<< "symbol_code" << order->SymbolCode
+				<< "order_amount" << order->OrderAmount
+				<< "price_type" << (int)order->PriceType
+				<< "order_price" << order->OrderPrice
+				<< "position" << (int)order->Position
+				<< "order_type" << (int)order->OrderType
+				<< "ori_order_no" << order->OriOrderNo
+				<< "filled_date" << order->FilledDate
+				<< "filled_time" << order->FilledTime
+				<< "filled_condition" << (int)order->FilledCondition
+				<< "filled_price" << order->FilledPrice
+				<< "filled_qty" << order->FilledQty
+				<< "order_state" << (int)order->OrderState
+				<< "symbol_decimal" << order->SymbolDecimal
+				<< "remain_qty" << order->RemainQty
+				<< "strategy_name" << order->StrategyName
+				<< "system_name" << order->SystemName
+				<< "fund_name" << order->FundName
+				<< bsoncxx::builder::stream::finalize;
+			auto res = db["order_list"].insert_one(std::move(doc_value));
+		}
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+}
+
+void SmMongoDBManager::OnAcceptedOrder(SmOrder* order)
+{
+	if (!order)
+		return;
+
+	try
+	{
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		mongocxx::collection coll = db["order_list"];
+
+		builder::stream::document builder{};
+		// 주문은 날짜와 주문번호로 구분을 한다.
+		// 날짜가 변경되면 주문은 다시 시작된다.
+		bsoncxx::stdx::optional<bsoncxx::document::value> found_order =
+			coll.find_one(bsoncxx::builder::stream::document{}
+				<< "order_date" << order->OrderDate
+				<< "order_no" << order->OrderNo
+				<< finalize);
+		if (found_order) {
+			coll.update_one(bsoncxx::builder::stream::document{}
+				<< "order_date" << order->OrderDate
+				<< "order_no" << order->OrderNo
+				<< finalize,
+				bsoncxx::builder::stream::document{} << "$set"
+				<< open_document
+				<< "order_state" << (int)order->OrderState
+				<< close_document << finalize);
+		}
+		
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+}
+
+void SmMongoDBManager::OnFilledOrder(SmOrder* order)
+{
+	if (!order)
+		return;
+
+	try
+	{
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		mongocxx::collection coll = db["order_list"];
+
+		builder::stream::document builder{};
+		// 주문은 날짜와 주문번호로 구분을 한다.
+		// 날짜가 변경되면 주문은 다시 시작된다.
+		bsoncxx::stdx::optional<bsoncxx::document::value> found_order =
+			coll.find_one(bsoncxx::builder::stream::document{}
+				<< "order_date" << order->OrderDate
+				<< "order_no" << order->OrderNo
+				<< finalize);
+		if (found_order) {
+			coll.update_one(bsoncxx::builder::stream::document{}
+				<< "order_date" << order->OrderDate
+				<< "order_no" << order->OrderNo
+				<< finalize,
+				bsoncxx::builder::stream::document{} << "$set"
+				<< open_document
+				<< "filled_date" << order->FilledDate
+				<< "filled_time" << order->FilledTime
+				<< "filled_price" << order->FilledPrice
+				<< "filled_qty" << order->FilledQty
+				<< "remain_qty" << order->RemainQty
+				<< "order_state" << (int)order->OrderState
+				<< close_document << finalize);
+		}
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+}
+
+std::vector<std::shared_ptr<SmOrder>> SmMongoDBManager::GetAcceptedOrderList(std::string account_no)
+{
+	std::vector<std::shared_ptr<SmOrder>> order_list;
+
+	try
+	{
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		mongocxx::collection coll = db["order_list"];
+
+		builder::stream::document builder{};
+
+		// 현재 날짜에 해당하는 것만 가져온다.
+		mongocxx::cursor cursor = coll.find(bsoncxx::builder::stream::document{}
+			<< "account_no" << account_no
+			<< "order_state" << (int)SmOrderState::Accepted
+			<< finalize);
+		for (auto doc : cursor) {
+			std::string message = bsoncxx::to_json(doc);
+			auto json_object = json::parse(message);
+			std::shared_ptr<SmOrder> order = std::make_shared<SmOrder>();
+
+			order->AccountNo = json_object["account_no"];
+			order->OrderType = json_object["order_type"];
+			order->Position = json_object["position_type"];
+			order->PriceType = json_object["price_type"];
+			order->SymbolCode = json_object["symbol_code"];
+			order->OrderPrice = json_object["order_price"];
+			order->OrderNo = json_object["order_no"];
+			order->OrderAmount = json_object["order_amount"];
+			order->OriOrderNo = json_object["ori_order_no"];
+			order->FilledDate = json_object["filled_date"];
+			order->FilledTime = json_object["filled_time"];
+			order->OrderDate = json_object["order_date"];
+			order->OrderTime = json_object["order_time"];
+			order->FilledQty = json_object["filled_qty"];
+			order->FilledPrice = json_object["filled_price"];
+			order->OrderState = json_object["order_state"];
+			order->FilledCondition = json_object["filled_condition"];
+			order->SymbolDecimal = json_object["symbol_decimal"];
+			order->RemainQty = json_object["remain_qty"];
+			order->StrategyName = json_object["strategy_name"];
+			order->SystemName = json_object["system_name"];
+			order->FundName = json_object["fund_name"];
+
+			order_list.push_back(order);
+		}
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+
+	return order_list;
+}
+
+std::vector<std::shared_ptr<SmOrder>> SmMongoDBManager::GetFilledOrderList(std::string account_no)
+{
+	std::vector<std::shared_ptr<SmOrder>> order_list;
+
+	try
+	{
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		mongocxx::collection coll = db["order_list"];
+
+		builder::stream::document builder{};
+
+		// 현재 날짜에 해당하는 것만 가져온다.
+		mongocxx::cursor cursor = coll.find(bsoncxx::builder::stream::document{}
+			<< "account_no" << account_no
+			<< "order_state" << (int)SmOrderState::Filled
+			<< finalize);
+		for (auto doc : cursor) {
+			std::string message = bsoncxx::to_json(doc);
+			auto json_object = json::parse(message);
+			std::shared_ptr<SmOrder> order = std::make_shared<SmOrder>();
+
+			order->AccountNo = json_object["account_no"];
+			order->OrderType = json_object["order_type"];
+			order->Position = json_object["position_type"];
+			order->PriceType = json_object["price_type"];
+			order->SymbolCode = json_object["symbol_code"];
+			order->OrderPrice = json_object["order_price"];
+			order->OrderNo = json_object["order_no"];
+			order->OrderAmount = json_object["order_amount"];
+			order->OriOrderNo = json_object["ori_order_no"];
+			order->FilledDate = json_object["filled_date"];
+			order->FilledTime = json_object["filled_time"];
+			order->OrderDate = json_object["order_date"];
+			order->OrderTime = json_object["order_time"];
+			order->FilledQty = json_object["filled_qty"];
+			order->FilledPrice = json_object["filled_price"];
+			order->OrderState = json_object["order_state"];
+			order->FilledCondition = json_object["filled_condition"];
+			order->SymbolDecimal = json_object["symbol_decimal"];
+			order->RemainQty = json_object["remain_qty"];
+			order->StrategyName = json_object["strategy_name"];
+			order->SystemName = json_object["system_name"];
+			order->FundName = json_object["fund_name"];
+
+			order_list.push_back(order);
+		}
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+
+	return order_list;
+}
+
+std::vector<std::shared_ptr<SmOrder>> SmMongoDBManager::GetOrderList(std::string account_no)
+{
+	std::vector<std::shared_ptr<SmOrder>> order_list;
+
+	try
+	{
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		mongocxx::collection coll = db["order_list"];
+
+		builder::stream::document builder{};
+
+		std::pair<std::string, std::string> date_time = VtStringUtil::GetCurrentDateTime();
+		// 현재 날짜에 해당하는 것만 가져온다.
+		mongocxx::cursor cursor = coll.find(bsoncxx::builder::stream::document{}
+			<< "order_date" << date_time.first
+			<< "account_no" << account_no
+			<< finalize);
+		for (auto doc : cursor) {
+			std::string message = bsoncxx::to_json(doc);
+			auto json_object = json::parse(message);
+			std::shared_ptr<SmOrder> order = std::make_shared<SmOrder>();
+
+			order->AccountNo = json_object["account_no"];
+			order->OrderType = json_object["order_type"];
+			order->Position = json_object["position_type"];
+			order->PriceType = json_object["price_type"];
+			order->SymbolCode = json_object["symbol_code"];
+			order->OrderPrice = json_object["order_price"];
+			order->OrderNo = json_object["order_no"];
+			order->OrderAmount = json_object["order_amount"];
+			order->OriOrderNo = json_object["ori_order_no"];
+			order->FilledDate = json_object["filled_date"];
+			order->FilledTime = json_object["filled_time"];
+			order->OrderDate = json_object["order_date"];
+			order->OrderTime = json_object["order_time"];
+			order->FilledQty = json_object["filled_qty"];
+			order->FilledPrice = json_object["filled_price"];
+			order->OrderState = json_object["order_state"];
+			order->FilledCondition = json_object["filled_condition"];
+			order->SymbolDecimal = json_object["symbol_decimal"];
+			order->RemainQty = json_object["remain_qty"];
+			order->StrategyName = json_object["strategy_name"];
+			order->SystemName = json_object["system_name"];
+			order->FundName = json_object["fund_name"];
+			
+			order_list.push_back(order);
+		}
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+
+	return order_list;
+}
+
+std::vector<std::shared_ptr<SmOrder>> SmMongoDBManager::GetOrderList(std::string date, std::string account_no)
+{
+	std::vector<std::shared_ptr<SmOrder>> order_list;
+
+	try
+	{
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		mongocxx::collection coll = db["order_list"];
+
+		builder::stream::document builder{};
+
+		// 현재 날짜에 해당하는 것만 가져온다.
+		mongocxx::cursor cursor = coll.find(bsoncxx::builder::stream::document{}
+			<< "order_date" << date
+			<< "account_no" << account_no
+			<< finalize);
+		for (auto doc : cursor) {
+			std::string message = bsoncxx::to_json(doc);
+			auto json_object = json::parse(message);
+			std::shared_ptr<SmOrder> order = std::make_shared<SmOrder>();
+
+			order->AccountNo = json_object["account_no"];
+			order->OrderType = json_object["order_type"];
+			order->Position = json_object["position_type"];
+			order->PriceType = json_object["price_type"];
+			order->SymbolCode = json_object["symbol_code"];
+			order->OrderPrice = json_object["order_price"];
+			order->OrderNo = json_object["order_no"];
+			order->OrderAmount = json_object["order_amount"];
+			order->OriOrderNo = json_object["ori_order_no"];
+			order->FilledDate = json_object["filled_date"];
+			order->FilledTime = json_object["filled_time"];
+			order->OrderDate = json_object["order_date"];
+			order->OrderTime = json_object["order_time"];
+			order->FilledQty = json_object["filled_qty"];
+			order->FilledPrice = json_object["filled_price"];
+			order->OrderState = json_object["order_state"];
+			order->FilledCondition = json_object["filled_condition"];
+			order->SymbolDecimal = json_object["symbol_decimal"];
+			order->RemainQty = json_object["remain_qty"];
+			order->StrategyName = json_object["strategy_name"];
+			order->SystemName = json_object["system_name"];
+			order->FundName = json_object["fund_name"];
+
+			order_list.push_back(order);
+		}
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+
+	return order_list;
+}
+
+std::vector<std::shared_ptr<SmPosition>> SmMongoDBManager::GetPositionList(std::string account_no)
+{
+	std::vector<std::shared_ptr<SmPosition>> posi_list;
+
+	try
+	{
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		mongocxx::collection coll = db["position_list"];
+
+		builder::stream::document builder{};
+
+		std::pair<std::string, std::string> date_time = VtStringUtil::GetCurrentDateTime();
+		// 현재 날짜에 해당하는 것만 가져온다.
+		mongocxx::cursor cursor = coll.find(bsoncxx::builder::stream::document{}
+			<< "created_date" << date_time.first
+			<< "account_no" << account_no
+			<< finalize);
+		for (auto doc : cursor) {
+			std::string message = bsoncxx::to_json(doc);
+			auto json_object = json::parse(message);
+			std::shared_ptr<SmPosition> posi = std::make_shared<SmPosition>();
+
+			posi->CreatedDate = json_object["created_date"];
+			posi->CreatedTime = json_object["created_time"];
+			posi->SymbolCode = json_object["symbol_code"];
+			posi->FundName = json_object["fund_name"];
+			posi->AccountNo = json_object["account_no"];
+			posi->Position = json_object["position_type"];
+			posi->OpenQty = json_object["open_qty"];
+			posi->Fee =json_object["fee"];
+			posi->TradePL = json_object["trade_pl"];
+			posi->AvgPrice = json_object["avg_price"];
+			posi->CurPrice = json_object["cur_price"];
+			posi->OpenPL = json_object["open_pl"];
+			
+			posi_list.push_back(posi);
+		}
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+
+	return posi_list;
+}
+
+std::vector<std::shared_ptr<SmPosition>> SmMongoDBManager::GetPositionList(std::string date, std::string account_no)
+{
+	std::vector<std::shared_ptr<SmPosition>> posi_list;
+
+	try
+	{
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		mongocxx::collection coll = db["position_list"];
+
+		builder::stream::document builder{};
+
+		// 현재 날짜에 해당하는 것만 가져온다.
+		mongocxx::cursor cursor = coll.find(bsoncxx::builder::stream::document{}
+			<< "created_date" << date
+			<< "account_no" << account_no
+			<< finalize);
+		for (auto doc : cursor) {
+			std::string message = bsoncxx::to_json(doc);
+			auto json_object = json::parse(message);
+			std::shared_ptr<SmPosition> posi = std::make_shared<SmPosition>();
+
+			posi->CreatedDate = json_object["created_date"];
+			posi->CreatedTime = json_object["created_time"];
+			posi->SymbolCode = json_object["symbol_code"];
+			posi->FundName = json_object["fund_name"];
+			posi->AccountNo = json_object["account_no"];
+			posi->Position = json_object["position_type"];
+			posi->OpenQty = json_object["open_qty"];
+			posi->Fee = json_object["fee"];
+			posi->TradePL = json_object["trade_pl"];
+			posi->AvgPrice = json_object["avg_price"];
+			posi->CurPrice = json_object["cur_price"];
+			posi->OpenPL = json_object["open_pl"];
+
+			posi_list.push_back(posi);
+		}
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+
+	return posi_list;
+}
+
+std::shared_ptr<SmPosition> SmMongoDBManager::GetPosition(std::string account_no, std::string symbol_code)
+{
+	try
+	{
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		mongocxx::collection coll = db["position_list"];
+
+		builder::stream::document builder{};
+
+		std::pair<std::string, std::string> date_time = VtStringUtil::GetCurrentDateTime();
+		// 현재 날짜에 해당하는 것만 가져온다.
+		mongocxx::cursor cursor = coll.find(bsoncxx::builder::stream::document{}
+			<< "created_date" << date_time.first
+			<< "account_no" << account_no
+			<< "symbol_code" << symbol_code
+			<< finalize);
+		for (auto doc : cursor) {
+			std::string message = bsoncxx::to_json(doc);
+			auto json_object = json::parse(message);
+			std::shared_ptr<SmPosition> posi = std::make_shared<SmPosition>();
+
+			posi->CreatedDate = json_object["created_date"];
+			posi->CreatedTime = json_object["created_time"];
+			posi->SymbolCode = json_object["symbol_code"];
+			posi->FundName = json_object["fund_name"];
+			posi->AccountNo = json_object["account_no"];
+			posi->Position = json_object["position_type"];
+			posi->OpenQty = json_object["open_qty"];
+			posi->Fee = json_object["fee"];
+			posi->TradePL = json_object["trade_pl"];
+			posi->AvgPrice = json_object["avg_price"];
+			posi->CurPrice = json_object["cur_price"];
+			posi->OpenPL = json_object["open_pl"];
+
+			return posi;
+		}
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+}
+
+std::shared_ptr<SmPosition> SmMongoDBManager::GetPosition(std::string date, std::string account_no, std::string symbol_code)
+{
+	try
+	{
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		mongocxx::collection coll = db["position_list"];
+
+		builder::stream::document builder{};
+
+		// 현재 날짜에 해당하는 것만 가져온다.
+		mongocxx::cursor cursor = coll.find(bsoncxx::builder::stream::document{}
+			<< "created_date" << date
+			<< "account_no" << account_no
+			<< "symbol_code" << symbol_code
+			<< finalize);
+		for (auto doc : cursor) {
+			std::string message = bsoncxx::to_json(doc);
+			auto json_object = json::parse(message);
+			std::shared_ptr<SmPosition> posi = std::make_shared<SmPosition>();
+
+			posi->CreatedDate = json_object["created_date"];
+			posi->CreatedTime = json_object["created_time"];
+			posi->SymbolCode = json_object["symbol_code"];
+			posi->FundName = json_object["fund_name"];
+			posi->AccountNo = json_object["account_no"];
+			posi->Position = json_object["position_type"];
+			posi->OpenQty = json_object["open_qty"];
+			posi->Fee = json_object["fee"];
+			posi->TradePL = json_object["trade_pl"];
+			posi->AvgPrice = json_object["avg_price"];
+			posi->CurPrice = json_object["cur_price"];
+			posi->OpenPL = json_object["open_pl"];
+
+			return posi;
+		}
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+}
+
+void SmMongoDBManager::LoadAccountList()
+{
+	try
+	{
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		mongocxx::collection coll = db["account_list"];
+
+		SmAccountManager* acntMgr = SmAccountManager::GetInstance();
+
+		builder::stream::document builder{};
+
+		mongocxx::cursor cursor = coll.find({});
+		for (auto doc : cursor) {
+			std::string message = bsoncxx::to_json(doc);
+			auto json_object = json::parse(message);
+			std::shared_ptr<SmAccount> acnt = std::make_shared<SmAccount>();
+			std::string account_no = json_object["account_no"];
+			std::string user_id = json_object["user_id"];
+			std::string account_name = json_object["account_name"];
+			std::string password = json_object["password"];
+			double initial_valance = json_object["initial_valance"];
+			double trade_profit_loss = json_object["trade_profit_loss"];
+			double open_profit_loss = json_object["open_profit_loss"];
+			acnt->AccountNo(account_no);
+			acnt->AccountName(account_name);
+			acnt->UserID(user_id);
+			acnt->Password(password);
+			acnt->InitialBalance(initial_valance);
+			acnt->TradePL(trade_profit_loss);
+			acnt->OpenPL(open_profit_loss);
+			acntMgr->AddAccount(acnt);
+		}
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+}
+
+void SmMongoDBManager::LoadFilledOrderList()
+{
+	try
+	{
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		mongocxx::collection coll = db["order_list"];
+
+		builder::stream::document builder{};
+
+		SmTotalOrderManager* totalOrderMgr = SmTotalOrderManager::GetInstance();
+
+		// 현재 날짜에 해당하는 것만 가져온다.
+		mongocxx::cursor cursor = coll.find(bsoncxx::builder::stream::document{}
+			<< "order_state" << (int)SmOrderState::Filled
+			<< finalize);
+		for (auto doc : cursor) {
+			std::string message = bsoncxx::to_json(doc);
+			auto json_object = json::parse(message);
+			std::shared_ptr<SmOrder> order = std::make_shared<SmOrder>();
+
+			order->AccountNo = json_object["account_no"];
+			order->OrderType = json_object["order_type"];
+			order->Position = json_object["position_type"];
+			order->PriceType = json_object["price_type"];
+			order->SymbolCode = json_object["symbol_code"];
+			order->OrderPrice = json_object["order_price"];
+			order->OrderNo = json_object["order_no"];
+			order->OrderAmount = json_object["order_amount"];
+			order->OriOrderNo = json_object["ori_order_no"];
+			order->FilledDate = json_object["filled_date"];
+			order->FilledTime = json_object["filled_time"];
+			order->OrderDate = json_object["order_date"];
+			order->OrderTime = json_object["order_time"];
+			order->FilledQty = json_object["filled_qty"];
+			order->FilledPrice = json_object["filled_price"];
+			order->OrderState = json_object["order_state"];
+			order->FilledCondition = json_object["filled_condition"];
+			order->SymbolDecimal = json_object["symbol_decimal"];
+			order->RemainQty = json_object["remain_qty"];
+			order->StrategyName = json_object["strategy_name"];
+			order->SystemName = json_object["system_name"];
+			order->FundName = json_object["fund_name"];
+
+			totalOrderMgr->AddFilledOrder(order);
+		}
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+}
+
+void SmMongoDBManager::LoadAcceptedOrderList()
+{
+	try
+	{
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		mongocxx::collection coll = db["order_list"];
+
+		builder::stream::document builder{};
+
+		SmTotalOrderManager* totalOrderMgr = SmTotalOrderManager::GetInstance();
+
+		// 현재 날짜에 해당하는 것만 가져온다.
+		mongocxx::cursor cursor = coll.find(bsoncxx::builder::stream::document{}
+			<< "order_state" << (int)SmOrderState::Accepted
+			<< finalize);
+		for (auto doc : cursor) {
+			std::string message = bsoncxx::to_json(doc);
+			auto json_object = json::parse(message);
+			std::shared_ptr<SmOrder> order = std::make_shared<SmOrder>();
+
+			order->AccountNo = json_object["account_no"];
+			order->OrderType = json_object["order_type"];
+			order->Position = json_object["position_type"];
+			order->PriceType = json_object["price_type"];
+			order->SymbolCode = json_object["symbol_code"];
+			order->OrderPrice = json_object["order_price"];
+			order->OrderNo = json_object["order_no"];
+			order->OrderAmount = json_object["order_amount"];
+			order->OriOrderNo = json_object["ori_order_no"];
+			order->FilledDate = json_object["filled_date"];
+			order->FilledTime = json_object["filled_time"];
+			order->OrderDate = json_object["order_date"];
+			order->OrderTime = json_object["order_time"];
+			order->FilledQty = json_object["filled_qty"];
+			order->FilledPrice = json_object["filled_price"];
+			order->OrderState = json_object["order_state"];
+			order->FilledCondition = json_object["filled_condition"];
+			order->SymbolDecimal = json_object["symbol_decimal"];
+			order->RemainQty = json_object["remain_qty"];
+			order->StrategyName = json_object["strategy_name"];
+			order->SystemName = json_object["system_name"];
+			order->FundName = json_object["fund_name"];
+
+			totalOrderMgr->AddAcceptedOrder(order);
+		}
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+}
+
+void SmMongoDBManager::LoadPositionList()
+{
+	try
+	{
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		mongocxx::collection coll = db["position_list"];
+
+		builder::stream::document builder{};
+
+		std::pair<std::string, std::string> date_time = VtStringUtil::GetCurrentDateTime();
+
+		SmTotalPositionManager* tpMgr = SmTotalPositionManager::GetInstance();
+		
+		// 잔고가 0보다 큰 모든 포지션을 가져온다.
+		mongocxx::cursor cursor = coll.find(
+			bsoncxx::builder::stream::document{} << "i" << open_document <<
+			"$gt" << 0
+			<< close_document << finalize);
+		for (auto doc : cursor) {
+			std::string message = bsoncxx::to_json(doc);
+			auto json_object = json::parse(message);
+			std::shared_ptr<SmPosition> posi = std::make_shared<SmPosition>();
+
+			posi->CreatedDate = json_object["created_date"];
+			posi->CreatedTime = json_object["created_time"];
+			posi->SymbolCode = json_object["symbol_code"];
+			posi->FundName = json_object["fund_name"];
+			posi->AccountNo = json_object["account_no"];
+			posi->Position = json_object["position_type"];
+			posi->OpenQty = json_object["open_qty"];
+			posi->Fee = json_object["fee"];
+			posi->TradePL = json_object["trade_pl"];
+			posi->AvgPrice = json_object["avg_price"];
+			posi->CurPrice = json_object["cur_price"];
+			posi->OpenPL = json_object["open_pl"];
+
+			tpMgr->AddPosition(posi);
+		}
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+}
+
+void SmMongoDBManager::SaveAccountNo(int first, int second, int last)
+{
+	try
+	{
+		//std::lock_guard<std::mutex> lock(_mutex);
+
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		// 먼저 시장이 있는지 검색한다. 
+		// 그리고 시장 속에 상품이 있는지 검색한다.
+		mongocxx::collection coll = db["account_no"];
+
+		builder::stream::document builder{};
+
+		bsoncxx::stdx::optional<bsoncxx::document::value> fount_no =
+			coll.find_one(bsoncxx::builder::stream::document{} << "current_no" << "current_no" << finalize);
+		if (fount_no) {
+			coll.update_one(bsoncxx::builder::stream::document{} << "current_no" << "current_no" << finalize,
+				bsoncxx::builder::stream::document{} << "$set"
+				<< open_document
+				<< "current_no" << "current_no"
+				<< "first" << first
+				<< "second" << second
+				<< "last" << last
+				<< close_document << finalize);
+		}
+		else {
+			bsoncxx::document::value doc_value = builder
+				<< "current_no" << "current_no"
+				<< "first" << first
+				<< "second" << second
+				<< "last" << last
+				<< bsoncxx::builder::stream::finalize;
+			auto res = db["account_no"].insert_one(std::move(doc_value));
+		}
 	}
 	catch (std::exception e) {
 		std::string error;

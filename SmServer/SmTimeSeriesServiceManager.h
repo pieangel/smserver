@@ -23,13 +23,14 @@ public:
 	void OnSymbolMasterRequest(SmSymbolMasterRequest&& master_req);
 	int SendDataSplitSize() const { return _SendDataSplitSize; }
 	void SendDataSplitSize(int val) { _SendDataSplitSize = val; }
-	void OnCompleteChartData(SmChartDataRequest data_req, SmChartData* chart_data);
+	void OnCompleteChartData(SmChartDataRequest data_req, std::shared_ptr<SmChartData> chart_data);
 	SmWebsocketSession* SisiSocket() const { return _SisiSocket; }
 	void SisiSocket(SmWebsocketSession* val) { _SisiSocket = val; }
 	void ClearSiseSocket(SmWebsocketSession* session);
 	void OnReqRegisterSiseSocket(SmWebsocketSession* socket);
 	void ResendChartDataRequest(SmChartDataRequest req);
-	void SendChartData(SmChartDataRequest data_req, SmChartData* chart_data);
+	void SendChartData(SmChartDataRequest data_req, std::shared_ptr<SmChartData> chart_data);
+	void SendChartData(SmChartDataRequest data_req, SmChartDataItem item);
 private:
 	SmServieReqNumGenerator _SvcNoGen;
 	void RegisterCycleChartDataRequest(SmChartDataRequest data_req);
@@ -38,9 +39,9 @@ private:
 	std::map<std::string, CppTime::timer_id> _CycleDataReqTimerMap;
 	int _SendDataSplitSize = 20;
 	CppTime::Timer _Timer;
-	std::map<std::string, SmChartData*> _CycleDataReqMap;
-	SmChartData* AddCycleDataReq(SmChartDataRequest data_req);
-	void RegisterTimer(SmChartData* chartData);
+	std::map<std::string, std::shared_ptr<SmChartData>> _CycleDataReqMap;
+	std::shared_ptr<SmChartData> AddCycleDataReq(SmChartDataRequest data_req);
+	void RegisterTimer(std::shared_ptr<SmChartData> chartData);
 	void SendChartDataFromDB(SmChartDataRequest&& data_req);
 	// 증권사나 데이터 제공 업체에 직접 데이터를 요청한다.
 	void GetChartDataFromSourceServer(SmChartDataRequest&& data_req);

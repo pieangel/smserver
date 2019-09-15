@@ -120,6 +120,9 @@ void SmProtocolManager::ParseMessage(std::string message, SmWebsocketSession* so
 		case SmProtocol::req_update_chart_data:
 			OnReqUpdateChartData(json_object);
 			break;
+		case SmProtocol::req_chart_data_onebyone:
+			OnReqChartDataOneByOne(json_object, socket);
+			break;
 		default:
 			break;
 		}
@@ -553,4 +556,62 @@ void SmProtocolManager::OnReqUpdateChartData(nlohmann::json& obj)
 	req.count = count;
 	SmMongoDBManager* mongoMgr = SmMongoDBManager::GetInstance();
 	mongoMgr->SendChartCycleData(std::move(req));
+}
+
+void SmProtocolManager::OnReqRegisterUser(nlohmann::json& obj)
+{
+	std::string user_id = obj["user_id"];
+	std::string password = obj["password"];
+	SmMongoDBManager* mongoMgr = SmMongoDBManager::GetInstance();
+	mongoMgr->SaveUserInfo(user_id, password);
+
+	obj["res_id"] = (int)SmProtocol::res_register_user;
+	obj["message"] = "Registered a user successfully!";
+	std::string content = obj.dump(4);
+	SmGlobal* global = SmGlobal::GetInstance();
+	std::shared_ptr<SmSessionManager> sessMgr = global->GetSessionManager();
+	sessMgr->send(content);
+}
+
+void SmProtocolManager::OnReqUnregisterUser(nlohmann::json& obj)
+{
+	std::string user_id = obj["user_id"];
+	SmMongoDBManager* mongoMgr = SmMongoDBManager::GetInstance();
+	mongoMgr->RemoveUserInfo(user_id);
+
+	obj["res_id"] = (int)SmProtocol::res_unregister_user;
+	obj["message"] = "Unregistered a user successfully!";
+	std::string content = obj.dump(4);
+	SmGlobal* global = SmGlobal::GetInstance();
+	std::shared_ptr<SmSessionManager> sessMgr = global->GetSessionManager();
+	sessMgr->send(content);
+}
+
+void SmProtocolManager::OnReqChartDataOneByOne(nlohmann::json& obj, SmWebsocketSession* socket)
+{
+	try {
+		if (!socket)
+			return;
+
+		std::string chart_id = obj["chart_id"];
+		std::string id = obj["user_id"];
+		std::string symCode = obj["symbol_code"];
+		int chart_type = obj["chart_type"];
+		int cycle = obj["cycle"];
+		int count = obj["count"];
+		SmChartDataRequest req;
+		req.reqType = SmChartDataReqestType::FIRST;
+		req.user_id = id;
+		req.session_id = socket->SessionID();
+		req.symbolCode = symCode;
+		req.chartType = (SmChartType)chart_type;
+		req.cycle = cycle;
+		req.count = count;
+		req.next = 0;
+		SmMongoDBManager* mongoMgr = SmMongoDBManager::GetInstance();
+		mongoMgr->SendChartDataFromDB(std::move(req));
+	}
+	catch (std::exception e) {
+		std::string error = e.what();
+	}
 }
