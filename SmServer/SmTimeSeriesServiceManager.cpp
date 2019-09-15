@@ -179,7 +179,7 @@ void SmTimeSeriesServiceManager::OnChartDataReceived(SmChartDataRequest&& data_r
 void SmTimeSeriesServiceManager::OnSiseDataRequest(SmSiseDataRequest&& sise_req)
 {
 	SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
-	SmSymbol* sym = symMgr->FindSymbol(sise_req.symbol_code);
+	std::shared_ptr<SmSymbol> sym = symMgr->FindSymbol(sise_req.symbol_code);
 	if (!sym)
 		return;
 	//std::string content = sym->GetQuoteByJson();
@@ -193,7 +193,7 @@ void SmTimeSeriesServiceManager::OnSiseDataRequest(SmSiseDataRequest&& sise_req)
 void SmTimeSeriesServiceManager::OnHogaDataRequest(SmHogaDataRequest&& hoga_req)
 {
 	SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
-	SmSymbol* sym = symMgr->FindSymbol(hoga_req.symbol_code);
+	std::shared_ptr<SmSymbol> sym = symMgr->FindSymbol(hoga_req.symbol_code);
 	if (!sym)
 		return;
 	std::string symbol_code = hoga_req.symbol_code;
@@ -204,7 +204,7 @@ void SmTimeSeriesServiceManager::OnHogaDataRequest(SmHogaDataRequest&& hoga_req)
 void SmTimeSeriesServiceManager::OnSymbolMasterRequest(SmSymbolMasterRequest&& master_req)
 {
 	SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
-	SmSymbol* sym = symMgr->FindSymbol(master_req.symbol_code);
+	std::shared_ptr<SmSymbol> sym = symMgr->FindSymbol(master_req.symbol_code);
 	if (!sym)
 		return;
 	json send_object;

@@ -36,7 +36,7 @@ void SmTotalOrderManager::OnRequestOrder(SmOrderRequest&& req)
 		return;
 	}
 	SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
-	SmSymbol* sym = symMgr->FindSymbol(req.SymbolCode);
+	std::shared_ptr<SmSymbol> sym = symMgr->FindSymbol(req.SymbolCode);
 	if (!sym) {
 		SendError(SmOrderError::BadSymbol, req);
 		return;
@@ -136,7 +136,7 @@ void SmTotalOrderManager::CheckFilled(std::shared_ptr<SmOrder> order)
 	} //지정가 주문 처리
 	else if (order->PriceType == SmPriceType::Price) {
 		SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
-		SmSymbol* sym = symMgr->FindSymbol(order->SymbolCode);
+		std::shared_ptr<SmSymbol> sym = symMgr->FindSymbol(order->SymbolCode);
 		if (order->Position == SmPositionType::Buy) {
 			if (order->OrderPrice >= sym->Quote.Close) {
 				OnOrderFilled(order);

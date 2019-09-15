@@ -11,7 +11,7 @@ void SmRealtimeSymbolServiceManager::RegisterAllRecentSymbol()
 {
 	SmHdClient* client = SmHdClient::GetInstance();
 	SmMarketManager* mrktMgr = SmMarketManager::GetInstance();
-	std::vector<SmSymbol*> symVec = mrktMgr->GetRecentMonthSymbolList();
+	std::vector<std::shared_ptr<SmSymbol>> symVec = mrktMgr->GetRecentMonthSymbolList();
 	for (auto it = symVec.begin(); it != symVec.end(); ++it) {
 		client->RegisterProduct((*it)->SymbolCode());
 	}
@@ -22,13 +22,13 @@ void SmRealtimeSymbolServiceManager::RegisterSymbol(std::string user_id, std::st
 	SmUserManager* userMgr = SmUserManager::GetInstance();
 	SmUser* user = userMgr->FindUser(user_id);
 	SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
-	SmSymbol* sym = symMgr->FindSymbol(symCode);
+	std::shared_ptr<SmSymbol> sym = symMgr->FindSymbol(symCode);
 	if (!user || !sym)
 		return;
 	RegisterSymbol(user, sym);
 }
 
-void SmRealtimeSymbolServiceManager::RegisterSymbol(SmUser* user, SmSymbol* sym)
+void SmRealtimeSymbolServiceManager::RegisterSymbol(SmUser* user, std::shared_ptr<SmSymbol> sym)
 {
 	if (!user || !sym)
 		return;
@@ -53,13 +53,13 @@ void SmRealtimeSymbolServiceManager::UnregisterSymbol(std::string user_id, std::
 	SmUserManager* userMgr = SmUserManager::GetInstance();
 	SmUser* user = userMgr->FindUser(user_id);
 	SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
-	SmSymbol* sym = symMgr->FindSymbol(symCode);
+	std::shared_ptr<SmSymbol> sym = symMgr->FindSymbol(symCode);
 	if (!user || !sym)
 		return;
 	UnregisterSymbol(user, sym);
 }
 
-void SmRealtimeSymbolServiceManager::UnregisterSymbol(SmUser* user, SmSymbol* sym)
+void SmRealtimeSymbolServiceManager::UnregisterSymbol(SmUser* user, std::shared_ptr<SmSymbol> sym)
 {
 	if (!user || !sym)
 		return;
@@ -161,7 +161,7 @@ void SmRealtimeSymbolServiceManager::BroadcastHoga()
 	}
 }
 
-void SmRealtimeSymbolServiceManager::SendSise(SmSymbol* sym, SmUserMap& userMap)
+void SmRealtimeSymbolServiceManager::SendSise(std::shared_ptr<SmSymbol> sym, SmUserMap& userMap)
 {
 	if (!sym || userMap.size() == 0)
 		return;
@@ -187,7 +187,7 @@ void SmRealtimeSymbolServiceManager::SendSise(SmSymbol* sym, SmUserMap& userMap)
 			sp->send(ss);
 }
 
-void SmRealtimeSymbolServiceManager::SendHoga(SmSymbol* sym, SmUserMap& userMap)
+void SmRealtimeSymbolServiceManager::SendHoga(std::shared_ptr<SmSymbol> sym, SmUserMap& userMap)
 {
 	if (!sym || userMap.size() == 0)
 		return;

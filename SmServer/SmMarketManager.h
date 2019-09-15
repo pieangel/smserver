@@ -22,7 +22,7 @@ public:
 	SmMarket* FindMarket(std::string mrkt_name);
 	void AddCategoryMarket(std::string cat_code, std::string mrkt_name);
 	SmCategory* FindCategory(std::string cat_code);
-	std::vector<SmSymbol*> GetRecentMonthSymbolList();
+	std::vector<std::shared_ptr<SmSymbol>> GetRecentMonthSymbolList();
 	void SendMarketList(std::string user_id);
 	void SendSymbolListByCategory(std::string user_id);
 	int GetTotalCategoryCount();
@@ -31,7 +31,7 @@ public:
 		return _MarketList;
 	}
 private:
-	void SendSymbolMaster(std::string user_id, SmSymbol* sym);
+	void SendSymbolMaster(std::string user_id, std::shared_ptr<SmSymbol> sym);
 	std::vector<SmMarket*> _MarketList;
 	/// 품목이 속한 시장 이름 대응 표
 	/// <summary>

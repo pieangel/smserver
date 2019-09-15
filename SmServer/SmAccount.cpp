@@ -19,7 +19,7 @@ SmPosition* SmAccount::CreatePosition(SmOrder* order)
 	if (!order)
 		return nullptr;
 	SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
-	SmSymbol* sym = symMgr->FindSymbol(order->SymbolCode);
+	std::shared_ptr<SmSymbol> sym = symMgr->FindSymbol(order->SymbolCode);
 	if (!sym)
 		return nullptr;
 

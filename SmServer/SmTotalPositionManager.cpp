@@ -19,7 +19,7 @@ std::shared_ptr<SmPosition> SmTotalPositionManager::CreatePosition(std::shared_p
 	if (!order)
 		return nullptr;
 	SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
-	SmSymbol* sym = symMgr->FindSymbol(order->SymbolCode);
+	std::shared_ptr<SmSymbol> sym = symMgr->FindSymbol(order->SymbolCode);
 	if (!sym)
 		return nullptr;
 	std::pair<std::string, std::string> date_time = VtStringUtil::GetCurrentDateTime();

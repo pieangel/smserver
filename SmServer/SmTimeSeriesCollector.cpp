@@ -32,7 +32,7 @@ void SmTimeSeriesCollector::CollectRecentMonthSymbolChartData()
 {
 	if (_Index >= _RecentMonthSymbolVec.size())
 		return;
-	SmSymbol* sym = _RecentMonthSymbolVec[_Index];
+	std::shared_ptr<SmSymbol> sym = _RecentMonthSymbolVec[_Index];
 	SmChartDataRequest req;
 	req.symbolCode = sym->SymbolCode();
 	req.chartType = SmChartType::MIN;
@@ -95,7 +95,7 @@ void SmTimeSeriesCollector::OnEveryMinute()
 	std::string prevTime = SmUtil::GetUTCDateTimeStringForPreMin(2);
 
 	for (auto it = _RecentMonthSymbolVec.begin(); it != _RecentMonthSymbolVec.end(); ++it) {
-		SmSymbol* sym = *it;
+		std::shared_ptr<SmSymbol> sym = *it;
 		std::string  meas = sym->SymbolCode() + "_quote";
 
 		std::string query_string = ""; // "select * from \"chart_data\" where \"symbol_code\" = \'CLN19\' AND \"chart_type\" = \'5\' AND \"cycle\" = \'1\'";
@@ -119,7 +119,7 @@ void SmTimeSeriesCollector::OnSiseTimer()
 {
 	if (_SiseIndex >= _RecentMonthSymbolVec.size())
 		return;
-	SmSymbol * sym = _RecentMonthSymbolVec[_SiseIndex];
+	std::shared_ptr<SmSymbol> sym = _RecentMonthSymbolVec[_SiseIndex];
 	SmHdClient * client = SmHdClient::GetInstance();
 	client->GetSiseData(sym->SymbolCode());
 	_SiseIndex++;
@@ -132,7 +132,7 @@ void SmTimeSeriesCollector::OnHogaTimer()
 {
 	if (_HogaIndex >= _RecentMonthSymbolVec.size())
 		return;
-	SmSymbol* sym = _RecentMonthSymbolVec[_HogaIndex];
+	std::shared_ptr<SmSymbol> sym = _RecentMonthSymbolVec[_HogaIndex];
 	SmHdClient* client = SmHdClient::GetInstance();
 	client->GetHogaData(sym->SymbolCode());
 	_HogaIndex++;

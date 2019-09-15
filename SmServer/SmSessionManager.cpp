@@ -112,7 +112,7 @@ void SmSessionManager::AddUser(std::string id, std::string pwd, SmWebsocketSessi
 	SmUser* user = userMgr->AddUser(id, pwd, sess);
 	SmRealtimeSymbolServiceManager* rtlSymSvcMgr = SmRealtimeSymbolServiceManager::GetInstance();
 	SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
-	SmSymbol* sym = symMgr->FindSymbol("CLN19");
+	std::shared_ptr<SmSymbol> sym = symMgr->FindSymbol("CLN19");
 	rtlSymSvcMgr->Symbol(sym);
 	rtlSymSvcMgr->Register(user);
 }

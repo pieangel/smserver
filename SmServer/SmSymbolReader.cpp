@@ -430,7 +430,7 @@ void SmSymbolReader::ReadJmFile(std::string fullPath)
 		SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
 		SmCategory* cat = marketMgr->FindCategory(MrktCd);
 		if (cat) {
-			SmSymbol* sym = cat->AddSymbol(Series);
+			std::shared_ptr<SmSymbol> sym = cat->AddSymbol(Series);
 			sym->Index(std::stoi(IndexCode));
 			sym->Name(SeriesNmKor);
 			sym->NameEn(SeriesNm);

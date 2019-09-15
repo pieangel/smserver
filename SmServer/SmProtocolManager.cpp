@@ -405,7 +405,7 @@ void SmProtocolManager::OnReqSymbolMasterAll(nlohmann::json& obj)
 {
 	try {
 		SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
-		std::map<std::string, SmSymbol*>& symbolMap = symMgr->GetSymbolMap();
+		std::map<std::string, std::shared_ptr<SmSymbol>>& symbolMap = symMgr->GetSymbolMap();
 		for (auto it = symbolMap.begin(); it != symbolMap.end(); ++it) {
 			std::string id = obj["user_id"];
 			std::string symCode = it->second->SymbolCode();
@@ -425,7 +425,7 @@ void SmProtocolManager::OnReqSiseDataAll(nlohmann::json& obj)
 {
 	try {
 		SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
-		std::map<std::string, SmSymbol*>& symbolMap = symMgr->GetSymbolMap();
+		std::map<std::string, std::shared_ptr<SmSymbol>>& symbolMap = symMgr->GetSymbolMap();
 		for (auto it = symbolMap.begin(); it != symbolMap.end(); ++it) {
 			std::string id = obj["user_id"];
 			std::string symCode = it->second->SymbolCode();
@@ -445,7 +445,7 @@ void SmProtocolManager::OnReqRecentSiseDataAll(nlohmann::json& obj)
 {
 	try {
 		SmMarketManager* symMgr = SmMarketManager::GetInstance();
-		std::vector<SmSymbol*> symVec = symMgr->GetRecentMonthSymbolList();
+		std::vector<std::shared_ptr<SmSymbol>> symVec = symMgr->GetRecentMonthSymbolList();
 		for (auto it = symVec.begin(); it != symVec.end(); ++it) {
 			std::string id = obj["user_id"];
 			std::string symCode = (*it)->SymbolCode();
@@ -465,7 +465,7 @@ void SmProtocolManager::OnReqRegisterRecentRealtimeSiseAll(nlohmann::json& obj)
 {
 	try {
 		SmMarketManager* symMgr = SmMarketManager::GetInstance();
-		std::vector<SmSymbol*> symVec = symMgr->GetRecentMonthSymbolList();
+		std::vector<std::shared_ptr<SmSymbol>> symVec = symMgr->GetRecentMonthSymbolList();
 		for (auto it = symVec.begin(); it != symVec.end(); ++it) {
 			std::string id = obj["user_id"];
 			std::string symCode = (*it)->SymbolCode();

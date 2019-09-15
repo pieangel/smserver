@@ -331,7 +331,7 @@ void SmHdCtrl::OnRcvdAbroadHoga(CString& strKey, LONG& nRealType)
 {
 	SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
 	CString strSymCode = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "종목코드");
-	SmSymbol* sym = symMgr->FindSymbol((LPCTSTR)strSymCode.Trim());
+	std::shared_ptr<SmSymbol> sym = symMgr->FindSymbol((LPCTSTR)strSymCode.Trim());
 	if (!sym)
 		return;
 	CString strHogaTime = m_CommAgent.CommGetData(strKey, nRealType, "OutRec1", 0, "호가시간");
@@ -441,7 +441,7 @@ void SmHdCtrl::OnRcvdAbroadSise(CString& strKey, LONG& nRealType)
 
 
 	SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
-	SmSymbol* sym = symMgr->FindSymbol((LPCTSTR)strSymCode.Trim());
+	std::shared_ptr<SmSymbol> sym = symMgr->FindSymbol((LPCTSTR)strSymCode.Trim());
 	if (!sym)
 		return;
 	sym->Quote.Close = _ttoi(strClose);
@@ -482,7 +482,7 @@ void SmHdCtrl::OnRcvdAbroadSiseByReq(CString& sTrCode, LONG& nRqID)
 		CString strLow = m_CommAgent.CommGetData(sTrCode, nRqID, "OutRec1", 0, "저가");
 
 		SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
-		SmSymbol* sym = symMgr->FindSymbol((LPCTSTR)strSymCode.Trim());
+		std::shared_ptr<SmSymbol> sym = symMgr->FindSymbol((LPCTSTR)strSymCode.Trim());
 		if (!sym)
 			continue;
 		sym->Quote.Close = _ttoi(strClose);
@@ -524,7 +524,7 @@ void SmHdCtrl::OnRcvdAbroadHogaByReq(CString& sTrCode, LONG& nRqID)
 	{
 		SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
 		CString strSymCode = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "종목코드");
-		SmSymbol* sym = symMgr->FindSymbol((LPCTSTR)strSymCode.Trim());
+		std::shared_ptr<SmSymbol> sym = symMgr->FindSymbol((LPCTSTR)strSymCode.Trim());
 		if (!sym)
 			continue;
 		CString strHogaTime = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "호가시간");

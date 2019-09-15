@@ -472,7 +472,7 @@ void CMainFrame::OnShowWindow(BOOL bShow, UINT nStatus)
 	SmCategory* cat = marketMgr->FindCategory("");
 
 	SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
-	SmSymbol* sym = symMgr->FindSymbol("ss");
+	std::shared_ptr<SmSymbol> sym = symMgr->FindSymbol("ss");
 
 	SmAccountManager* acntMgr = SmAccountManager::GetInstance();
 	std::string acnt = acntMgr->GenAccountNo();
@@ -531,7 +531,7 @@ void CMainFrame::OnServerGetmindata()
 {
 	SmTimeSeriesDBManager* dbMgr = SmTimeSeriesDBManager::GetInstance();
 	SmMarketManager* mrktMgr = SmMarketManager::GetInstance();
-	std::vector<SmSymbol*> symVec = mrktMgr->GetRecentMonthSymbolList();
+	std::vector<std::shared_ptr<SmSymbol>> symVec = mrktMgr->GetRecentMonthSymbolList();
 	std::string curTime = SmUtil::GetUTCDateTimeStringForNowMin();
 	std::string prevTime = SmUtil::GetUTCDateTimeStringForPreMin(2);
 	std::string  meas = "CLN19";

@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <memory>
 class SmSymbol;
 class SmCategory
 {
@@ -23,11 +24,11 @@ public:
 	void MarketName(std::string val) { _MarketName = val; }
 	std::string MarketCode() const { return _MarketCode; }
 	void MarketCode(std::string val) { _MarketCode = val; }
-	SmSymbol* AddSymbol(std::string symCode);
-	std::vector<SmSymbol*>& GetSymbolList() {
+	std::shared_ptr<SmSymbol> AddSymbol(std::string symCode);
+	std::vector<std::shared_ptr<SmSymbol>>& GetSymbolList() {
 		return _SymbolList;
 	}
-	SmSymbol* GetRecentMonthSymbol();
+	std::shared_ptr<SmSymbol> GetRecentMonthSymbol();
 private:
 	// 품목코드
 	std::string _Code;
@@ -57,6 +58,6 @@ private:
 	/// 107 : Dairy & Beef(축산)              
 	/// </summary>
 	std::string _MarketCode;
-	std::vector<SmSymbol*> _SymbolList;
+	std::vector<std::shared_ptr<SmSymbol>> _SymbolList;
 };
 

@@ -95,14 +95,14 @@ SmCategory* SmMarketManager::FindCategory(std::string cat_code)
 	return nullptr;
 }
 
-std::vector<SmSymbol*> SmMarketManager::GetRecentMonthSymbolList()
+std::vector<std::shared_ptr<SmSymbol>> SmMarketManager::GetRecentMonthSymbolList()
 {
-	std::vector<SmSymbol*> symvec;
+	std::vector<std::shared_ptr<SmSymbol>> symvec;
 	for (auto it = _MarketList.begin(); it != _MarketList.end(); ++it) {
 		SmMarket* mrkt = *it;
 		auto cat_vec = mrkt->GetCategoryList();
 		for (auto itc = cat_vec.begin(); itc != cat_vec.end(); ++itc) {
-			SmSymbol* sym = (*itc)->GetRecentMonthSymbol();
+			std::shared_ptr<SmSymbol> sym = (*itc)->GetRecentMonthSymbol();
 			if (sym)
 				symvec.push_back(sym);
 		}
@@ -149,7 +149,7 @@ void SmMarketManager::SendSymbolListByCategory(std::string user_id)
 		std::vector<SmCategory*>& cat_list = market->GetCategoryList();
 		for (size_t j = 0; j < cat_list.size(); ++j) {
 			SmCategory* cat = cat_list[j];
-			std::vector<SmSymbol*>& sym_list = cat->GetSymbolList();
+			std::vector<std::shared_ptr<SmSymbol>>& sym_list = cat->GetSymbolList();
 			for (size_t k = 0; k < sym_list.size(); ++k) {
 				SendSymbolMaster(user_id, sym_list[k]);
 			}
@@ -182,7 +182,7 @@ int SmMarketManager::GetTotalSymbolCount()
 	return total;
 }
 
-void SmMarketManager::SendSymbolMaster(std::string user_id, SmSymbol* sym)
+void SmMarketManager::SendSymbolMaster(std::string user_id, std::shared_ptr<SmSymbol> sym)
 {
 	if (!sym)
 		return;

@@ -283,7 +283,7 @@ void SmMongoDBManager::LoadSymbolList()
 			int seungsu = json_object["seungsu"];
 			double tick_size = json_object["tick_size"];
 			double tick_value = json_object["tick_value"];
-			SmSymbol* symbol = foundCategory->AddSymbol(symbol_code);
+			std::shared_ptr<SmSymbol> symbol = foundCategory->AddSymbol(symbol_code);
 			symbol->Index(symbol_index);
 			symbol->SymbolCode(symbol_code);
 			symbol->CategoryCode(product_code);
@@ -1963,9 +1963,9 @@ void SmMongoDBManager::SaveSymbolsToDatabase()
 			std::vector<SmCategory*>& cat_list = market->GetCategoryList();
 			for (size_t j = 0; j < cat_list.size(); ++j) {
 				SmCategory* cat = cat_list[j];
-				std::vector<SmSymbol*>& sym_list = cat->GetSymbolList();
+				std::vector<std::shared_ptr<SmSymbol>>& sym_list = cat->GetSymbolList();
 				for (size_t k = 0; k < sym_list.size(); ++k) {
-					SmSymbol* sym = sym_list[k];
+					std::shared_ptr<SmSymbol> sym = sym_list[k];
 					bsoncxx::stdx::optional<bsoncxx::document::value> found_symbol =
 						coll.find_one(bsoncxx::builder::stream::document{} << "symbol_list" << sym->SymbolCode() << finalize);
 					if (!found_symbol) {

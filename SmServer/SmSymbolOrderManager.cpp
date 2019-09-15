@@ -25,7 +25,7 @@ void SmSymbolOrderManager::OnOrderAccepted(std::shared_ptr<SmOrder> order)
 	if (order->SymbolCode.compare(_SymbolCode) != 0)
 		return;
 	SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
-	SmSymbol* sym = symMgr->FindSymbol(order->SymbolCode);
+	std::shared_ptr<SmSymbol> sym = symMgr->FindSymbol(order->SymbolCode);
 	if (!sym)
 		return;
 	// 접수된 가격을 넣어 준다.
@@ -41,7 +41,7 @@ void SmSymbolOrderManager::OnOrderFilled(std::shared_ptr<SmOrder> order)
 		return;
 
 	SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
-	SmSymbol* sym = symMgr->FindSymbol(order->SymbolCode);
+	std::shared_ptr<SmSymbol> sym = symMgr->FindSymbol(order->SymbolCode);
 	if (!sym)
 		return;
 	// 체결 날짜를 넣어 준다.
@@ -84,7 +84,7 @@ void SmSymbolOrderManager::CalcPosition(std::shared_ptr<SmOrder> order)
 	if (!acnt)
 		return;
 	SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
-	SmSymbol* sym = symMgr->FindSymbol(order->SymbolCode);
+	std::shared_ptr<SmSymbol> sym = symMgr->FindSymbol(order->SymbolCode);
 	if (!sym)
 		return;
 

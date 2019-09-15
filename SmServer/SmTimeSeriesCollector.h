@@ -28,6 +28,6 @@ private:
 	size_t _Index = 0;
 	size_t _SiseIndex = 0;
 	size_t _HogaIndex = 0;
-	std::vector<SmSymbol*> _RecentMonthSymbolVec;
+	std::vector<std::shared_ptr<SmSymbol>> _RecentMonthSymbolVec;
 };
 
