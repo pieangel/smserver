@@ -12,8 +12,8 @@ class SmRealtimeSymbolServiceManager : public TemplateSingleton<SmRealtimeSymbol
 private:
 	std::mutex _mutex;
 	std::shared_ptr<SmSymbol> _Symbol = nullptr;
-	std::map<std::string, SmUser*> _UserMap;
-	typedef std::map<SmUser*, SmUser*> SmUserMap;
+	std::map<std::string, std::shared_ptr<SmUser>> _UserMap;
+	typedef std::map<std::shared_ptr<SmUser>, std::shared_ptr<SmUser>> SmUserMap;
 	std::map<std::shared_ptr<SmSymbol>, SmUserMap> _ServiceMap;
 public:
 	void RegisterAllRecentSymbol();
@@ -22,7 +22,7 @@ public:
 	void UnregisterAllSymbol(std::string user_id);
 
 
-	void Register(SmUser* user);
+	void Register(std::shared_ptr<SmUser> user);
 	void Unregister(std::string user_id);
 	void SendInfo();
 	std::shared_ptr<SmSymbol> Symbol() const { return _Symbol; }
@@ -30,9 +30,9 @@ public:
 	void BroadcastSise();
 	void BroadcastHoga();
 private:
-	void RegisterSymbol(SmUser* user, std::shared_ptr<SmSymbol> sym);
-	void UnregisterSymbol(SmUser* user, std::shared_ptr<SmSymbol> sym);
-	void UnregisterAllSymbol(SmUser* user);
+	void RegisterSymbol(std::shared_ptr<SmUser> user, std::shared_ptr<SmSymbol> sym);
+	void UnregisterSymbol(std::shared_ptr<SmUser> user, std::shared_ptr<SmSymbol> sym);
+	void UnregisterAllSymbol(std::shared_ptr<SmUser> user);
 
 	void SendSise(std::shared_ptr<SmSymbol> sym, SmUserMap& userMap);
 	void SendHoga(std::shared_ptr<SmSymbol> sym, SmUserMap& userMap);

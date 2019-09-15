@@ -322,7 +322,7 @@ void SmMongoDBManager::SendChartDataFromDB(SmChartDataRequest&& data_req)
 		//opts.sort(make_document(kvp("date_time", 1)));
 		opts.limit(data_req.count);
 		SmTimeSeriesServiceManager* tsMgr = SmTimeSeriesServiceManager::GetInstance();
-		int data_count = coll.count_documents({});
+		long long data_count = coll.count_documents({});
 		// 데이터가 없거나 요청한 갯수보다 적으면 서버에 요청을 한다.
 		if (data_count == 0 || data_count < data_req.count) {
 			if (tsMgr->SisiSocket()) {
@@ -344,7 +344,7 @@ void SmMongoDBManager::SendChartDataFromDB(SmChartDataRequest&& data_req)
 			}
 		}
 		
-		SendChartData(data_req);
+		SendChartDataOneByOne(data_req);
 	}
 	catch (std::exception e) {
 		std::string error;
@@ -352,7 +352,7 @@ void SmMongoDBManager::SendChartDataFromDB(SmChartDataRequest&& data_req)
 	}
 }
 
-void SmMongoDBManager::SendChartData(SmChartDataRequest data_req)
+void SmMongoDBManager::SendChartDataOneByOne(SmChartDataRequest data_req)
 {
 	try
 	{
@@ -411,7 +411,7 @@ void SmMongoDBManager::SendChartData(SmChartDataRequest data_req)
 	}
 }
 
-void SmMongoDBManager::SendChartDataOneByOne(SmChartDataRequest data_req)
+void SmMongoDBManager::SendChartData(SmChartDataRequest data_req)
 {
 	try
 	{

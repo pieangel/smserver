@@ -20,7 +20,7 @@ void SmRealtimeSymbolServiceManager::RegisterAllRecentSymbol()
 void SmRealtimeSymbolServiceManager::RegisterSymbol(std::string user_id, std::string symCode)
 {
 	SmUserManager* userMgr = SmUserManager::GetInstance();
-	SmUser* user = userMgr->FindUser(user_id);
+	std::shared_ptr<SmUser> user = userMgr->FindUser(user_id);
 	SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
 	std::shared_ptr<SmSymbol> sym = symMgr->FindSymbol(symCode);
 	if (!user || !sym)
@@ -28,7 +28,7 @@ void SmRealtimeSymbolServiceManager::RegisterSymbol(std::string user_id, std::st
 	RegisterSymbol(user, sym);
 }
 
-void SmRealtimeSymbolServiceManager::RegisterSymbol(SmUser* user, std::shared_ptr<SmSymbol> sym)
+void SmRealtimeSymbolServiceManager::RegisterSymbol(std::shared_ptr<SmUser> user, std::shared_ptr<SmSymbol> sym)
 {
 	if (!user || !sym)
 		return;
@@ -51,7 +51,7 @@ void SmRealtimeSymbolServiceManager::RegisterSymbol(SmUser* user, std::shared_pt
 void SmRealtimeSymbolServiceManager::UnregisterSymbol(std::string user_id, std::string symCode)
 {
 	SmUserManager* userMgr = SmUserManager::GetInstance();
-	SmUser* user = userMgr->FindUser(user_id);
+	std::shared_ptr<SmUser> user = userMgr->FindUser(user_id);
 	SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
 	std::shared_ptr<SmSymbol> sym = symMgr->FindSymbol(symCode);
 	if (!user || !sym)
@@ -59,7 +59,7 @@ void SmRealtimeSymbolServiceManager::UnregisterSymbol(std::string user_id, std::
 	UnregisterSymbol(user, sym);
 }
 
-void SmRealtimeSymbolServiceManager::UnregisterSymbol(SmUser* user, std::shared_ptr<SmSymbol> sym)
+void SmRealtimeSymbolServiceManager::UnregisterSymbol(std::shared_ptr<SmUser> user, std::shared_ptr<SmSymbol> sym)
 {
 	if (!user || !sym)
 		return;
@@ -80,13 +80,13 @@ void SmRealtimeSymbolServiceManager::UnregisterSymbol(SmUser* user, std::shared_
 void SmRealtimeSymbolServiceManager::UnregisterAllSymbol(std::string user_id)
 {
 	SmUserManager* userMgr = SmUserManager::GetInstance();
-	SmUser* user = userMgr->FindUser(user_id);
+	std::shared_ptr<SmUser> user = userMgr->FindUser(user_id);
 	if (!user)
 		return;
 	UnregisterAllSymbol(user);
 }
 
-void SmRealtimeSymbolServiceManager::UnregisterAllSymbol(SmUser* user)
+void SmRealtimeSymbolServiceManager::UnregisterAllSymbol(std::shared_ptr<SmUser> user)
 {
 	if (!user)
 		return;
@@ -103,7 +103,7 @@ void SmRealtimeSymbolServiceManager::UnregisterAllSymbol(SmUser* user)
 	}
 }
 
-void SmRealtimeSymbolServiceManager::Register(SmUser* user)
+void SmRealtimeSymbolServiceManager::Register(std::shared_ptr<SmUser> user)
 {
 	if (!user)
 		return;
@@ -134,7 +134,7 @@ void SmRealtimeSymbolServiceManager::SendInfo()
 		std::lock_guard<std::mutex> lock(_mutex);
 		v.reserve(_UserMap.size());
 		for (auto it = _UserMap.begin(); it != _UserMap.end(); ++it) {
-			SmUser* user = it->second;
+			std::shared_ptr<SmUser> user = it->second;
 			if (user->Socket())
 				v.emplace_back(user->Socket()->weak_from_this());
 		}
@@ -174,7 +174,7 @@ void SmRealtimeSymbolServiceManager::SendSise(std::shared_ptr<SmSymbol> sym, SmU
 		std::lock_guard<std::mutex> lock(_mutex);
 		v.reserve(userMap.size());
 		for (auto it = userMap.begin(); it != userMap.end(); ++it) {
-			SmUser* user = it->second;
+			std::shared_ptr<SmUser> user = it->second;
 			if (user->Connected() && user->Socket())
 				v.emplace_back(user->Socket()->weak_from_this());
 		}
@@ -200,7 +200,7 @@ void SmRealtimeSymbolServiceManager::SendHoga(std::shared_ptr<SmSymbol> sym, SmU
 		std::lock_guard<std::mutex> lock(_mutex);
 		v.reserve(userMap.size());
 		for (auto it = userMap.begin(); it != userMap.end(); ++it) {
-			SmUser* user = it->second;
+			std::shared_ptr<SmUser> user = it->second;
 			if (user->Connected() && user->Socket())
 				v.emplace_back(user->Socket()->weak_from_this());
 		}

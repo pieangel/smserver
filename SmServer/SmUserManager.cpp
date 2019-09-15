@@ -15,13 +15,13 @@ SmUserManager::~SmUserManager()
 {
 	std::lock_guard<std::mutex> lock(_mutex);
 	for (auto it = _UserMap.begin(); it != _UserMap.end(); ++it) {
-		SmUser* user = it->second;
+		std::shared_ptr<SmUser> user = it->second;
 		ClearAllService(user);
-		delete user;
+		//delete user;
 	}
 }
 
-SmUser* SmUserManager::FindUserBySocket(SmWebsocketSession* socket)
+std::shared_ptr<SmUser> SmUserManager::FindUserBySocket(SmWebsocketSession* socket)
 {
 	if (!socket)
 		return nullptr;
@@ -33,15 +33,15 @@ SmUser* SmUserManager::FindUserBySocket(SmWebsocketSession* socket)
 	return nullptr;
 }
 
-SmUser* SmUserManager::AddUser(std::string id, SmWebsocketSession* socket)
+std::shared_ptr<SmUser> SmUserManager::AddUser(std::string id, SmWebsocketSession* socket)
 {
 	std::lock_guard<std::mutex> lock(_mutex);
 	if (!socket)
 		return nullptr;
 
-	SmUser* user = FindUser(id);
+	std::shared_ptr<SmUser> user = FindUser(id);
 	if (!user) {
-		user = new SmUser();
+		user = std::make_shared<SmUser>();
 	}
 	user->Id(id);
 	user->Socket(socket);
@@ -51,15 +51,15 @@ SmUser* SmUserManager::AddUser(std::string id, SmWebsocketSession* socket)
 	return user;
 }
 
-SmUser* SmUserManager::AddUser(std::string id, std::string pwd, SmWebsocketSession* socket)
+std::shared_ptr<SmUser> SmUserManager::AddUser(std::string id, std::string pwd, SmWebsocketSession* socket)
 {
 	std::lock_guard<std::mutex> lock(_mutex);
 
 	if (!socket)
 		return nullptr;
-	SmUser* user = FindUser(id);
+	std::shared_ptr<SmUser> user = FindUser(id);
 	if (!user) {
-		user = new SmUser();
+		user = std::make_shared<SmUser>();
 	}
 	user->Id(id);
 	user->Password(pwd);
@@ -110,7 +110,7 @@ void SmUserManager::RemoveUser(std::string id)
 	}
 }
 
-void SmUserManager::ClearAllService(SmUser* user)
+void SmUserManager::ClearAllService(std::shared_ptr<SmUser> user)
 {
 	if (!user)
 		return;
@@ -153,7 +153,7 @@ void SmUserManager::SendBroadcastMessage(std::string message)
 		std::lock_guard<std::mutex> lock(_mutex);
 		v.reserve(_UserMap.size());
 		for (auto it = _UserMap.begin(); it != _UserMap.end(); ++it) {
-			SmUser* user = it->second;
+			std::shared_ptr<SmUser> user = it->second;
 			if (user->Connected() && user->Socket())
 				v.emplace_back(user->Socket()->weak_from_this());
 		}
@@ -167,7 +167,7 @@ void SmUserManager::SendBroadcastMessage(std::string message)
 
 }
 
-SmUser* SmUserManager::FindUser(std::string id)
+std::shared_ptr<SmUser> SmUserManager::FindUser(std::string id)
 {
 	auto it = _UserMap.find(id);
 	if (it != _UserMap.end()) {
@@ -183,7 +183,7 @@ void SmUserManager::ResetUserBySocket(SmWebsocketSession* socket)
 
 	auto it = _SocketToUserMap.find(socket);
 	if (it != _SocketToUserMap.end()) {
-		SmUser* user = it->second;
+		std::shared_ptr<SmUser> user = it->second;
 		ClearAllService(user);
 		user->Reset();
 	}
@@ -203,7 +203,7 @@ void SmUserManager::SendResultMessage(std::string user_id, std::string message)
 		v.reserve(1);
 		auto it = _UserMap.find(user_id);
 		if (it != _UserMap.end()) {
-			SmUser* user = it->second;
+			std::shared_ptr<SmUser> user = it->second;
 			if (user->Connected() && user->Socket())
 				v.emplace_back(user->Socket()->weak_from_this());
 		}
@@ -218,7 +218,7 @@ void SmUserManager::SendResultMessage(std::string user_id, std::string message)
 
 void SmUserManager::Logout(std::string id)
 {
-	SmUser* user = FindUser(id);
+	std::shared_ptr<SmUser> user = FindUser(id);
 	if (!user)
 		return;
 	if (user->Socket())
@@ -263,7 +263,7 @@ void SmUserManager::OnLogout(std::string id)
 
 int SmUserManager::GetSendBufferQueueSize(std::string user_id)
 {
-	SmUser* user = FindUser(user_id);
+	std::shared_ptr<SmUser> user = FindUser(user_id);
 	if (!user)
 		return -1;
 	if (user->Socket())
