@@ -31,7 +31,8 @@ leave(SmWebsocketSession* session)
 {
 	std::lock_guard<std::mutex> lock(mutex_);
 	SmUserManager* userMgr = SmUserManager::GetInstance();
-	userMgr->ResetUserBySocket(session);
+	// 사용자가 소유한 소켓에서 현재 소켓을 제외해 준다.
+	userMgr->RemoveSocketFromUser(session);
 	//sessions_.erase(session);
 	auto it = _session_map.find(session->SessionID());
 	if (it != _session_map.end()) {

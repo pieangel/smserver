@@ -4,7 +4,10 @@
 #include "SmRealtimeSymbolServiceManager.h"
 #include "SmTimeSeriesDBManager.h"
 #include "Json/json.hpp"
+#include "SmMongoDBManager.h"
 #include "SmServiceDefine.h"
+#include "SmGlobal.h"
+#include "SmSessionManager.h"
 using namespace nlohmann;
 SmUserManager::SmUserManager()
 {
@@ -17,20 +20,7 @@ SmUserManager::~SmUserManager()
 	for (auto it = _UserMap.begin(); it != _UserMap.end(); ++it) {
 		std::shared_ptr<SmUser> user = it->second;
 		ClearAllService(user);
-		//delete user;
 	}
-}
-
-std::shared_ptr<SmUser> SmUserManager::FindUserBySocket(SmWebsocketSession* socket)
-{
-	if (!socket)
-		return nullptr;
-	auto it = _SocketToUserMap.find(socket);
-	if (it != _SocketToUserMap.end()) {
-		return it->second;
-	}
-
-	return nullptr;
 }
 
 std::shared_ptr<SmUser> SmUserManager::AddUser(std::string id, SmWebsocketSession* socket)
@@ -44,10 +34,9 @@ std::shared_ptr<SmUser> SmUserManager::AddUser(std::string id, SmWebsocketSessio
 		user = std::make_shared<SmUser>();
 	}
 	user->Id(id);
-	user->Socket(socket);
-	user->Connected(true);
+	user->AddSocket(socket->SessionID());
 	_UserMap[id] = user;
-	_SocketToUserMap[socket] = user;
+	_SocketToUserMap[socket->SessionID()] = user;
 	return user;
 }
 
@@ -63,37 +52,30 @@ std::shared_ptr<SmUser> SmUserManager::AddUser(std::string id, std::string pwd, 
 	}
 	user->Id(id);
 	user->Password(pwd);
-	user->Socket(socket);
-	user->Connected(true);
+	user->AddSocket(socket->SessionID());
 	_UserMap[id] = user;
-	_SocketToUserMap[socket] = user;
-	AddUserToDatabase(id, pwd);
+	_SocketToUserMap[socket->SessionID()] = user;
 	return user;
 }
 
-std::string SmUserManager::CheckUserInfo(std::string id, std::string pwd, SmWebsocketSession* socket)
+std::pair<int, std::string> SmUserManager::CheckUserInfo(std::string id, std::string pwd, SmWebsocketSession* socket)
 {
 	std::string result_msg = "";
-	/*
-	if (!IsExistUser(id)) {
-		AddUser(id, pwd, socket);
-		result_msg = "User registered successfully!";
-		return result_msg;
+	SmMongoDBManager* mongoMgr = SmMongoDBManager::GetInstance();
+	auto user_info = mongoMgr->GetUserInfo(id);
+	int result = 0;
+	if (id.compare(user_info.first) != 0) {
+		result_msg = "No user id is there!";
+		result = -1;
+	} 
+	else if (pwd.compare(user_info.second) != 0) {
+		result_msg = "Wrong password!";
+		result = -2;
+	} 
+	else {
+		result_msg = "Login success!";
 	}
-	SmTimeSeriesDBManager* dbMgr = SmTimeSeriesDBManager::GetInstance();
-	std::pair<std::string, std::string> id_pwd = dbMgr->GetUserInfo(id);
-	if (id_pwd.first.compare(id) != 0) {
-		result_msg = "ID error!";
-		return result_msg;
-	}
-	if (id_pwd.second.compare(pwd) != 0) {
-		result_msg = "Password error!";
-		return result_msg;
-	}
-	*/
-	AddUser(id, pwd, socket);
-	result_msg = "Login success!";
-	return result_msg;
+	return std::make_pair(result, result_msg);
 }
 
 void SmUserManager::AddUserToDatabase(std::string id, std::string pwd)
@@ -130,6 +112,19 @@ void SmUserManager::SendLoginResult(std::string user_id, std::string msg)
 	SendResultMessage(user_id, content);
 }
 
+void SmUserManager::SendLoginResult(std::string user_id, std::string msg, int session_id)
+{
+	json send_object;
+	send_object["res_id"] = SmProtocol::res_login;
+	send_object["result_msg"] = msg;
+	send_object["result_code"] = 0;
+	std::string content = send_object.dump(4);
+
+	SmGlobal* global = SmGlobal::GetInstance();
+	std::shared_ptr<SmSessionManager> sessMgr = global->GetSessionManager();
+	sessMgr->send(session_id, content);
+}
+
 void SmUserManager::SendLogoutResult(std::string user_id)
 {
 	json send_object;
@@ -142,28 +137,7 @@ void SmUserManager::SendLogoutResult(std::string user_id)
 
 void SmUserManager::SendBroadcastMessage(std::string message)
 {
-	// Put the message in a shared pointer so we can re-use it for each client
-	auto const ss = boost::make_shared<std::string const>(std::move(message));
-
-	// Make a local list of all the weak pointers representing
-	// the sessions, so we can do the actual sending without
-	// holding the mutex:
-	std::vector<std::weak_ptr<SmWebsocketSession>> v;
-	{
-		std::lock_guard<std::mutex> lock(_mutex);
-		v.reserve(_UserMap.size());
-		for (auto it = _UserMap.begin(); it != _UserMap.end(); ++it) {
-			std::shared_ptr<SmUser> user = it->second;
-			if (user->Connected() && user->Socket())
-				v.emplace_back(user->Socket()->weak_from_this());
-		}
-	}
-
-	// For each session in our local list, try to acquire a strong
-   // pointer. If successful, then send the message on that session.
-	for (auto const& wp : v)
-		if (auto sp = wp.lock())
-			sp->send(ss);
+	
 
 }
 
@@ -177,43 +151,34 @@ std::shared_ptr<SmUser> SmUserManager::FindUser(std::string id)
 	return nullptr;
 }
 
-void SmUserManager::ResetUserBySocket(SmWebsocketSession* socket)
+void SmUserManager::RemoveSocketFromUser(SmWebsocketSession* socket)
 {
 	std::lock_guard<std::mutex> lock(_mutex);
 
-	auto it = _SocketToUserMap.find(socket);
+	if (!socket)
+		return;
+
+	auto it = _SocketToUserMap.find(socket->SessionID());
 	if (it != _SocketToUserMap.end()) {
 		std::shared_ptr<SmUser> user = it->second;
-		ClearAllService(user);
-		user->Reset();
+		user->RemoveSocket(socket->SessionID());
 	}
 }
 
 void SmUserManager::SendResultMessage(std::string user_id, std::string message)
 {
-	// Put the message in a shared pointer so we can re-use it for each client
-	auto const ss = boost::make_shared<std::string const>(std::move(message));
-
-	// Make a local list of all the weak pointers representing
-	// the sessions, so we can do the actual sending without
-	// holding the mutex:
-	std::vector<std::weak_ptr<SmWebsocketSession>> v;
-	{
-		std::lock_guard<std::mutex> lock(_mutex);
-		v.reserve(1);
-		auto it = _UserMap.find(user_id);
-		if (it != _UserMap.end()) {
-			std::shared_ptr<SmUser> user = it->second;
-			if (user->Connected() && user->Socket())
-				v.emplace_back(user->Socket()->weak_from_this());
+	auto it = _UserMap.find(user_id);
+	if (it != _UserMap.end()) {
+		std::shared_ptr<SmUser> user = it->second;
+		std::set<int> socket_set = user->GetSocketSet();
+		// 같은 아이디를 가지고 접속한 모든 소켓에 동시에 메시지를 보낸다.
+		for (auto it = socket_set.begin(); it != socket_set.end(); ++it) {
+			int session_id = *it;
+			SmGlobal* global = SmGlobal::GetInstance();
+			std::shared_ptr<SmSessionManager> sessMgr = global->GetSessionManager();
+			sessMgr->send(session_id, message);
 		}
 	}
-
-	// For each session in our local list, try to acquire a strong
-	// pointer. If successful, then send the message on that session.
-	for (auto const& wp : v)
-		if (auto sp = wp.lock())
-			sp->send(ss);
 }
 
 void SmUserManager::Logout(std::string id)
@@ -221,8 +186,6 @@ void SmUserManager::Logout(std::string id)
 	std::shared_ptr<SmUser> user = FindUser(id);
 	if (!user)
 		return;
-	if (user->Socket())
-		ResetUserBySocket(user->Socket());
 }
 
 bool SmUserManager::IsExistUser(std::string id)
@@ -251,8 +214,16 @@ bool SmUserManager::IsExistUser(std::string id)
 
 void SmUserManager::OnLogin(std::string id, std::string pwd, SmWebsocketSession* socket)
 {
-	std::string result = CheckUserInfo(id, pwd, socket);
-	SendLoginResult(id, result);
+	if (!socket)
+		return;
+
+	auto result = CheckUserInfo(id, pwd, socket);
+	// 로그인이 성공하면 사용자 등록을 한다.
+	// 등록된 사용자만 주문을 할 수 있다.
+	if (result.first == 0) {
+		AddUser(id, pwd, socket);
+	}
+	SendLoginResult(id, result.second, socket->SessionID());
 }
 
 void SmUserManager::OnLogout(std::string id)
@@ -263,11 +234,5 @@ void SmUserManager::OnLogout(std::string id)
 
 int SmUserManager::GetSendBufferQueueSize(std::string user_id)
 {
-	std::shared_ptr<SmUser> user = FindUser(user_id);
-	if (!user)
-		return -1;
-	if (user->Socket())
-		return user->Socket()->GetSendBufferQueueSize();
-	else
-		return -1;
+	return -1;
 }

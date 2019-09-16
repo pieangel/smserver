@@ -344,7 +344,7 @@ void SmMongoDBManager::SendChartDataFromDB(SmChartDataRequest&& data_req)
 			}
 		}
 		
-		SendChartDataOneByOne(data_req);
+		SendChartData(data_req);
 	}
 	catch (std::exception e) {
 		std::string error;
@@ -641,7 +641,7 @@ void SmMongoDBManager::SaveUserInfo(std::string user_id, std::string pwd)
 		auto db = (*c)["andromeda"];
 		using namespace bsoncxx;
 
-		mongocxx::collection coll = db["user_info"];
+		mongocxx::collection coll = db["user_list"];
 
 		builder::stream::document builder{};
 
@@ -659,7 +659,7 @@ void SmMongoDBManager::SaveUserInfo(std::string user_id, std::string pwd)
 				<< "user_id" << user_id
 				<< "password" << pwd
 				<< bsoncxx::builder::stream::finalize;
-			auto res = db["user_info"].insert_one(std::move(doc_value));
+			auto res = db["user_list"].insert_one(std::move(doc_value));
 		}
 	}
 	catch (std::exception e) {
@@ -677,7 +677,7 @@ std::pair<std::string, std::string> SmMongoDBManager::GetUserInfo(std::string us
 		auto db = (*c)["andromeda"];
 		using namespace bsoncxx;
 
-		mongocxx::collection coll = db["user_info"];
+		mongocxx::collection coll = db["user_list"];
 
 
 		bsoncxx::stdx::optional<bsoncxx::document::value> maybe_result =
@@ -710,7 +710,7 @@ bool SmMongoDBManager::RemoveUserInfo(std::string user_id)
 		auto db = (*c)["andromeda"];
 		using namespace bsoncxx;
 
-		mongocxx::collection coll = db["user_info"];
+		mongocxx::collection coll = db["user_list"];
 
 
 		bsoncxx::stdx::optional<bsoncxx::document::value> maybe_result =

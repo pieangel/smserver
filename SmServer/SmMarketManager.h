@@ -25,6 +25,8 @@ public:
 	std::vector<std::shared_ptr<SmSymbol>> GetRecentMonthSymbolList();
 	void SendMarketList(std::string user_id);
 	void SendSymbolListByCategory(std::string user_id);
+	void SendMarketList(int session_id);
+	void SendSymbolListByCategory(int session_id);
 	int GetTotalCategoryCount();
 	int GetTotalSymbolCount();
 	std::vector<SmMarket*>& GetMarketList() {
@@ -32,6 +34,7 @@ public:
 	}
 private:
 	void SendSymbolMaster(std::string user_id, std::shared_ptr<SmSymbol> sym);
+	void SendSymbolMaster(int session_id, std::shared_ptr<SmSymbol> sym);
 	std::vector<SmMarket*> _MarketList;
 	/// 품목이 속한 시장 이름 대응 표
 	/// <summary>

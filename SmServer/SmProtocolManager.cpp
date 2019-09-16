@@ -51,6 +51,7 @@ void SmProtocolManager::ParseMessage(std::string message, SmWebsocketSession* so
 
 	try {
 		auto json_object = json::parse(message);
+		json_object["session_id"] = socket->SessionID();
 
 		int req_id = json_object["req_id"];
 		SmProtocol sm_protocol = [](int id) {
@@ -123,6 +124,9 @@ void SmProtocolManager::ParseMessage(std::string message, SmWebsocketSession* so
 		case SmProtocol::req_chart_data_onebyone:
 			OnReqChartDataOneByOne(json_object, socket);
 			break;
+		case SmProtocol::req_register_user:
+			OnReqRegisterUser(json_object);
+			break;
 		default:
 			break;
 		}
@@ -136,9 +140,9 @@ void SmProtocolManager::ParseMessage(std::string message, SmWebsocketSession* so
 void SmProtocolManager::OnLogin(nlohmann::json& obj, SmWebsocketSession* socket)
 {
 	try {
-		auto user_info = obj["user_info"];
-		std::string id = user_info["id"];
-		std::string pwd = user_info["pwd"];
+		std::string id = obj["user_id"];
+		std::string pwd = obj["pwd"];
+		int session_id = obj["session_id"];
 		SmUserManager* userMgr = SmUserManager::GetInstance();
 		userMgr->OnLogin(id, pwd, socket);
 	}
@@ -180,6 +184,24 @@ void SmProtocolManager::SendResult(std::string user_id, SmProtocol protocol, int
 	};
 	SmUserManager* userMgr = SmUserManager::GetInstance();
 	userMgr->SendResultMessage(user_id, res.dump(4));
+}
+
+void SmProtocolManager::SendResult(int session_id, SmProtocol protocol, int result_code, std::string result_msg)
+{
+	json res = {
+		{"res_id", (int)protocol},
+		{"result_code", result_code},
+		{"result_msg", result_msg}
+	};
+
+	SmGlobal* global = SmGlobal::GetInstance();
+	std::shared_ptr<SmSessionManager> sessMgr = global->GetSessionManager();
+	sessMgr->send(session_id, res.dump(4));
+}
+
+void SmProtocolManager::SendResult(int session_id, int result_code, std::string result_msg)
+{
+
 }
 
 void SmProtocolManager::OnRegisterSymbol(nlohmann::json& obj)
@@ -482,8 +504,8 @@ void SmProtocolManager::OnReqMarketList(nlohmann::json& obj)
 {
 	try {
 		SmMarketManager* marketMgr = SmMarketManager::GetInstance();
-		std::string id = obj["user_id"];
-		marketMgr->SendMarketList(id);
+		int session_id = obj["session_id"];
+		marketMgr->SendMarketList(session_id);
 	}
 	catch (std::exception e) {
 		std::string error = e.what();
@@ -494,8 +516,8 @@ void SmProtocolManager::OnReqSymbolListByCategory(nlohmann::json& obj)
 {
 	try {
 		SmMarketManager* marketMgr = SmMarketManager::GetInstance();
-		std::string id = obj["user_id"];
-		marketMgr->SendSymbolListByCategory(id);
+		int session_id = obj["session_id"];
+		marketMgr->SendSymbolListByCategory(session_id);
 	}
 	catch (std::exception e) {
 		std::string error = e.what();
@@ -505,7 +527,7 @@ void SmProtocolManager::OnReqSymbolListByCategory(nlohmann::json& obj)
 void SmProtocolManager::OnReqChartDataResend(nlohmann::json& obj)
 {
 	int service_req_id = obj["service_req_id"];
-	int session_id = obj["session_id"];
+	int session_id = obj["req_session_id"];
 	std::string user_id = obj["user_id"];
 	std::string symbol_code = obj["symbol_code"];
 	SmChartType chart_type = (SmChartType)obj["chart_type"];
@@ -614,4 +636,9 @@ void SmProtocolManager::OnReqChartDataOneByOne(nlohmann::json& obj, SmWebsocketS
 	catch (std::exception e) {
 		std::string error = e.what();
 	}
+}
+
+void SmProtocolManager::OnReqAccountList(nlohmann::json& obj)
+{
+
 }

@@ -24,7 +24,7 @@ std::shared_ptr<SmPosition> SmTotalPositionManager::CreatePosition(std::shared_p
 		return nullptr;
 	std::pair<std::string, std::string> date_time = VtStringUtil::GetCurrentDateTime();
 
-	std::shared_ptr<SmPosition> position = std::shared_ptr<SmPosition>();
+	std::shared_ptr<SmPosition> position = std::make_shared<SmPosition>();
 	position->CreatedDate = date_time.first;
 	position->CreatedTime = date_time.second;
 	position->AccountNo = order->AccountNo;

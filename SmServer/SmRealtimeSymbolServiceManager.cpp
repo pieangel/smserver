@@ -120,31 +120,7 @@ void SmRealtimeSymbolServiceManager::Unregister(std::string user_id)
 
 void SmRealtimeSymbolServiceManager::SendInfo()
 {
-	//if (!_Symbol)
-	//	return;
-	std::string message = "test message";
-	// Put the message in a shared pointer so we can re-use it for each client
-	auto const ss = boost::make_shared<std::string const>(std::move(message));
-
-	// Make a local list of all the weak pointers representing
-	// the sessions, so we can do the actual sending without
-	// holding the mutex:
-	std::vector<std::weak_ptr<SmWebsocketSession>> v;
-	{
-		std::lock_guard<std::mutex> lock(_mutex);
-		v.reserve(_UserMap.size());
-		for (auto it = _UserMap.begin(); it != _UserMap.end(); ++it) {
-			std::shared_ptr<SmUser> user = it->second;
-			if (user->Socket())
-				v.emplace_back(user->Socket()->weak_from_this());
-		}
-	}
-
-	// For each session in our local list, try to acquire a strong
-   // pointer. If successful, then send the message on that session.
-	for (auto const& wp : v)
-		if (auto sp = wp.lock())
-			sp->send(ss);
+	
 }
 
 void SmRealtimeSymbolServiceManager::BroadcastSise()
@@ -163,52 +139,10 @@ void SmRealtimeSymbolServiceManager::BroadcastHoga()
 
 void SmRealtimeSymbolServiceManager::SendSise(std::shared_ptr<SmSymbol> sym, SmUserMap& userMap)
 {
-	if (!sym || userMap.size() == 0)
-		return;
-	std::string message = sym->GetQuoteByJson();
-	// Put the message in a shared pointer so we can re-use it for each client
-	auto const ss = boost::make_shared<std::string const>(std::move(message));
-
-	std::vector<std::weak_ptr<SmWebsocketSession>> v;
-	{
-		std::lock_guard<std::mutex> lock(_mutex);
-		v.reserve(userMap.size());
-		for (auto it = userMap.begin(); it != userMap.end(); ++it) {
-			std::shared_ptr<SmUser> user = it->second;
-			if (user->Connected() && user->Socket())
-				v.emplace_back(user->Socket()->weak_from_this());
-		}
-	}
-
-	// For each session in our local list, try to acquire a strong
-	// pointer. If successful, then send the message on that session.
-	for (auto const& wp : v)
-		if (auto sp = wp.lock())
-			sp->send(ss);
+	
 }
 
 void SmRealtimeSymbolServiceManager::SendHoga(std::shared_ptr<SmSymbol> sym, SmUserMap& userMap)
 {
-	if (!sym || userMap.size() == 0)
-		return;
-	std::string message = sym->GetHogaByJson();
-	// Put the message in a shared pointer so we can re-use it for each client
-	auto const ss = boost::make_shared<std::string const>(std::move(message));
-
-	std::vector<std::weak_ptr<SmWebsocketSession>> v;
-	{
-		std::lock_guard<std::mutex> lock(_mutex);
-		v.reserve(userMap.size());
-		for (auto it = userMap.begin(); it != userMap.end(); ++it) {
-			std::shared_ptr<SmUser> user = it->second;
-			if (user->Connected() && user->Socket())
-				v.emplace_back(user->Socket()->weak_from_this());
-		}
-	}
-
-	// For each session in our local list, try to acquire a strong
-	// pointer. If successful, then send the message on that session.
-	for (auto const& wp : v)
-		if (auto sp = wp.lock())
-			sp->send(ss);
+	
 }

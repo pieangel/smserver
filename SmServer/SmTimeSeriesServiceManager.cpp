@@ -136,6 +136,7 @@ void SmTimeSeriesServiceManager::SendChartData(SmChartDataRequest data_req, SmCh
 	json send_object;
 	send_object["res_id"] = SmProtocol::res_chart_data_onebyone;
 	send_object["data_key"] = data_req.GetDataKey();
+	send_object["symbol_code"] = data_req.symbolCode;
 	send_object["date_time"] = item.date + item.time;
 	send_object["o"] = item.o;
 	send_object["h"] = item.h;
@@ -157,7 +158,7 @@ void SmTimeSeriesServiceManager::ResendChartDataRequest(SmChartDataRequest req)
 	send_object["req_id"] = (int)SmProtocol::req_chart_data_from_main_server;
 	send_object["user_id"] = req.user_id;
 	send_object["service_req_id"] = service_req_id;
-	send_object["session_id"] = req.session_id;
+	send_object["req_session_id"] = req.session_id;
 	send_object["symbol_code"] = req.symbolCode;
 	send_object["chart_type"] = (int)req.chartType;
 	send_object["cycle"] = req.cycle;

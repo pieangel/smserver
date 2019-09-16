@@ -353,7 +353,7 @@
       <Filter>Service</Filter>
     </ClInclude>
     <ClInclude Include="SmGlobal.h">
-      <Filter>Server</Filter>
+      <Filter>Global</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -529,7 +529,7 @@
       <Filter>Service</Filter>
     </ClCompile>
     <ClCompile Include="SmGlobal.cpp">
-      <Filter>Server</Filter>
+      <Filter>Global</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
