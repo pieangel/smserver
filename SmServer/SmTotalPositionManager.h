@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <map>
+#include <vector>
 #include "Global/TemplateSingleton.h"
 struct SmPosition;
 class SmAccountPositionManager;
@@ -13,6 +14,7 @@ public:
 	std::shared_ptr<SmPosition> CreatePosition(std::shared_ptr<SmOrder> order);
 	std::shared_ptr<SmPosition> FindPosition(std::string acntNo, std::string symbolCode);
 	void AddPosition(std::shared_ptr<SmPosition> posi);
+	void SendPositionList(int session_id, std::string account_no);
 private:
 	std::map<std::string, SmAccountPositionManager*> _AccountPositionManagerMap;
 	SmAccountPositionManager* FindAddAccountPositionManager(std::string accountNo);

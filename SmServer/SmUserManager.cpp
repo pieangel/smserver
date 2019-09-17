@@ -23,6 +23,18 @@ SmUserManager::~SmUserManager()
 	}
 }
 
+std::set<int> SmUserManager::GetUserSocketList(std::string user_id)
+{
+	auto it = _UserMap.find(user_id);
+	if (it != _UserMap.end()) {
+		return it->second->GetSocketSet();
+	} 
+	else {
+		std::set<int> empty_set;
+		return empty_set;
+	}
+}
+
 std::shared_ptr<SmUser> SmUserManager::AddUser(std::string id, SmWebsocketSession* socket)
 {
 	std::lock_guard<std::mutex> lock(_mutex);
@@ -174,8 +186,7 @@ void SmUserManager::SendResultMessage(std::string user_id, std::string message)
 		// 같은 아이디를 가지고 접속한 모든 소켓에 동시에 메시지를 보낸다.
 		for (auto it = socket_set.begin(); it != socket_set.end(); ++it) {
 			int session_id = *it;
-			SmGlobal* global = SmGlobal::GetInstance();
-			std::shared_ptr<SmSessionManager> sessMgr = global->GetSessionManager();
+			std::shared_ptr<SmSessionManager> sessMgr = SmGlobal::GetInstance()->GetSessionManager();
 			sessMgr->send(session_id, message);
 		}
 	}

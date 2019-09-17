@@ -14,11 +14,12 @@ private:
 	// 기초자산은 1억원
 	double _InitialBalance = 100000000;
 	// 매매로 이루어진 수익
-	double _TradePL;
+	double _TradePL = 0.0;
 	// 현재 청산되지 않은 주문으로 인한 평가 손익
-	double _OpenPL;
+	double _OpenPL = 0.0;
 	std::string _Password;
 public:
+	std::string GetAccountInfoByJSon();
 	std::string AccountNo() const { return _AccountNo; }
 	void AccountNo(std::string val) { _AccountNo = val; }
 	std::string AccountName() const { return _AccountName; }

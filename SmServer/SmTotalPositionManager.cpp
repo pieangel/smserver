@@ -6,7 +6,14 @@
 #include "SmSymbol.h"
 #include "SmAccountPositionManager.h"
 #include "Util/VtStringUtil.h"
+#include "SmMongoDBManager.h"
+#include "SmServiceDefine.h"
+#include "SmGlobal.h"
+#include "SmSessionManager.h"
+#include "SmMongoDBManager.h"
 
+#include "Json/json.hpp"
+using namespace nlohmann;
 SmTotalPositionManager::~SmTotalPositionManager()
 {
 	for (auto it = _AccountPositionManagerMap.begin(); it != _AccountPositionManagerMap.end(); ++it) {
@@ -55,6 +62,37 @@ void SmTotalPositionManager::AddPosition(std::shared_ptr<SmPosition> posi)
 		return;
 	SmAccountPositionManager* acntPosiMgr = FindAddAccountPositionManager(posi->AccountNo);
 	acntPosiMgr->AddPosition(posi);
+	// 여기서 데이터 베이스에 포지션을 저장해 준다.
+	SmMongoDBManager::GetInstance()->AddPosition(posi);
+}
+
+void SmTotalPositionManager::SendPositionList(int session_id, std::string account_no)
+{
+	std::vector<std::shared_ptr<SmPosition>> position_list = SmMongoDBManager::GetInstance()->GetPositionList(account_no);
+	json send_object;
+	send_object["res_id"] = SmProtocol::res_position_list;
+	send_object["total_position_count"] = (int)position_list.size();
+	for (size_t j = 0; j < position_list.size(); ++j) {
+		std::shared_ptr<SmPosition> position = position_list[j];
+		send_object["position"][j] = {
+			{ "created_date",  position->CreatedDate },
+			{ "created_time", position->CreatedTime },
+			{ "symbol_code",  position->SymbolCode },
+			{ "fund_name",  position->FundName },
+			{ "position_type",  (int)position->Position },
+			{ "account_no",  position->AccountNo },
+			{ "open_qty",  position->OpenQty },
+			{ "fee",  position->Fee },
+			{ "trade_pl",  position->TradePL },
+			{ "average_price",  position->AvgPrice },
+			{ "current_price",  position->CurPrice },
+			{ "open_pl",  position->OpenPL }
+		};
+
+	}
+
+	std::shared_ptr<SmSessionManager> session_mgr = SmGlobal::GetInstance()->GetSessionManager();
+	session_mgr->send(session_id, send_object.dump());
 }
 
 SmAccountPositionManager* SmTotalPositionManager::FindAddAccountPositionManager(std::string accountNo)

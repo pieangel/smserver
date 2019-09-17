@@ -5,6 +5,7 @@
 #include <unordered_set>
 #include <map>
 #include <memory>
+#include <set>
 #include "Global/TemplateSingleton.h"
 class SmUser;
 class SmWebsocketSession;
@@ -22,6 +23,7 @@ class SmUserManager : public TemplateSingleton<SmUserManager>
 public:
 	SmUserManager();
 	~SmUserManager();
+	std::set<int> GetUserSocketList(std::string user_id);
 	std::shared_ptr<SmUser> AddUser(std::string id, SmWebsocketSession* socket);
 	std::shared_ptr<SmUser> AddUser(std::string id, std::string pwd, SmWebsocketSession* socket);
 	std::pair<int, std::string> CheckUserInfo(std::string id, std::string pwd, SmWebsocketSession* socket);

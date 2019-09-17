@@ -4,6 +4,27 @@
 #include "SmSymbol.h"
 #include "SmOrder.h"
 #include "SmPosition.h"
+#include "SmServiceDefine.h"
+
+#include "Json/json.hpp"
+using namespace nlohmann;
+
+
+std::string SmAccount::GetAccountInfoByJSon()
+{
+	json account;
+	account["res_id"] = SmProtocol::res_account_list;
+	account["account_no"] = _AccountNo;
+	account["account_name"] = _AccountName;
+	account["user_id"] = _UserID;
+	account["password"] = _Password;
+	account["initial_balance"] = _InitialBalance;
+	account["trade_profit_loss"] = _TradePL;
+	account["open_profit_loss"] = _OpenPL;
+	
+	return account.dump();
+}
+
 SmPosition* SmAccount::FindPosition(std::string symCode)
 {
 	auto it = _PositionMap.find(symCode);

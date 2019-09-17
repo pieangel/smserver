@@ -733,7 +733,7 @@ bool SmMongoDBManager::RemoveUserInfo(std::string user_id)
 }
 
 
-void SmMongoDBManager::SaveAccountInfo(SmAccount* acnt)
+void SmMongoDBManager::SaveAccountInfo(std::shared_ptr<SmAccount> acnt)
 {
 	if (!acnt)
 		return;
@@ -784,7 +784,7 @@ void SmMongoDBManager::SaveAccountInfo(SmAccount* acnt)
 }
 
 // 매매수익과 평가 손익을 업데이트 한다.
-void SmMongoDBManager::UpdateAccountInfo(SmAccount* acnt)
+void SmMongoDBManager::UpdateAccountInfo(std::shared_ptr<SmAccount> acnt)
 {
 	if (!acnt)
 		return;
@@ -843,7 +843,7 @@ std::vector<std::shared_ptr<SmAccount>> SmMongoDBManager::GetAccountList(std::st
 			std::string user_id = json_object["user_id"];
 			std::string account_name = json_object["account_name"];
 			std::string password = json_object["password"];
-			double initial_valance = json_object["initial_valance"];
+			double initial_valance = json_object["initial_balance"];
 			double trade_profit_loss = json_object["trade_profit_loss"];
 			double open_profit_loss = json_object["open_profit_loss"];
 			acnt->AccountNo(account_no);
@@ -888,7 +888,7 @@ std::shared_ptr<SmAccount> SmMongoDBManager::GetAccount(std::string account_no)
 			std::string user_id = json_object["user_id"];
 			std::string account_name = json_object["account_name"];
 			std::string password = json_object["password"];
-			double initial_valance = json_object["initial_valance"];
+			double initial_valance = json_object["initial_balance"];
 			double trade_profit_loss = json_object["trade_profit_loss"];
 			double open_profit_loss = json_object["open_profit_loss"];
 			acnt->AccountNo(account_no);
@@ -907,7 +907,7 @@ std::shared_ptr<SmAccount> SmMongoDBManager::GetAccount(std::string account_no)
 	}
 }
 
-void SmMongoDBManager::AddPosition(SmPosition* posi)
+void SmMongoDBManager::AddPosition(std::shared_ptr<SmPosition> posi)
 {
 	if (!posi)
 		return;
@@ -929,15 +929,17 @@ void SmMongoDBManager::AddPosition(SmPosition* posi)
 				<< "symbol_code" << posi->SymbolCode
 				<< finalize);
 		if (found_posi) {
-			coll.update_one(bsoncxx::builder::stream::document{} 
+			coll.update_one(bsoncxx::builder::stream::document{}
 				<< "account_no" << posi->AccountNo
 				<< "symbol_code" << posi->SymbolCode
 				<< finalize,
 				bsoncxx::builder::stream::document{} << "$set"
 				<< open_document
+				<< "created_date" << posi->CreatedDate
+				<< "created_time" << posi->CreatedTime
 				<< "account_no" << posi->AccountNo
 				<< "symbol_code" << posi->SymbolCode
-				<< "position" << (int)posi->Position
+				<< "position_type" << (int)posi->Position
 				<< "open_qty" << posi->OpenQty
 				<< "fee" << posi->Fee
 				<< "trade_profitloss" << posi->TradePL
@@ -947,9 +949,11 @@ void SmMongoDBManager::AddPosition(SmPosition* posi)
 		}
 		else {
 			bsoncxx::document::value doc_value = builder
+				<< "created_date" << posi->CreatedDate
+				<< "created_time" << posi->CreatedTime
 				<< "account_no" << posi->AccountNo
 				<< "symbol_code" << posi->SymbolCode
-				<< "position" << (int)posi->Position
+				<< "position_type" << (int)posi->Position
 				<< "open_qty" << posi->OpenQty
 				<< "fee" << posi->Fee
 				<< "trade_profitloss" << posi->TradePL
@@ -965,7 +969,7 @@ void SmMongoDBManager::AddPosition(SmPosition* posi)
 	}
 }
 
-void SmMongoDBManager::UpdatePosition(SmPosition* posi)
+void SmMongoDBManager::UpdatePosition(std::shared_ptr<SmPosition> posi)
 {
 	if (!posi)
 		return;
@@ -997,7 +1001,7 @@ void SmMongoDBManager::UpdatePosition(SmPosition* posi)
 					<< open_document
 					<< "account_no" << posi->AccountNo
 					<< "symbol_code" << posi->SymbolCode
-					<< "position" << (int)posi->Position
+					<< "position_type" << (int)posi->Position
 					<< "open_qty" << posi->OpenQty
 					<< "fee" << posi->Fee
 					<< "trade_profitloss" << posi->TradePL
@@ -1016,7 +1020,7 @@ void SmMongoDBManager::UpdatePosition(SmPosition* posi)
 			bsoncxx::document::value doc_value = builder
 				<< "account_no" << posi->AccountNo
 				<< "symbol_code" << posi->SymbolCode
-				<< "position" << (int)posi->Position
+				<< "position_type" << (int)posi->Position
 				<< "open_qty" << posi->OpenQty
 				<< "fee" << posi->Fee
 				<< "trade_profitloss" << posi->TradePL
@@ -1033,7 +1037,7 @@ void SmMongoDBManager::UpdatePosition(SmPosition* posi)
 }
 
 
-void SmMongoDBManager::AddOrder(SmOrder* order)
+void SmMongoDBManager::AddOrder(std::shared_ptr<SmOrder> order)
 {
 	if (!order)
 		return;
@@ -1070,7 +1074,7 @@ void SmMongoDBManager::AddOrder(SmOrder* order)
 				<< "order_amount" << order->OrderAmount
 				<< "price_type" << (int)order->PriceType
 				<< "order_price" << order->OrderPrice
-				<< "position" << (int)order->Position
+				<< "position_type" << (int)order->Position
 				<< "order_type" << (int)order->OrderType
 				<< "ori_order_no" << order->OriOrderNo
 				<< "filled_date" << order->FilledDate
@@ -1096,7 +1100,7 @@ void SmMongoDBManager::AddOrder(SmOrder* order)
 				<< "order_amount" << order->OrderAmount
 				<< "price_type" << (int)order->PriceType
 				<< "order_price" << order->OrderPrice
-				<< "position" << (int)order->Position
+				<< "position_type" << (int)order->Position
 				<< "order_type" << (int)order->OrderType
 				<< "ori_order_no" << order->OriOrderNo
 				<< "filled_date" << order->FilledDate
@@ -1120,7 +1124,7 @@ void SmMongoDBManager::AddOrder(SmOrder* order)
 	}
 }
 
-void SmMongoDBManager::OnAcceptedOrder(SmOrder* order)
+void SmMongoDBManager::OnAcceptedOrder(std::shared_ptr<SmOrder> order)
 {
 	if (!order)
 		return;
@@ -1160,7 +1164,7 @@ void SmMongoDBManager::OnAcceptedOrder(SmOrder* order)
 	}
 }
 
-void SmMongoDBManager::OnFilledOrder(SmOrder* order)
+void SmMongoDBManager::OnFilledOrder(std::shared_ptr<SmOrder> order)
 {
 	if (!order)
 		return;
@@ -1402,6 +1406,74 @@ std::vector<std::shared_ptr<SmOrder>> SmMongoDBManager::GetOrderList(std::string
 			<< "order_date" << date
 			<< "account_no" << account_no
 			<< finalize);
+		for (auto doc : cursor) {
+			std::string message = bsoncxx::to_json(doc);
+			auto json_object = json::parse(message);
+			std::shared_ptr<SmOrder> order = std::make_shared<SmOrder>();
+
+			order->AccountNo = json_object["account_no"];
+			order->OrderType = json_object["order_type"];
+			order->Position = json_object["position_type"];
+			order->PriceType = json_object["price_type"];
+			order->SymbolCode = json_object["symbol_code"];
+			order->OrderPrice = json_object["order_price"];
+			order->OrderNo = json_object["order_no"];
+			order->OrderAmount = json_object["order_amount"];
+			order->OriOrderNo = json_object["ori_order_no"];
+			order->FilledDate = json_object["filled_date"];
+			order->FilledTime = json_object["filled_time"];
+			order->OrderDate = json_object["order_date"];
+			order->OrderTime = json_object["order_time"];
+			order->FilledQty = json_object["filled_qty"];
+			order->FilledPrice = json_object["filled_price"];
+			order->OrderState = json_object["order_state"];
+			order->FilledCondition = json_object["filled_condition"];
+			order->SymbolDecimal = json_object["symbol_decimal"];
+			order->RemainQty = json_object["remain_qty"];
+			order->StrategyName = json_object["strategy_name"];
+			order->SystemName = json_object["system_name"];
+			order->FundName = json_object["fund_name"];
+
+			order_list.push_back(order);
+		}
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+
+	return order_list;
+}
+
+std::vector<std::shared_ptr<SmOrder>> SmMongoDBManager::GetOrderList(std::string account_no, int count, int skip)
+{
+	std::vector<std::shared_ptr<SmOrder>> order_list;
+
+	try
+	{
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		mongocxx::collection coll = db["order_list"];
+
+		// @begin: cpp-query-sort
+		mongocxx::options::find opts;
+		// 최신것이 앞에 오도록 한다.
+		opts.sort(make_document(kvp("order_no", -1)));
+		// 과거의 것이 앞에 오도록 한다.
+		//opts.sort(make_document(kvp("date_time", 1)));
+		opts.limit(count);
+		opts.skip(skip);
+
+		builder::stream::document builder{};
+
+		// 현재 날짜에 해당하는 것만 가져온다.
+		mongocxx::cursor cursor = coll.find(
+			bsoncxx::builder::stream::document{}
+			<< "account_no" << account_no
+			<< finalize, opts);
 		for (auto doc : cursor) {
 			std::string message = bsoncxx::to_json(doc);
 			auto json_object = json::parse(message);

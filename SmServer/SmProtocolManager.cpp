@@ -19,6 +19,9 @@
 #include "SmWebsocketSession.h"
 #include "SmMongoDBManager.h"
 #include "SmGlobal.h"
+#include "SmAccountManager.h"
+#include "SmTotalPositionManager.h"
+#include "SmAccount.h"
 using namespace nlohmann;
 SmProtocolManager::SmProtocolManager()
 {
@@ -38,6 +41,10 @@ void SmProtocolManager::OnMessage(std::string message, SmWebsocketSession* socke
 	//CString msg;
 	//msg.Format(_T("message = %s, %x\n"), message.c_str(), socket);
 	//TRACE(msg);
+
+	char buffer[4096];
+	sprintf(buffer, "OnMessage%s\n", message.c_str());
+	OutputDebugString(buffer);
 	ParseMessage(message, socket);
 }
 
@@ -61,7 +68,7 @@ void SmProtocolManager::ParseMessage(std::string message, SmWebsocketSession* so
 		switch (sm_protocol)
 		{
 		case SmProtocol::req_login:
-			OnLogin(json_object, socket);
+			OnReqLogin(json_object, socket);
 			break;
 		case  SmProtocol::req_register_symbol:
 			OnRegisterSymbol(json_object);
@@ -127,6 +134,21 @@ void SmProtocolManager::ParseMessage(std::string message, SmWebsocketSession* so
 		case SmProtocol::req_register_user:
 			OnReqRegisterUser(json_object);
 			break;
+		case SmProtocol::req_account_list:
+			OnReqAccountList(json_object);
+			break;
+		case SmProtocol::req_accepted_order_list:
+			OnReqAcceptedList(json_object);
+			break;
+		case SmProtocol::req_filled_order_list:
+			OnReqFilledList(json_object);
+			break;
+		case SmProtocol::req_position_list:
+			OnReqPositionList(json_object);
+			break;
+		case SmProtocol::req_order_list:
+			OnReqOrderList(json_object);
+			break;
 		default:
 			break;
 		}
@@ -137,7 +159,7 @@ void SmProtocolManager::ParseMessage(std::string message, SmWebsocketSession* so
 }
 
 
-void SmProtocolManager::OnLogin(nlohmann::json& obj, SmWebsocketSession* socket)
+void SmProtocolManager::OnReqLogin(nlohmann::json& obj, SmWebsocketSession* socket)
 {
 	try {
 		std::string id = obj["user_id"];
@@ -584,15 +606,25 @@ void SmProtocolManager::OnReqRegisterUser(nlohmann::json& obj)
 {
 	std::string user_id = obj["user_id"];
 	std::string password = obj["password"];
+	int session_id = obj["session_id"];
+	// 사용자 정보를 데이터베이스에 저장한다.
 	SmMongoDBManager* mongoMgr = SmMongoDBManager::GetInstance();
 	mongoMgr->SaveUserInfo(user_id, password);
 
+	// 계좌를 만들고 데이터베이스에 저장한다.
+	SmAccountManager* acntMgr = SmAccountManager::GetInstance();
+	acntMgr->CreateAccount(user_id, password);
+
+	// 등록 결과 메시지를 보낸다.
 	obj["res_id"] = (int)SmProtocol::res_register_user;
 	obj["message"] = "Registered a user successfully!";
 	std::string content = obj.dump(4);
 	SmGlobal* global = SmGlobal::GetInstance();
 	std::shared_ptr<SmSessionManager> sessMgr = global->GetSessionManager();
-	sessMgr->send(content);
+	sessMgr->send(session_id, content);
+
+	// 여기서 계좌 정보를 보내 준다.
+	acntMgr->SendAccountList(session_id, user_id);
 }
 
 void SmProtocolManager::OnReqUnregisterUser(nlohmann::json& obj)
@@ -640,5 +672,69 @@ void SmProtocolManager::OnReqChartDataOneByOne(nlohmann::json& obj, SmWebsocketS
 
 void SmProtocolManager::OnReqAccountList(nlohmann::json& obj)
 {
+	try {
+		
+		std::string user_id = obj["user_id"];
+		int session_id = obj["session_id"];
+		SmAccountManager::GetInstance()->SendAccountList(session_id, user_id);
+	}
+	catch (std::exception e) {
+		std::string error = e.what();
+	}
+}
 
+void SmProtocolManager::OnReqAcceptedList(nlohmann::json& obj)
+{
+	try {
+
+		std::string user_id = obj["user_id"];
+		int session_id = obj["session_id"];
+		std::string account_no = obj["account_no"];
+		SmTotalOrderManager::GetInstance()->SendAcceptedOrderList(session_id, account_no);
+	}
+	catch (std::exception e) {
+		std::string error = e.what();
+	}
+}
+
+void SmProtocolManager::OnReqFilledList(nlohmann::json& obj)
+{
+	try {
+
+		std::string user_id = obj["user_id"];
+		int session_id = obj["session_id"];
+		std::string account_no = obj["account_no"];
+		SmTotalOrderManager::GetInstance()->SendFilledOrderList(session_id, account_no);
+	}
+	catch (std::exception e) {
+		std::string error = e.what();
+	}
+}
+
+void SmProtocolManager::OnReqOrderList(nlohmann::json& obj)
+{
+	try {
+
+		std::string user_id = obj["user_id"];
+		int session_id = obj["session_id"];
+		std::string account_no = obj["account_no"];
+		SmTotalOrderManager::GetInstance()->SendOrderList(session_id, account_no);
+	}
+	catch (std::exception e) {
+		std::string error = e.what();
+	}
+}
+
+void SmProtocolManager::OnReqPositionList(nlohmann::json& obj)
+{
+	try {
+
+		std::string user_id = obj["user_id"];
+		int session_id = obj["session_id"];
+		std::string account_no = obj["account_no"];
+		SmTotalPositionManager::GetInstance()->SendPositionList(session_id, account_no);
+	}
+	catch (std::exception e) {
+		std::string error = e.what();
+	}
 }

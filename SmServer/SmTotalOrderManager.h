@@ -15,6 +15,12 @@ public:
 	void OnRequestOrder(SmOrderRequest&& req);
 	virtual void AddFilledOrder(std::shared_ptr<SmOrder> order);
 	virtual void AddAcceptedOrder(std::shared_ptr<SmOrder> order);
+	// 접수확인된 주문들을 보낸다.
+	void SendAcceptedOrderList(int session_id, std::string account_no);
+	// 체결된(이미 청산된 주문은 체외) 주문들을 보낸다.
+	void SendFilledOrderList(int session_id, std::string account_no);
+	// 주문 목록을 최신 것 부터 보낸다.
+	void SendOrderList(int session_id, std::string account_no, int count = 50);
 private:
 	std::shared_ptr<SmOrder> CreateOrder();
 	void OnOrderNew(std::shared_ptr<SmOrder> order);

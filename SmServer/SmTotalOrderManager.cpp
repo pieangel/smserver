@@ -12,6 +12,9 @@
 #include "SmAccount.h"
 #include "SmTotalPositionManager.h"
 #include "SmPosition.h"
+#include "SmMongoDBManager.h"
+#include "SmGlobal.h"
+#include "SmSessionManager.h"
 using namespace std::chrono;
 using namespace nlohmann;
 
@@ -380,4 +383,121 @@ void SmTotalOrderManager::SendConfirmCancel(std::shared_ptr<SmOrder> order)
 	// 원래 주문 상태를 변경한다.
 	oriOrder->OrderState = SmOrderState::ConfirmCancel;
 	SendResponse(order);
+}
+
+void SmTotalOrderManager::SendAcceptedOrderList(int session_id, std::string account_no)
+{
+	std::vector<std::shared_ptr<SmOrder>> order_list = SmMongoDBManager::GetInstance()->GetAcceptedOrderList(account_no);
+	json send_object;
+	send_object["res_id"] = SmProtocol::res_accepted_order_list;
+	send_object["total_order_count"] = (int)order_list.size();
+	for (size_t j = 0; j < order_list.size(); ++j) {
+		std::shared_ptr<SmOrder> order = order_list[j];
+		send_object["order"][j] = {
+			{ "account_no",  order->AccountNo },
+			{ "order_type", order->OrderType },
+			{ "position_type",  order->Position },
+			{ "price_type",  order->PriceType },
+			{ "symbol_code",  order->SymbolCode },
+			{ "order_price",  order->OrderPrice },
+			{ "order_no",  order->OrderNo },
+			{ "order_amount",  order->OrderAmount },
+			{ "ori_order_no",  order->OriOrderNo },
+			{ "filled_date",  order->FilledDate },
+			{ "filled_time",  order->FilledTime },
+			{ "order_date",  order->OrderDate },
+			{ "order_time",  order->OrderTime },
+			{ "filled_qty",  order->FilledQty },
+			{ "filled_price",  order->FilledPrice },
+			{ "order_state",  order->OrderState },
+			{ "filled_condition",  order->FilledCondition },
+			{ "symbol_decimal",  order->SymbolDecimal },
+			{ "remain_qty",  order->RemainQty },
+			{ "strategy_name",  order->StrategyName },
+			{ "system_name",  order->SystemName },
+			{ "fund_name",  order->FundName }
+		};
+
+	}
+
+	std::shared_ptr<SmSessionManager> session_mgr = SmGlobal::GetInstance()->GetSessionManager();
+	session_mgr->send(session_id, send_object.dump());
+}
+
+void SmTotalOrderManager::SendFilledOrderList(int session_id, std::string account_no)
+{
+	std::vector<std::shared_ptr<SmOrder>> order_list = SmMongoDBManager::GetInstance()->GetFilledOrderList(account_no);
+	json send_object;
+	send_object["res_id"] = SmProtocol::res_filled_order_list;
+	send_object["total_order_count"] = (int)order_list.size();
+	for (size_t j = 0; j < order_list.size(); ++j) {
+		std::shared_ptr<SmOrder> order = order_list[j];
+		send_object["order"][j] = {
+			{ "account_no",  order->AccountNo },
+			{ "order_type", order->OrderType },
+			{ "position_type",  order->Position },
+			{ "price_type",  order->PriceType },
+			{ "symbol_code",  order->SymbolCode },
+			{ "order_price",  order->OrderPrice },
+			{ "order_no",  order->OrderNo },
+			{ "order_amount",  order->OrderAmount },
+			{ "ori_order_no",  order->OriOrderNo },
+			{ "filled_date",  order->FilledDate },
+			{ "filled_time",  order->FilledTime },
+			{ "order_date",  order->OrderDate },
+			{ "order_time",  order->OrderTime },
+			{ "filled_qty",  order->FilledQty },
+			{ "filled_price",  order->FilledPrice },
+			{ "order_state",  order->OrderState },
+			{ "filled_condition",  order->FilledCondition },
+			{ "symbol_decimal",  order->SymbolDecimal },
+			{ "remain_qty",  order->RemainQty },
+			{ "strategy_name",  order->StrategyName },
+			{ "system_name",  order->SystemName },
+			{ "fund_name",  order->FundName }
+		};
+
+	}
+
+	std::shared_ptr<SmSessionManager> session_mgr = SmGlobal::GetInstance()->GetSessionManager();
+	session_mgr->send(session_id, send_object.dump());
+}
+
+void SmTotalOrderManager::SendOrderList(int session_id, std::string account_no, int count)
+{
+	std::vector<std::shared_ptr<SmOrder>> order_list = SmMongoDBManager::GetInstance()->GetFilledOrderList(account_no);
+	json send_object;
+	send_object["res_id"] = SmProtocol::res_order_list;
+	send_object["total_order_count"] = (int)order_list.size();
+	for (size_t j = 0; j < order_list.size(); ++j) {
+		std::shared_ptr<SmOrder> order = order_list[j];
+		send_object["order"][j] = {
+			{ "account_no",  order->AccountNo },
+			{ "order_type", order->OrderType },
+			{ "position_type",  order->Position },
+			{ "price_type",  order->PriceType },
+			{ "symbol_code",  order->SymbolCode },
+			{ "order_price",  order->OrderPrice },
+			{ "order_no",  order->OrderNo },
+			{ "order_amount",  order->OrderAmount },
+			{ "ori_order_no",  order->OriOrderNo },
+			{ "filled_date",  order->FilledDate },
+			{ "filled_time",  order->FilledTime },
+			{ "order_date",  order->OrderDate },
+			{ "order_time",  order->OrderTime },
+			{ "filled_qty",  order->FilledQty },
+			{ "filled_price",  order->FilledPrice },
+			{ "order_state",  order->OrderState },
+			{ "filled_condition",  order->FilledCondition },
+			{ "symbol_decimal",  order->SymbolDecimal },
+			{ "remain_qty",  order->RemainQty },
+			{ "strategy_name",  order->StrategyName },
+			{ "system_name",  order->SystemName },
+			{ "fund_name",  order->FundName }
+		};
+
+	}
+
+	std::shared_ptr<SmSessionManager> session_mgr = SmGlobal::GetInstance()->GetSessionManager();
+	session_mgr->send(session_id, send_object.dump());
 }

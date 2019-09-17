@@ -9,6 +9,7 @@
 #include <math.h>
 #include "SmTotalPositionManager.h"
 #include "Util/VtStringUtil.h"
+#include "SmMongoDBManager.h"
 SmSymbolOrderManager::SmSymbolOrderManager()
 {
 
@@ -32,6 +33,7 @@ void SmSymbolOrderManager::OnOrderAccepted(std::shared_ptr<SmOrder> order)
 	order->AcceptedPrice = sym->Quote.Close;
 	// 주문 상태를 변경한다.
 	order->OrderState = SmOrderState::Accepted;
+	SmMongoDBManager::GetInstance()->OnAcceptedOrder(order);
 	// 접수 확인 목록에 넣어 준다.
 	SmOrderManager::OnOrderAccepted(order);
 }
@@ -59,6 +61,8 @@ void SmSymbolOrderManager::OnOrderFilled(std::shared_ptr<SmOrder> order)
 	order->RemainQty = order->FilledQty * buho;
 	// 포지션을 계산한다.
 	CalcPosition(order);
+	// 여기서 주문 상태를 데이터베이스에 저장해 준다.
+	SmMongoDBManager::GetInstance()->OnFilledOrder(order);
 	SmOrderManager::OnOrderFilled(order);
 }
 
@@ -72,6 +76,9 @@ void SmSymbolOrderManager::OnOrder(std::shared_ptr<SmOrder> order)
 	// 주문 날짜를 넣어 준다.
 	order->OrderDate = date_time.first;
 	order->OrderTime = date_time.second;
+	// 여기서 데이터 베이스에 주문을 저장해 준다.
+	SmMongoDBManager::GetInstance()->AddOrder(order);
+	// 주문 목록에 넣어 준다.
 	SmOrderManager::OnOrder(order);
 }
 
@@ -163,6 +170,8 @@ void SmSymbolOrderManager::CalcPosition(std::shared_ptr<SmOrder> order)
 		int error = -1;
 		error = error;
 	}
+	// 여기서 데이터베이스의 포지션을 상태를 업데이트한다.
+	SmMongoDBManager::GetInstance()->UpdatePosition(posi);
 }
 int SmSymbolOrderManager::CalcRemain(std::shared_ptr<SmOrder> newOrder)
 {

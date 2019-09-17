@@ -17,7 +17,7 @@ private:
 	void ParseMessage(std::string message, SmWebsocketSession* socket);
 	void SendResult(std::string user_id, int result_code, std::string result_msg);
 	void SendResult(int session_id, int result_code, std::string result_msg);
-	void OnLogin(nlohmann::json& obj, SmWebsocketSession* socket);
+	void OnReqLogin(nlohmann::json& obj, SmWebsocketSession* socket);
 	void OnLogout(nlohmann::json& obj);
 	void OnRegisterSymbol(nlohmann::json& obj);
 	void OnUnregisterSymbol(nlohmann::json& obj);
@@ -43,6 +43,10 @@ private:
 	void OnReqUnregisterUser(nlohmann::json& obj);
 	void OnReqChartDataOneByOne(nlohmann::json& obj, SmWebsocketSession* socket);
 	void OnReqAccountList(nlohmann::json& obj);
+	void OnReqAcceptedList(nlohmann::json& obj);
+	void OnReqFilledList(nlohmann::json& obj);
+	void OnReqOrderList(nlohmann::json& obj);
+	void OnReqPositionList(nlohmann::json& obj);
 	void SendResult(std::string user_id, SmProtocol protocol, int result_code, std::string result_msg);
 	void SendResult(int session_id, SmProtocol protocol, int result_code, std::string result_msg);
 };

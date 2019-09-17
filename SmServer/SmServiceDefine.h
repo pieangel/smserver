@@ -114,5 +114,17 @@ enum class SmProtocol {
 	// 차트 데이터 일대일 요청
 	req_chart_data_onebyone,
 	// 차트 데이터 일대일 응답
-	res_chart_data_onebyone
+	res_chart_data_onebyone,
+	// 접수확인 주문 목록 요청
+	req_accepted_order_list,
+	// 접수확인 주문 목록 응답
+	res_accepted_order_list,
+	// 체결 주문 목록 요청
+	req_filled_order_list,
+	// 체결 주문 목록 응답
+	res_filled_order_list,
+	// 주문 목록 요청
+	req_order_list,
+	// 주문 목록 응답
+	res_order_list
 };
