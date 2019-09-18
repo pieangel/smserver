@@ -78,15 +78,14 @@ void SmTotalPositionManager::SendPositionList(int session_id, std::string accoun
 			{ "created_date",  position->CreatedDate },
 			{ "created_time", position->CreatedTime },
 			{ "symbol_code",  position->SymbolCode },
-			{ "fund_name",  position->FundName },
 			{ "position_type",  (int)position->Position },
 			{ "account_no",  position->AccountNo },
 			{ "open_qty",  position->OpenQty },
 			{ "fee",  position->Fee },
-			{ "trade_pl",  position->TradePL },
+			{ "trade_profitloss",  position->TradePL },
 			{ "average_price",  position->AvgPrice },
 			{ "current_price",  position->CurPrice },
-			{ "open_pl",  position->OpenPL }
+			{ "open_profitloss",  position->OpenPL }
 		};
 
 	}

@@ -22,6 +22,8 @@
 #include "SmAccountManager.h"
 #include "SmTotalPositionManager.h"
 #include "SmAccount.h"
+#include "SmSymbol.h"
+#include "SmSymbolManager.h"
 using namespace nlohmann;
 SmProtocolManager::SmProtocolManager()
 {
@@ -571,6 +573,26 @@ void SmProtocolManager::OnReqChartDataResend(nlohmann::json& obj)
 void SmProtocolManager::OnReqUpdateQuote(nlohmann::json& obj)
 {
 	obj["res_id"] = (int)SmProtocol::res_realtime_sise;
+
+	std::string symbol_code = obj["symbol_code"];
+	int gap_from_preday = obj["gap_from_preday"];
+	std::string sign_to_preday = obj["sign_to_preday"];
+	std::string ratio_to_preday = obj["ratio_to_preday"];
+	int open = obj["open"];
+	int high = obj["high"];
+	int low = obj["low"];
+	int close = obj["close"];
+	int acc_volume = obj["acc_volume"];
+
+	std::shared_ptr<SmSymbol> sym = SmSymbolManager::GetInstance()->FindSymbol(symbol_code);
+	if (sym) {
+		sym->Quote.accVolume = acc_volume;
+		sym->Quote.Open = open;
+		sym->Quote.High = high;
+		sym->Quote.Low = low;
+		sym->Quote.Close = close;
+	}
+
 	std::string content = obj.dump(4);
 	SmGlobal* global = SmGlobal::GetInstance();
 	std::shared_ptr<SmSessionManager> sessMgr = global->GetSessionManager();

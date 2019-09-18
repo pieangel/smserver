@@ -14,6 +14,7 @@ public:
 	std::map<std::string, std::shared_ptr<SmSymbol>>& GetSymbolMap() {
 		return _SymbolMap;
 	}
+	
 private:
 	std::map<std::string, std::shared_ptr<SmSymbol>> _SymbolMap;
 };

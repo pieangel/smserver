@@ -944,6 +944,7 @@ void SmMongoDBManager::AddPosition(std::shared_ptr<SmPosition> posi)
 				<< "fee" << posi->Fee
 				<< "trade_profitloss" << posi->TradePL
 				<< "average_price" << posi->AvgPrice
+				<< "current_price" << posi->CurPrice
 				<< "open_profitloss" << posi->OpenPL
 				<< close_document << finalize);
 		}
@@ -958,6 +959,7 @@ void SmMongoDBManager::AddPosition(std::shared_ptr<SmPosition> posi)
 				<< "fee" << posi->Fee
 				<< "trade_profitloss" << posi->TradePL
 				<< "average_price" << posi->AvgPrice
+				<< "current_price" << posi->CurPrice
 				<< "open_profitloss" << posi->OpenPL
 				<< bsoncxx::builder::stream::finalize;
 			auto res = db["position_list"].insert_one(std::move(doc_value));
@@ -999,6 +1001,8 @@ void SmMongoDBManager::UpdatePosition(std::shared_ptr<SmPosition> posi)
 					<< finalize,
 					bsoncxx::builder::stream::document{} << "$set"
 					<< open_document
+					<< "created_date" << posi->CreatedDate
+					<< "created_time" << posi->CreatedTime
 					<< "account_no" << posi->AccountNo
 					<< "symbol_code" << posi->SymbolCode
 					<< "position_type" << (int)posi->Position
@@ -1006,6 +1010,7 @@ void SmMongoDBManager::UpdatePosition(std::shared_ptr<SmPosition> posi)
 					<< "fee" << posi->Fee
 					<< "trade_profitloss" << posi->TradePL
 					<< "average_price" << posi->AvgPrice
+					<< "current_price" << posi->CurPrice
 					<< "open_profitloss" << posi->OpenPL
 					<< close_document << finalize);
 			}
@@ -1018,6 +1023,8 @@ void SmMongoDBManager::UpdatePosition(std::shared_ptr<SmPosition> posi)
 		}
 		else { // 포지션이 없을 때는 삽입해 준다.
 			bsoncxx::document::value doc_value = builder
+				<< "created_date" << posi->CreatedDate
+				<< "created_time" << posi->CreatedTime
 				<< "account_no" << posi->AccountNo
 				<< "symbol_code" << posi->SymbolCode
 				<< "position_type" << (int)posi->Position
@@ -1025,6 +1032,7 @@ void SmMongoDBManager::UpdatePosition(std::shared_ptr<SmPosition> posi)
 				<< "fee" << posi->Fee
 				<< "trade_profitloss" << posi->TradePL
 				<< "average_price" << posi->AvgPrice
+				<< "current_price" << posi->CurPrice
 				<< "open_profitloss" << posi->OpenPL
 				<< bsoncxx::builder::stream::finalize;
 			auto res = db["position_list"].insert_one(std::move(doc_value));
@@ -1201,6 +1209,47 @@ void SmMongoDBManager::OnFilledOrder(std::shared_ptr<SmOrder> order)
 				<< "order_state" << (int)order->OrderState
 				<< close_document << finalize);
 		}
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+}
+
+void SmMongoDBManager::ChangeOrderState(std::shared_ptr<SmOrder> order)
+{
+	if (!order)
+		return;
+
+	try
+	{
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		mongocxx::collection coll = db["order_list"];
+
+		builder::stream::document builder{};
+		// 주문은 날짜와 주문번호로 구분을 한다.
+		// 날짜가 변경되면 주문은 다시 시작된다.
+		bsoncxx::stdx::optional<bsoncxx::document::value> found_order =
+			coll.find_one(bsoncxx::builder::stream::document{}
+				<< "order_date" << order->OrderDate
+				<< "order_no" << order->OrderNo
+				<< finalize);
+		if (found_order) {
+			coll.update_one(bsoncxx::builder::stream::document{}
+				<< "order_date" << order->OrderDate
+				<< "order_no" << order->OrderNo
+				<< finalize,
+				bsoncxx::builder::stream::document{} << "$set"
+				<< open_document
+				<< "order_state" << (int)order->OrderState
+				<< "remain_qty" << order->RemainQty
+				<< close_document << finalize);
+		}
+
 	}
 	catch (std::exception e) {
 		std::string error;
@@ -1542,15 +1591,14 @@ std::vector<std::shared_ptr<SmPosition>> SmMongoDBManager::GetPositionList(std::
 			posi->CreatedDate = json_object["created_date"];
 			posi->CreatedTime = json_object["created_time"];
 			posi->SymbolCode = json_object["symbol_code"];
-			posi->FundName = json_object["fund_name"];
 			posi->AccountNo = json_object["account_no"];
 			posi->Position = json_object["position_type"];
 			posi->OpenQty = json_object["open_qty"];
 			posi->Fee =json_object["fee"];
-			posi->TradePL = json_object["trade_pl"];
-			posi->AvgPrice = json_object["avg_price"];
-			posi->CurPrice = json_object["cur_price"];
-			posi->OpenPL = json_object["open_pl"];
+			posi->TradePL = json_object["trade_profitloss"];
+			posi->AvgPrice = json_object["average_price"];
+			posi->CurPrice = json_object["current_price"];
+			posi->OpenPL = json_object["open_profitloss"];
 			
 			posi_list.push_back(posi);
 		}
@@ -1591,15 +1639,14 @@ std::vector<std::shared_ptr<SmPosition>> SmMongoDBManager::GetPositionList(std::
 			posi->CreatedDate = json_object["created_date"];
 			posi->CreatedTime = json_object["created_time"];
 			posi->SymbolCode = json_object["symbol_code"];
-			posi->FundName = json_object["fund_name"];
 			posi->AccountNo = json_object["account_no"];
 			posi->Position = json_object["position_type"];
 			posi->OpenQty = json_object["open_qty"];
 			posi->Fee = json_object["fee"];
-			posi->TradePL = json_object["trade_pl"];
-			posi->AvgPrice = json_object["avg_price"];
-			posi->CurPrice = json_object["cur_price"];
-			posi->OpenPL = json_object["open_pl"];
+			posi->TradePL = json_object["trade_profitloss"];
+			posi->AvgPrice = json_object["average_price"];
+			posi->CurPrice = json_object["current_price"];
+			posi->OpenPL = json_object["open_profitloss"];
 
 			posi_list.push_back(posi);
 		}
@@ -1640,15 +1687,14 @@ std::shared_ptr<SmPosition> SmMongoDBManager::GetPosition(std::string account_no
 			posi->CreatedDate = json_object["created_date"];
 			posi->CreatedTime = json_object["created_time"];
 			posi->SymbolCode = json_object["symbol_code"];
-			posi->FundName = json_object["fund_name"];
 			posi->AccountNo = json_object["account_no"];
 			posi->Position = json_object["position_type"];
 			posi->OpenQty = json_object["open_qty"];
 			posi->Fee = json_object["fee"];
-			posi->TradePL = json_object["trade_pl"];
-			posi->AvgPrice = json_object["avg_price"];
-			posi->CurPrice = json_object["cur_price"];
-			posi->OpenPL = json_object["open_pl"];
+			posi->TradePL = json_object["trade_profitloss"];
+			posi->AvgPrice = json_object["average_price"];
+			posi->CurPrice = json_object["current_price"];
+			posi->OpenPL = json_object["open_profitloss"];
 
 			return posi;
 		}
@@ -1686,15 +1732,14 @@ std::shared_ptr<SmPosition> SmMongoDBManager::GetPosition(std::string date, std:
 			posi->CreatedDate = json_object["created_date"];
 			posi->CreatedTime = json_object["created_time"];
 			posi->SymbolCode = json_object["symbol_code"];
-			posi->FundName = json_object["fund_name"];
 			posi->AccountNo = json_object["account_no"];
 			posi->Position = json_object["position_type"];
 			posi->OpenQty = json_object["open_qty"];
 			posi->Fee = json_object["fee"];
-			posi->TradePL = json_object["trade_pl"];
-			posi->AvgPrice = json_object["avg_price"];
-			posi->CurPrice = json_object["cur_price"];
-			posi->OpenPL = json_object["open_pl"];
+			posi->TradePL = json_object["trade_profitloss"];
+			posi->AvgPrice = json_object["average_price"];
+			posi->CurPrice = json_object["current_price"];
+			posi->OpenPL = json_object["open_profitloss"];
 
 			return posi;
 		}

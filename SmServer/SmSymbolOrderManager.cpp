@@ -59,10 +59,10 @@ void SmSymbolOrderManager::OnOrderFilled(std::shared_ptr<SmOrder> order)
 	// 잔고 갯수를 넣어 준다.
 	int buho = order->Position == SmPositionType::Buy ? 1 : -1;
 	order->RemainQty = order->FilledQty * buho;
-	// 포지션을 계산한다.
-	CalcPosition(order);
 	// 여기서 주문 상태를 데이터베이스에 저장해 준다.
 	SmMongoDBManager::GetInstance()->OnFilledOrder(order);
+	// 포지션을 계산한다.
+	CalcPosition(order);
 	SmOrderManager::OnOrderFilled(order);
 }
 
@@ -194,9 +194,13 @@ int SmSymbolOrderManager::CalcRemain(std::shared_ptr<SmOrder> newOrder)
 			newOrder->RemainQty = 0;
 			oldOrder->RemainQty = 0;
 			newOrder->OrderState = SmOrderState::Settled;
+			// 여기서 주문 상태를 데이터베이스에 저장해 준다.
+			SmMongoDBManager::GetInstance()->ChangeOrderState(newOrder);
 			// 새로운 주문이 청산 시킨 주문은 목록에 넣어 준다.
 			newOrder->SettledOrders.push_back(oldOrder->OrderNo);
 			oldOrder->OrderState = SmOrderState::Settled;
+			// 여기서 주문 상태를 데이터베이스에 저장해 준다.
+			SmMongoDBManager::GetInstance()->ChangeOrderState(oldOrder);
 			// 잔고에서 지워준다.
 			_RemainOrderMap.erase(it);
 			break;
@@ -209,6 +213,8 @@ int SmSymbolOrderManager::CalcRemain(std::shared_ptr<SmOrder> newOrder)
 			// 새로운 주문이 청산 시킨 주문은 목록에 넣어 준다.
 			newOrder->SettledOrders.push_back(oldOrder->OrderNo);
 			oldOrder->OrderState = SmOrderState::Settled;
+			// 여기서 주문 상태를 데이터베이스에 저장해 준다.
+			SmMongoDBManager::GetInstance()->ChangeOrderState(oldOrder);
 			// 기존 주문을 목록에서 지워준다.
 			it = _RemainOrderMap.erase(it);
 			// iterator를 하나 후퇴시킨다.
@@ -220,6 +226,8 @@ int SmSymbolOrderManager::CalcRemain(std::shared_ptr<SmOrder> newOrder)
 			newOrder->RemainQty = 0;
 			oldOrder->RemainQty += newOrder->RemainQty;
 			newOrder->OrderState = SmOrderState::Settled;
+			// 여기서 주문 상태를 데이터베이스에 저장해 준다.
+			SmMongoDBManager::GetInstance()->ChangeOrderState(newOrder);
 			break;
 		}
 	}

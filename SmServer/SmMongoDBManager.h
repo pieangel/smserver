@@ -46,6 +46,7 @@ public:
 	void AddOrder(std::shared_ptr<SmOrder> order);
 	void OnAcceptedOrder(std::shared_ptr<SmOrder> order);
 	void OnFilledOrder(std::shared_ptr<SmOrder> order);
+	void ChangeOrderState(std::shared_ptr<SmOrder> order);
 	std::vector<std::shared_ptr<SmOrder>> GetAcceptedOrderList(std::string account_no);
 	std::vector<std::shared_ptr<SmOrder>> GetFilledOrderList(std::string account_no);
 	std::vector<std::shared_ptr<SmOrder>> GetOrderList(std::string account_no);

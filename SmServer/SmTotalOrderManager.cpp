@@ -371,6 +371,8 @@ void SmTotalOrderManager::SendConfirmModify(std::shared_ptr<SmOrder> order)
 	std::shared_ptr<SmOrder> oriOrder = FindOrder(order->OriOrderNo);
 	// 원래 주문 상태를 변경한다.
 	oriOrder->OrderState = SmOrderState::ConfirmModify;
+	// 여기서 주문 상태를 데이터베이스에 저장해 준다.
+	SmMongoDBManager::GetInstance()->ChangeOrderState(oriOrder);
 	SendResponse(order);
 }
 
@@ -382,6 +384,8 @@ void SmTotalOrderManager::SendConfirmCancel(std::shared_ptr<SmOrder> order)
 	std::shared_ptr<SmOrder> oriOrder = FindOrder(order->OriOrderNo);
 	// 원래 주문 상태를 변경한다.
 	oriOrder->OrderState = SmOrderState::ConfirmCancel;
+	// 여기서 주문 상태를 데이터베이스에 저장해 준다.
+	SmMongoDBManager::GetInstance()->ChangeOrderState(oriOrder);
 	SendResponse(order);
 }
 
