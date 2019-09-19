@@ -326,6 +326,7 @@ void SmMongoDBManager::SendChartDataFromDB(SmChartDataRequest&& data_req)
 		// 데이터가 없거나 요청한 갯수보다 적으면 서버에 요청을 한다.
 		if (data_count == 0 || data_count < data_req.count) {
 			if (tsMgr->SisiSocket()) {
+				SendChartData(data_req);
 				tsMgr->ResendChartDataRequest(data_req);
 				return;
 			}
@@ -339,6 +340,7 @@ void SmMongoDBManager::SendChartDataFromDB(SmChartDataRequest&& data_req)
 		// 최신 데이터가 현재 날짜와 같지 않으면 서버에 요청한다.
 		if (!found_symbol) {
 			if (tsMgr->SisiSocket()) {
+				SendChartData(data_req);
 				tsMgr->ResendChartDataRequest(data_req);
 				return;
 			}

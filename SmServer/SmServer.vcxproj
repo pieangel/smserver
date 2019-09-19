@@ -335,6 +335,7 @@
     <ClCompile Include="SmGlobal.cpp" />
     <ClCompile Include="SmMongoDBManager.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="SmOrderManager.cpp" />
     <ClCompile Include="SmAccountOrderManager.cpp" />
@@ -342,6 +343,7 @@
     <ClCompile Include="SmServieReqNumGenerator.cpp" />
     <ClCompile Include="SmSessionNumberGenerator.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="SmSymbolOrderManager.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
@@ -367,6 +369,7 @@
     <ClCompile Include="SmMarketManager.cpp" />
     <ClCompile Include="SmProtocolManager.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="SmRealtimeRegisterManager.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
@@ -401,6 +404,7 @@
     </ClCompile>
     <ClCompile Include="SmTimeSeriesServiceManager.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="SmTotalOrderManager.cpp" />
     <ClCompile Include="SmTotalPositionManager.cpp" />
