@@ -62,6 +62,8 @@ struct SmChartDataItem {
 	std::string symbolCode;
 	SmChartType chartType;
 	int cycle = 0;
+	int total_count = 0;
+	int current_count = 0;
 	std::string date;
 	std::string time;
 	int o = 0;

@@ -107,10 +107,10 @@ void SmTimeSeriesServiceManager::SendChartData(SmChartDataRequest data_req, std:
 	for (auto it = data.begin(); it != data.end(); ++it) {
 		end_index = i;
 		SmChartDataItem srcItem = *it;
-		std::string time = srcItem.date + srcItem.time;
-		std::string local_date_time = VtStringUtil::GetLocalTimeByDatetimeString(time);
+		std::string date_time = srcItem.date + srcItem.time;
+		std::string local_date_time = VtStringUtil::GetLocalTimeByDatetimeString(date_time);
 		SmSimpleChartDataItem item;
-		item.date_time = local_date_time;
+		item.date_time = date_time;
 		item.c = srcItem.c;
 		item.h = srcItem.h;
 		item.l = srcItem.l;
@@ -135,8 +135,12 @@ void SmTimeSeriesServiceManager::SendChartData(SmChartDataRequest data_req, SmCh
 {
 	json send_object;
 	send_object["res_id"] = SmProtocol::res_chart_data_onebyone;
+	send_object["total_count"] = item.total_count;
+	send_object["current_count"] = item.current_count;
 	send_object["data_key"] = data_req.GetDataKey();
 	send_object["symbol_code"] = data_req.symbolCode;
+	send_object["chart_type"] = data_req.chartType;
+	send_object["cycle"] = data_req.cycle;
 	send_object["date_time"] = item.date + item.time;
 	send_object["o"] = item.o;
 	send_object["h"] = item.h;

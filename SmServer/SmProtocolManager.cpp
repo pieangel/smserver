@@ -640,6 +640,8 @@ void SmProtocolManager::OnReqRegisterUser(nlohmann::json& obj)
 	// 등록 결과 메시지를 보낸다.
 	obj["res_id"] = (int)SmProtocol::res_register_user;
 	obj["message"] = "Registered a user successfully!";
+	obj["user_id"] = user_id;
+	obj["password"] = password;
 	std::string content = obj.dump(4);
 	SmGlobal* global = SmGlobal::GetInstance();
 	std::shared_ptr<SmSessionManager> sessMgr = global->GetSessionManager();

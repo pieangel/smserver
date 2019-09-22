@@ -326,7 +326,7 @@ void SmMongoDBManager::SendChartDataFromDB(SmChartDataRequest&& data_req)
 		// 데이터가 없거나 요청한 갯수보다 적으면 서버에 요청을 한다.
 		if (data_count == 0 || data_count < data_req.count) {
 			if (tsMgr->SisiSocket()) {
-				SendChartData(data_req);
+				SendChartDataOneByOne(data_req);
 				tsMgr->ResendChartDataRequest(data_req);
 				return;
 			}
@@ -340,13 +340,13 @@ void SmMongoDBManager::SendChartDataFromDB(SmChartDataRequest&& data_req)
 		// 최신 데이터가 현재 날짜와 같지 않으면 서버에 요청한다.
 		if (!found_symbol) {
 			if (tsMgr->SisiSocket()) {
-				SendChartData(data_req);
+				SendChartDataOneByOne(data_req);
 				tsMgr->ResendChartDataRequest(data_req);
 				return;
 			}
 		}
 		
-		SendChartData(data_req);
+		SendChartDataOneByOne(data_req);
 	}
 	catch (std::exception e) {
 		std::string error;
@@ -371,13 +371,20 @@ void SmMongoDBManager::SendChartDataOneByOne(SmChartDataRequest data_req)
 		mongocxx::options::find opts;
 		// 최신것이 앞에 오도록 한다.
 		opts.sort(make_document(kvp("date_time", -1)));
+		
+		auto item_count = db[data_req.GetDataKey()].count_documents({});
+		if (item_count == 0)
+			return;
+
+		int limit = item_count > data_req.count ? data_req.count : item_count;
 		// 과거의 것이 앞에 오도록 한다.
 		//opts.sort(make_document(kvp("date_time", 1)));
-		opts.limit(data_req.count);
+		opts.limit(limit);
+
 		mongocxx::cursor cursor = coll.find({}, opts);
-		//int total_count = std::distance(cursor.begin(), cursor.end());
 		SmChartDataManager* chartDataMgr = SmChartDataManager::GetInstance();
 		std::shared_ptr<SmChartData> chart_data = chartDataMgr->AddChartData(data_req);
+		int count = 1;
 		for (auto&& doc : cursor) {
 			std::string object = bsoncxx::to_json(doc);
 			auto json_object = json::parse(object);
@@ -391,6 +398,8 @@ void SmMongoDBManager::SendChartDataOneByOne(SmChartDataRequest data_req)
 			int v = json_object["v"];
 
 			SmChartDataItem data;
+			data.current_count = count;
+			data.total_count = limit;
 			data.symbolCode = data_req.symbolCode;
 			data.chartType = data_req.chartType;
 			data.cycle = data_req.cycle;
@@ -403,6 +412,8 @@ void SmMongoDBManager::SendChartDataOneByOne(SmChartDataRequest data_req)
 			data.v = v;
 			SmTimeSeriesServiceManager* tsMgr = SmTimeSeriesServiceManager::GetInstance();
 			tsMgr->SendChartData(data_req, data);
+			count++;
+			
 		}
 
 		
