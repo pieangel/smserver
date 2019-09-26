@@ -4,6 +4,7 @@
 #include <vector>
 #include <set>
 #include <list>
+#include <map>
 class SmChartData
 {
 private:
@@ -15,6 +16,7 @@ private:
 	// 최신데이터가 맨 앞에 온다. 
 	// 따라서 인덱스 0이 가장 최신 데이터이다.
 	std::list<SmChartDataItem> _DataItemList;
+	std::multimap<std::string, SmChartDataItem> _DataMap;
 	// 차트를 요청하는 사용자 아이디 목록
 	std::set<std::string> _UserList;
 	void GetChartDataFromDB();
@@ -25,11 +27,19 @@ private:
 	// 등록된 사용자들에게 차트 정기 데이터를 보내준다.
 	void SendCyclicChartDataToUsers();
 public:
+	std::multimap<std::string, SmChartDataItem>& GetDataMap() {
+		return _DataMap;
+	}
+	void AddData(SmChartDataItem& data_item);
 	std::list<SmChartDataItem>& GetDataItemList() {
 		return _DataItemList;
 	}
 	size_t GetChartDataCount() {
 		return _DataItemList.size();
+	}
+
+	size_t GetDataCount() {
+		return _DataMap.size();
 	}
 	// 대기시간, 사이클
 	std::pair<int, int> GetCycleByTimeDif();
@@ -63,6 +73,15 @@ public:
 		key.append(std::to_string((int)_ChartType));
 		key.append(":");
 		key.append(std::to_string(_Cycle));
+		return key;
+	}
+
+	static std::string MakeDataKey(std::string symbol_code, int chart_type, int cycle) {
+		std::string key = symbol_code;
+		key.append(":");
+		key.append(std::to_string(chart_type));
+		key.append(":");
+		key.append(std::to_string(cycle));
 		return key;
 	}
 	int DataQueueSize() const { return _DataQueueSize; }

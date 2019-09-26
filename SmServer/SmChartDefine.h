@@ -66,6 +66,7 @@ struct SmChartDataItem {
 	int current_count = 0;
 	std::string date;
 	std::string time;
+	std::string date_time;
 	int o = 0;
 	int h = 0;
 	int l = 0;

@@ -50,6 +50,21 @@ std::shared_ptr<SmChartData> SmChartDataManager::AddChartData(SmChartDataItem da
 	return chartData;
 }
 
+std::shared_ptr<SmChartData> SmChartDataManager::AddChartData(std::string symbol_code, int chart_type, int cycle)
+{
+	std::string data_key = SmChartData::MakeDataKey(symbol_code, chart_type, cycle);
+	std::shared_ptr<SmChartData> chartData = FindChartData(data_key);
+	if (!chartData) {
+		chartData = std::make_shared<SmChartData>();
+		chartData->SymbolCode(symbol_code);
+		chartData->ChartType((SmChartType)chart_type);
+		chartData->Cycle(cycle);
+		_ChartDataMap[data_key] = chartData;
+	}
+
+	return chartData;
+}
+
 std::shared_ptr<SmChartData> SmChartDataManager::FindChartData(std::string data_key)
 {
 	auto it = _ChartDataMap.find(data_key);

@@ -39,6 +39,7 @@
 #include "SmTotalPositionManager.h"
 
 #include "Json/json.hpp"
+#include <windows.h>
 
 using namespace nlohmann;
 
@@ -52,6 +53,12 @@ using bsoncxx::builder::stream::document;
 using bsoncxx::builder::stream::finalize;
 using bsoncxx::builder::stream::open_array;
 using bsoncxx::builder::stream::open_document;
+
+#define DebugOut( s )            \
+{                             \
+   std::ostringstream os_;    \
+   os_ << s;                   \
+}
 
 SmMongoDBManager::SmMongoDBManager()
 {
@@ -73,6 +80,11 @@ SmMongoDBManager::~SmMongoDBManager()
 	if (_ConnPool) {
 		delete _ConnPool;
 		_ConnPool = nullptr;
+	}
+
+	if (_URI) {
+		delete _URI;
+		_URI = nullptr;
 	}
 }
 
@@ -314,19 +326,12 @@ void SmMongoDBManager::SendChartDataFromDB(SmChartDataRequest&& data_req)
 
 		mongocxx::collection coll = db[data_req.GetDataKey()];
 		
-		// @begin: cpp-query-sort
-		mongocxx::options::find opts;
-		// 최신것이 앞에 오도록 한다.
-		opts.sort(make_document(kvp("date_time", -1)));
-		// 과거의 것이 앞에 오도록 한다.
-		//opts.sort(make_document(kvp("date_time", 1)));
-		opts.limit(data_req.count);
 		SmTimeSeriesServiceManager* tsMgr = SmTimeSeriesServiceManager::GetInstance();
 		long long data_count = coll.count_documents({});
 		// 데이터가 없거나 요청한 갯수보다 적으면 서버에 요청을 한다.
 		if (data_count == 0 || data_count < data_req.count) {
 			if (tsMgr->SisiSocket()) {
-				SendChartDataOneByOne(data_req);
+				//SendChartDataOneByOne(data_req);
 				tsMgr->ResendChartDataRequest(data_req);
 				return;
 			}
@@ -340,7 +345,7 @@ void SmMongoDBManager::SendChartDataFromDB(SmChartDataRequest&& data_req)
 		// 최신 데이터가 현재 날짜와 같지 않으면 서버에 요청한다.
 		if (!found_symbol) {
 			if (tsMgr->SisiSocket()) {
-				SendChartDataOneByOne(data_req);
+				//SendChartDataOneByOne(data_req);
 				tsMgr->ResendChartDataRequest(data_req);
 				return;
 			}
@@ -369,7 +374,7 @@ void SmMongoDBManager::SendChartDataOneByOne(SmChartDataRequest data_req)
 
 		// @begin: cpp-query-sort
 		mongocxx::options::find opts;
-		// 최신것이 앞에 오도록 한다.
+		
 		opts.sort(make_document(kvp("date_time", -1)));
 		
 		auto item_count = db[data_req.GetDataKey()].count_documents({});
@@ -410,6 +415,11 @@ void SmMongoDBManager::SendChartDataOneByOne(SmChartDataRequest data_req)
 			data.o = o;
 			data.c = c;
 			data.v = v;
+
+			char buffer[4096];
+			sprintf(buffer, "SendChartDataOnebyOne%s\n", date_time.c_str());
+			OutputDebugString(buffer);
+
 			SmTimeSeriesServiceManager* tsMgr = SmTimeSeriesServiceManager::GetInstance();
 			tsMgr->SendChartData(data_req, data);
 			count++;
@@ -2127,6 +2137,7 @@ void SmMongoDBManager::SaveSymbolsToDatabase()
 void SmMongoDBManager::InitDatabase()
 {
 	_Instance = new mongocxx::instance();
+	_URI = new mongocxx::uri{ "mongodb://localhost:27017/?minPoolSize=3&maxPoolSize=10" };
 	_Client = new mongocxx::client(mongocxx::uri{});
-	_ConnPool = new mongocxx::pool(mongocxx::uri{});
+	_ConnPool = new mongocxx::pool(mongocxx::uri{ "mongodb://localhost:27017/?minPoolSize=3&maxPoolSize=10" });
 }

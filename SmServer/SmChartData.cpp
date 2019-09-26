@@ -115,6 +115,17 @@ void SmChartData::SendCyclicChartDataToUsers()
 	}
 }
 
+void SmChartData::AddData(SmChartDataItem& data_item)
+{
+	_DataMap.insert(std::make_pair(data_item.date_time,data_item));
+	size_t count = _DataMap.size();
+	if (count > _DataQueueSize) {
+		// 큐의 크기를 넘어서면 맨 과거 데이터를 제거해 준다.
+		auto it = _DataMap.begin();
+		_DataMap.erase(it);
+	}
+}
+
 std::pair<int, int> SmChartData::GetCycleByTimeDif()
 {
 	if (_DataItemList.size() < 2)

@@ -11,6 +11,7 @@ namespace mongocxx
 		class instance;
 		class client;
 		class pool;
+		class uri;
 	MONGOCXX_INLINE_NAMESPACE_END
 };
 
@@ -77,6 +78,7 @@ private:
 	mongocxx::instance* _Instance = nullptr;
 	mongocxx::client* _Client = nullptr;
 	mongocxx::pool* _ConnPool = nullptr;
+	mongocxx::uri* _URI = nullptr;
 	int _SendDataSplitSize = 20;
 	bool _SendingHoga = false;
 	std::mutex _mutex;

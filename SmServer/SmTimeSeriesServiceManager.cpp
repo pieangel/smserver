@@ -154,25 +154,61 @@ void SmTimeSeriesServiceManager::SendChartData(SmChartDataRequest data_req, SmCh
 	sessMgr->send(data_req.session_id, content);
 }
 
+void SmTimeSeriesServiceManager::SendChartData(int session_id, SmChartDataItem item)
+{
+	json send_object;
+	send_object["res_id"] = SmProtocol::res_chart_data_onebyone;
+	send_object["total_count"] = item.total_count;
+	send_object["current_count"] = item.current_count;
+	send_object["data_key"] = item.GetDataKey();
+	send_object["symbol_code"] = item.symbolCode;
+	send_object["chart_type"] = item.chartType;
+	send_object["cycle"] = item.cycle;
+	send_object["date_time"] = item.date_time;
+	send_object["o"] = item.o;
+	send_object["h"] = item.h;
+	send_object["l"] = item.l;
+	send_object["c"] = item.c;
+	send_object["v"] = item.v;
+
+	std::string content = send_object.dump();
+	SmGlobal* global = SmGlobal::GetInstance();
+	std::shared_ptr<SmSessionManager> sessMgr = global->GetSessionManager();
+	sessMgr->send(session_id, content);
+}
+
+void SmTimeSeriesServiceManager::SendChartData(int session_id, std::shared_ptr<SmChartData> chart_data)
+{
+	if (!chart_data)
+		return;
+	std::multimap<std::string, SmChartDataItem>& dataMap = chart_data->GetDataMap();
+	int total_count = (int)dataMap.size();
+	int current_count = 1;
+	for (auto element : dataMap) {
+		SmChartDataItem item = element.second;
+		item.total_count = total_count;
+		item.current_count = current_count++;
+		SendChartData(session_id, item);
+	}
+}
+
 void SmTimeSeriesServiceManager::ResendChartDataRequest(SmChartDataRequest req)
 {
 	int service_req_id = _SvcNoGen.GetID();
 	_HistoryDataReqMap[service_req_id] = req;
 	json send_object;
 	send_object["req_id"] = (int)SmProtocol::req_chart_data_from_main_server;
-	send_object["user_id"] = req.user_id;
-	send_object["service_req_id"] = service_req_id;
 	send_object["req_session_id"] = req.session_id;
 	send_object["symbol_code"] = req.symbolCode;
 	send_object["chart_type"] = (int)req.chartType;
 	send_object["cycle"] = req.cycle;
 	send_object["count"] = req.count;
 	std::string content = send_object.dump(4);
-	char buffer[50];
-	int n, a = 5, b = 3;
-	n = sprintf(buffer, "%d plus %d is %d", a, b, a + b);
+	char buffer[512];
+	sprintf(buffer, "%s", req.symbolCode.c_str());
 
 	OutputDebugString(buffer);
+	LOG_F(INFO, "ResendChartDataRequest", buffer);
 	SendRequestToSiseServer(content);
 }
 

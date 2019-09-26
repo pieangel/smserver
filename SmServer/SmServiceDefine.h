@@ -126,5 +126,6 @@ enum class SmProtocol {
 	// 주문 목록 요청
 	req_order_list,
 	// 주문 목록 응답
-	res_order_list
+	res_order_list,
+	req_chart_data_resend_onebyone
 };

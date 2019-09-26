@@ -11,6 +11,7 @@ public:
 	SmChartDataManager();
 	~SmChartDataManager();
 	std::shared_ptr<SmChartData> AddChartData(SmChartDataRequest data_req);
+	std::shared_ptr<SmChartData> AddChartData(std::string symbol_code, int chart_type, int cycle);
 	void AddChartData(std::shared_ptr<SmChartData> chart_data);
 	std::shared_ptr<SmChartData> FindChartData(std::string data_key);
 	std::shared_ptr<SmChartData> AddChartData(SmChartDataItem data_item);

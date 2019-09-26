@@ -151,6 +151,9 @@ void SmProtocolManager::ParseMessage(std::string message, SmWebsocketSession* so
 		case SmProtocol::req_order_list:
 			OnReqOrderList(json_object);
 			break;
+		case SmProtocol::req_chart_data_resend_onebyone:
+			OnReqResendChartDataOneByOne(json_object);
+			break;
 		default:
 			break;
 		}
@@ -226,6 +229,53 @@ void SmProtocolManager::SendResult(int session_id, SmProtocol protocol, int resu
 void SmProtocolManager::SendResult(int session_id, int result_code, std::string result_msg)
 {
 
+}
+/// <summary>
+/// 클라이언트에서 차트 데이터를 하나씩 보낼때 대응하는 함수
+/// 차트 리스트에 저장하고 바로 앱으로 보낸다.
+/// </summary>
+/// <param name="obj"></param>
+void SmProtocolManager::OnReqResendChartDataOneByOne(nlohmann::json& obj)
+{
+	int req_session_id = obj["req_session_id"];
+	std::string symbol_code = obj["symbol_code"];
+	SmChartType chart_type = (SmChartType)obj["chart_type"];
+	int cycle = obj["cycle"];
+	int current_count = obj["current_count"];
+	int total_count = obj["total_count"];
+	std::string date = obj["date"];
+	std::string time = obj["time"];
+	int o = obj["o"];
+	int h = obj["h"];
+	int l = obj["l"];
+	int c = obj["c"];
+	int v = obj["v"];
+
+	SmChartDataItem data;
+	data.current_count = current_count;
+	data.total_count = total_count;
+	data.symbolCode = symbol_code;
+	data.chartType = chart_type;
+	data.cycle = cycle;
+	data.date = date;
+	data.time = time;
+	data.date_time = date + time;
+	data.h = h;
+	data.l = l;
+	data.o = o;
+	data.c = c;
+	data.v = v;
+
+	char buffer[4096];
+	sprintf(buffer, "SendChartDataOnebyOne%s : %s\n", date.c_str() , time.c_str());
+	OutputDebugString(buffer);
+
+	// 차트데이터에 추가한다.
+	std::shared_ptr<SmChartData> chart_data = SmChartDataManager::GetInstance()->AddChartData(data);
+	chart_data->AddData(data);
+
+	SmTimeSeriesServiceManager* tsMgr = SmTimeSeriesServiceManager::GetInstance();
+	tsMgr->SendChartData(req_session_id, data);
 }
 
 void SmProtocolManager::OnRegisterSymbol(nlohmann::json& obj)
@@ -382,17 +432,22 @@ void SmProtocolManager::OnReqChartData(nlohmann::json& obj, SmWebsocketSession* 
 		int chart_type = obj["chart_type"];
 		int cycle = obj["cycle"];
 		int count = obj["count"];
-		SmChartDataRequest req;
-		req.reqType = SmChartDataReqestType::FIRST;
-		req.user_id = id;
-		req.session_id = socket->SessionID();
-		req.symbolCode = symCode;
-		req.chartType = (SmChartType)chart_type;
-		req.cycle = cycle;
-		req.count = count;
-		req.next = 0;
-		SmMongoDBManager* mongoMgr = SmMongoDBManager::GetInstance();
-		mongoMgr->SendChartDataFromDB(std::move(req));
+		std::string data_key = SmChartData::MakeDataKey(symCode, chart_type, cycle);
+		std::shared_ptr<SmChartData> chart_data = SmChartDataManager::GetInstance()->AddChartData(symCode, chart_type, cycle);
+		size_t data_count = chart_data->GetDataCount();
+		// 데이터가 없으면 증권사 서버에 요청을 한다.
+		if (data_count == 0) {
+			SmChartDataRequest req;
+			req.symbolCode = symCode;
+			req.chartType = (SmChartType)chart_type;
+			req.cycle = cycle;
+			req.count = count;
+			req.session_id = socket->SessionID();
+			SmTimeSeriesServiceManager::GetInstance()->ResendChartDataRequest(req);
+		} 
+		else { // 데이터가 있으면 바로 보낸다.
+			SmTimeSeriesServiceManager::GetInstance()->SendChartData(socket->SessionID(), chart_data);
+		}
 	}
 	catch (std::exception e) {
 		std::string error = e.what();
@@ -567,7 +622,7 @@ void SmProtocolManager::OnReqChartDataResend(nlohmann::json& obj)
 	req.count = count;
 	req.next = 0;
 	SmMongoDBManager* mongoMgr = SmMongoDBManager::GetInstance();
-	mongoMgr->SendChartData(std::move(req));
+	mongoMgr->SendChartDataOneByOne(std::move(req));
 }
 
 void SmProtocolManager::OnReqUpdateQuote(nlohmann::json& obj)

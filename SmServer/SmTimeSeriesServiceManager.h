@@ -31,6 +31,8 @@ public:
 	void ResendChartDataRequest(SmChartDataRequest req);
 	void SendChartData(SmChartDataRequest data_req, std::shared_ptr<SmChartData> chart_data);
 	void SendChartData(SmChartDataRequest data_req, SmChartDataItem item);
+	void SendChartData(int session_id, SmChartDataItem item);
+	void SendChartData(int session_id, std::shared_ptr<SmChartData> chart_data);
 private:
 	SmServieReqNumGenerator _SvcNoGen;
 	void RegisterCycleChartDataRequest(SmChartDataRequest data_req);
