@@ -50,5 +50,6 @@ private:
 	void SendResult(std::string user_id, SmProtocol protocol, int result_code, std::string result_msg);
 	void SendResult(int session_id, SmProtocol protocol, int result_code, std::string result_msg);
 	void OnReqResendChartDataOneByOne(nlohmann::json& obj);
+	void OnReqCycleDataResendOneByOne(nlohmann::json& obj);
 };
 

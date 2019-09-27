@@ -46,7 +46,7 @@ void SmProtocolManager::OnMessage(std::string message, SmWebsocketSession* socke
 
 	char buffer[4096];
 	sprintf(buffer, "OnMessage%s\n", message.c_str());
-	OutputDebugString(buffer);
+	//OutputDebugString(buffer);
 	ParseMessage(message, socket);
 }
 
@@ -153,6 +153,9 @@ void SmProtocolManager::ParseMessage(std::string message, SmWebsocketSession* so
 			break;
 		case SmProtocol::req_chart_data_resend_onebyone:
 			OnReqResendChartDataOneByOne(json_object);
+			break;
+		case SmProtocol::req_cycle_data_resend_onebyone:
+			OnReqCycleDataResendOneByOne(json_object);
 			break;
 		default:
 			break;
@@ -274,8 +277,52 @@ void SmProtocolManager::OnReqResendChartDataOneByOne(nlohmann::json& obj)
 	std::shared_ptr<SmChartData> chart_data = SmChartDataManager::GetInstance()->AddChartData(data);
 	chart_data->AddData(data);
 
+	if (total_count == current_count) {
+		chart_data->Received(true);
+	}
+
 	SmTimeSeriesServiceManager* tsMgr = SmTimeSeriesServiceManager::GetInstance();
 	tsMgr->SendChartData(req_session_id, data);
+}
+
+void SmProtocolManager::OnReqCycleDataResendOneByOne(nlohmann::json& obj)
+{
+	std::string symbol_code = obj["symbol_code"];
+	SmChartType chart_type = (SmChartType)obj["chart_type"];
+	int cycle = obj["cycle"];
+	std::string date = obj["date"];
+	std::string time = obj["time"];
+	int o = obj["o"];
+	int h = obj["h"];
+	int l = obj["l"];
+	int c = obj["c"];
+	int v = obj["v"];
+
+	SmChartDataItem data;
+	data.symbolCode = symbol_code;
+	data.chartType = chart_type;
+	data.cycle = cycle;
+	data.date = date;
+	data.time = time;
+	data.date_time = date + time;
+	data.h = h;
+	data.l = l;
+	data.o = o;
+	data.c = c;
+	data.v = v;
+
+	char buffer[4096];
+	sprintf(buffer, "SendChartDataOnebyOne%s : %s\n", date.c_str(), time.c_str());
+	OutputDebugString(buffer);
+
+	// 차트데이터에 추가한다.
+	std::shared_ptr<SmChartData> chart_data = SmChartDataManager::GetInstance()->AddChartData(data);
+	// 최소 차트 데이터를 한번은 받은 데이터만 업데이트를 시작한다.
+	if (chart_data->GetDataCount() > 10)
+		chart_data->AddData(data);
+
+	SmTimeSeriesServiceManager* tsMgr = SmTimeSeriesServiceManager::GetInstance();
+	tsMgr->BroadcastChartData(data);
 }
 
 void SmProtocolManager::OnRegisterSymbol(nlohmann::json& obj)
@@ -444,6 +491,7 @@ void SmProtocolManager::OnReqChartData(nlohmann::json& obj, SmWebsocketSession* 
 			req.count = count;
 			req.session_id = socket->SessionID();
 			SmTimeSeriesServiceManager::GetInstance()->ResendChartDataRequest(req);
+			SmMongoDBManager::GetInstance()->SaveChartDataRequest(req);
 		} 
 		else { // 데이터가 있으면 바로 보낸다.
 			SmTimeSeriesServiceManager::GetInstance()->SendChartData(socket->SessionID(), chart_data);
@@ -676,7 +724,7 @@ void SmProtocolManager::OnReqUpdateChartData(nlohmann::json& obj)
 	req.cycle = cycle;
 	req.count = count;
 	SmMongoDBManager* mongoMgr = SmMongoDBManager::GetInstance();
-	mongoMgr->SendChartCycleData(std::move(req));
+	//mongoMgr->SendChartCycleData(std::move(req));
 }
 
 void SmProtocolManager::OnReqRegisterUser(nlohmann::json& obj)

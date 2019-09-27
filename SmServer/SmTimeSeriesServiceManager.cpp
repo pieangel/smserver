@@ -192,6 +192,27 @@ void SmTimeSeriesServiceManager::SendChartData(int session_id, std::shared_ptr<S
 	}
 }
 
+void SmTimeSeriesServiceManager::BroadcastChartData(SmChartDataItem item)
+{
+	json send_object;
+	send_object["res_id"] = SmProtocol::res_chart_cycle_data;
+	send_object["data_key"] = item.GetDataKey();
+	send_object["symbol_code"] = item.symbolCode;
+	send_object["chart_type"] = item.chartType;
+	send_object["cycle"] = item.cycle;
+	send_object["date_time"] = item.date_time;
+	send_object["o"] = item.o;
+	send_object["h"] = item.h;
+	send_object["l"] = item.l;
+	send_object["c"] = item.c;
+	send_object["v"] = item.v;
+
+	std::string content = send_object.dump();
+	SmGlobal* global = SmGlobal::GetInstance();
+	std::shared_ptr<SmSessionManager> sessMgr = global->GetSessionManager();
+	sessMgr->send(content);
+}
+
 void SmTimeSeriesServiceManager::ResendChartDataRequest(SmChartDataRequest req)
 {
 	int service_req_id = _SvcNoGen.GetID();

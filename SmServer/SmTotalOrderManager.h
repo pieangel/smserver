@@ -21,6 +21,7 @@ public:
 	void SendFilledOrderList(int session_id, std::string account_no);
 	// 주문 목록을 최신 것 부터 보낸다.
 	void SendOrderList(int session_id, std::string account_no, int count = 50);
+	void SendResponse(std::shared_ptr<SmOrder> order, SmProtocol protocol);
 private:
 	std::shared_ptr<SmOrder> CreateOrder();
 	void OnOrderNew(std::shared_ptr<SmOrder> order);
@@ -29,7 +30,6 @@ private:
 	void CheckFilled(std::shared_ptr<SmOrder> order);
 	void SendResponse(std::shared_ptr<SmOrder> order);
 	void SendRemain(std::shared_ptr<SmOrder> order);
-	void SendResponse(std::shared_ptr<SmOrder> order, SmProtocol protocol);
 	void SendError(SmOrderError ErrorCode);
 	void SendError(SmOrderError ErrorCode, SmOrderRequest& req);
 	void SendError(SmOrderError ErrorCode, SmOrder& order);

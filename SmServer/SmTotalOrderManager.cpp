@@ -330,7 +330,10 @@ void SmTotalOrderManager::OnOrderFilled(std::shared_ptr<SmOrder> order)
 	SmAccountOrderManager* acntOrderMgr = FindAddOrderManager(order->AccountNo);
 	acntOrderMgr->OnOrderFilled(order);
 	SmOrderManager::OnOrderFilled(order);
-	SendResponse(order, SmProtocol::res_order_filled);
+	// 체결된 주문만 보낸다. 청산된 주문은 이미 처리되었음.
+	if (order->OrderState == SmOrderState::Filled)
+		SendResponse(order, SmProtocol::res_order_filled);
+	// 잔고를 보낸다.
 	SendRemain(order);
 }
 

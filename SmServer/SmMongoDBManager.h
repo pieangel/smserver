@@ -71,6 +71,7 @@ public:
 	void LoadAcceptedOrderList();
 	// 현재 존재하는 모든 포지션을 로드한다.
 	void LoadPositionList();
+	void SaveChartDataRequest(SmChartDataRequest req);
 private:
 	void SaveMarketsToDatabase();
 	void SaveSymbolsToDatabase();

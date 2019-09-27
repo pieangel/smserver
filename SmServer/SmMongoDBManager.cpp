@@ -37,7 +37,7 @@
 #include "SmAccountManager.h"
 #include "SmTotalOrderManager.h"
 #include "SmTotalPositionManager.h"
-
+#include "SmOrderNumberGenerator.h"
 #include "Json/json.hpp"
 #include <windows.h>
 
@@ -1847,6 +1847,7 @@ void SmMongoDBManager::LoadFilledOrderList()
 			order->SymbolCode = json_object["symbol_code"];
 			order->OrderPrice = json_object["order_price"];
 			order->OrderNo = json_object["order_no"];
+			SmOrderNumberGenerator::SetID(order->OrderNo);
 			order->OrderAmount = json_object["order_amount"];
 			order->OriOrderNo = json_object["ori_order_no"];
 			order->FilledDate = json_object["filled_date"];
@@ -1903,6 +1904,7 @@ void SmMongoDBManager::LoadAcceptedOrderList()
 			order->SymbolCode = json_object["symbol_code"];
 			order->OrderPrice = json_object["order_price"];
 			order->OrderNo = json_object["order_no"];
+			SmOrderNumberGenerator::SetID(order->OrderNo);
 			order->OrderAmount = json_object["order_amount"];
 			order->OriOrderNo = json_object["ori_order_no"];
 			order->FilledDate = json_object["filled_date"];
@@ -1969,6 +1971,41 @@ void SmMongoDBManager::LoadPositionList()
 			posi->OpenPL = json_object["open_pl"];
 
 			tpMgr->AddPosition(posi);
+		}
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+}
+
+void SmMongoDBManager::SaveChartDataRequest(SmChartDataRequest req)
+{
+	try
+	{
+		//std::lock_guard<std::mutex> lock(_mutex);
+
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		// 먼저 시장이 있는지 검색한다. 
+		// 그리고 시장 속에 상품이 있는지 검색한다.
+		mongocxx::collection coll = db["chart_data_request"];
+
+		builder::stream::document builder{};
+
+		bsoncxx::stdx::optional<bsoncxx::document::value> fount_no =
+			coll.find_one(bsoncxx::builder::stream::document{} << "symbol_code" << req.symbolCode << "chart_type" << (int)req.chartType << "chart_cycle" << req.cycle << finalize);
+		if (!fount_no)
+		{
+			bsoncxx::document::value doc_value = builder
+				<< "symbol_code" << req.symbolCode
+				<< "chart_type" << (int)req.chartType
+				<< "chart_cycle" << req.cycle
+				<< bsoncxx::builder::stream::finalize;
+			auto res = db["chart_data_request"].insert_one(std::move(doc_value));
 		}
 	}
 	catch (std::exception e) {

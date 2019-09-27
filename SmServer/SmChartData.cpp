@@ -117,6 +117,16 @@ void SmChartData::SendCyclicChartDataToUsers()
 
 void SmChartData::AddData(SmChartDataItem& data_item)
 {
+	auto it = _DataMap.find(data_item.date_time);
+	if (it != _DataMap.end()) {
+		SmChartDataItem& data = it->second;
+		data.c = data_item.c;
+		data.o = data_item.o;
+		data.h = data_item.h;
+		data.l = data_item.l;
+		data.v = data_item.v;
+		return;
+	}
 	_DataMap.insert(std::make_pair(data_item.date_time,data_item));
 	size_t count = _DataMap.size();
 	if (count > _DataQueueSize) {

@@ -62,7 +62,12 @@ send(std::string message)
 		//for (auto p : sessions_)
 		//	v.emplace_back(p->weak_from_this());
 		for (auto it = _session_map.begin(); it != _session_map.end(); ++it) {
-			v.emplace_back(it->second->weak_from_this());
+			// 시세 소켓과 다른 것들에게만 메시지를 보낸다.
+			SmTimeSeriesServiceManager* tsMgr = SmTimeSeriesServiceManager::GetInstance();
+			if (tsMgr->SisiSocket() &&
+				tsMgr->SisiSocket()->SessionID() != it->second->SessionID()) {
+				v.emplace_back(it->second->weak_from_this());
+			}
 		}
 	}
 

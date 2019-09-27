@@ -10,6 +10,8 @@
 #include "SmTotalPositionManager.h"
 #include "Util/VtStringUtil.h"
 #include "SmMongoDBManager.h"
+#include "SmTotalOrderManager.h"
+#include "SmServiceDefine.h"
 SmSymbolOrderManager::SmSymbolOrderManager()
 {
 
@@ -199,6 +201,10 @@ int SmSymbolOrderManager::CalcRemain(std::shared_ptr<SmOrder> newOrder)
 			// 새로운 주문이 청산 시킨 주문은 목록에 넣어 준다.
 			newOrder->SettledOrders.push_back(oldOrder->OrderNo);
 			oldOrder->OrderState = SmOrderState::Settled;
+			// 청산 주문 메시지를 보낸다.
+			SmTotalOrderManager::GetInstance()->SendResponse(oldOrder, SmProtocol::res_order_settled);
+			// 청산 주문 메시지를 보낸다.
+			SmTotalOrderManager::GetInstance()->SendResponse(newOrder, SmProtocol::res_order_settled);
 			// 여기서 주문 상태를 데이터베이스에 저장해 준다.
 			SmMongoDBManager::GetInstance()->ChangeOrderState(oldOrder);
 			// 잔고에서 지워준다.
@@ -213,6 +219,8 @@ int SmSymbolOrderManager::CalcRemain(std::shared_ptr<SmOrder> newOrder)
 			// 새로운 주문이 청산 시킨 주문은 목록에 넣어 준다.
 			newOrder->SettledOrders.push_back(oldOrder->OrderNo);
 			oldOrder->OrderState = SmOrderState::Settled;
+			// 청산 주문 메시지를 보낸다.
+			SmTotalOrderManager::GetInstance()->SendResponse(oldOrder, SmProtocol::res_order_settled);
 			// 여기서 주문 상태를 데이터베이스에 저장해 준다.
 			SmMongoDBManager::GetInstance()->ChangeOrderState(oldOrder);
 			// 기존 주문을 목록에서 지워준다.
@@ -226,6 +234,8 @@ int SmSymbolOrderManager::CalcRemain(std::shared_ptr<SmOrder> newOrder)
 			newOrder->RemainQty = 0;
 			oldOrder->RemainQty += newOrder->RemainQty;
 			newOrder->OrderState = SmOrderState::Settled;
+			// 청산 주문 메시지를 보낸다.
+			SmTotalOrderManager::GetInstance()->SendResponse(oldOrder, SmProtocol::res_order_settled);
 			// 여기서 주문 상태를 데이터베이스에 저장해 준다.
 			SmMongoDBManager::GetInstance()->ChangeOrderState(newOrder);
 			break;
