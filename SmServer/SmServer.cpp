@@ -155,7 +155,7 @@ BOOL CSmServerApp::InitInstance()
 	CString path = iniFileName;
 	CString fileName = path.Left(path.ReverseFind('\\') + 1);
 	fileName = fileName += "HDFCommAgent.ocx";
-	RegisterOCX(fileName);
+	//RegisterOCX(fileName);
 
 	// AfxInitRichEdit2() is required to use RichEdit control
 	// AfxInitRichEdit2();
