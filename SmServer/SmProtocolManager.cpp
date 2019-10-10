@@ -318,7 +318,7 @@ void SmProtocolManager::OnReqCycleDataResendOneByOne(nlohmann::json& obj)
 	// 차트데이터에 추가한다.
 	std::shared_ptr<SmChartData> chart_data = SmChartDataManager::GetInstance()->AddChartData(data);
 	// 최소 차트 데이터를 한번은 받은 데이터만 업데이트를 시작한다.
-	if (chart_data->GetDataCount() > 10)
+	if (chart_data->Received())
 		chart_data->AddData(data);
 
 	SmTimeSeriesServiceManager* tsMgr = SmTimeSeriesServiceManager::GetInstance();

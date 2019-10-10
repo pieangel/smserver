@@ -15,6 +15,9 @@ public:
 	void AddChartData(std::shared_ptr<SmChartData> chart_data);
 	std::shared_ptr<SmChartData> FindChartData(std::string data_key);
 	std::shared_ptr<SmChartData> AddChartData(SmChartDataItem data_item);
+	std::map<std::string, std::shared_ptr<SmChartData>> GetChartDataMap() {
+		return _ChartDataMap;
+	}
 private:
 	std::map<std::string, std::shared_ptr<SmChartData>> _ChartDataMap;
 };

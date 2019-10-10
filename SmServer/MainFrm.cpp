@@ -43,6 +43,7 @@
 #include "SmUtil.h"
 #include "SmMarket.h"
 #include "SmAccountManager.h"
+#include "CShowChartData.h"
 
 using namespace std;
 
@@ -72,6 +73,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_COMMAND(ID_SERVER_REGISTERALLRECENTSYMBOL, &CMainFrame::OnServerRegisterallrecentsymbol)
 	ON_COMMAND(ID_SERVER_DELETEMEASURE, &CMainFrame::OnServerDeletemeasure)
 	ON_COMMAND(ID_SERVER_CREATEDATABASE, &CMainFrame::OnServerCreatedatabase)
+	ON_COMMAND(ID_SERVER_SHOWCHARTDATA, &CMainFrame::OnServerShowchartdata)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -588,4 +590,11 @@ void CMainFrame::OnServerCreatedatabase()
 {
 	SmTimeSeriesDBManager* dbMgr = SmTimeSeriesDBManager::GetInstance();
 	dbMgr->CreateDataBase("abroad_future");
+}
+
+
+void CMainFrame::OnServerShowchartdata()
+{
+	CShowChartData dlg;
+	dlg.DoModal();
 }

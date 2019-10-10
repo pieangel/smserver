@@ -69,6 +69,7 @@ public:
 	afx_msg void OnServerRegisterallrecentsymbol();
 	afx_msg void OnServerDeletemeasure();
 	afx_msg void OnServerCreatedatabase();
+	afx_msg void OnServerShowchartdata();
 };
 
 

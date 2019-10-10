@@ -2,7 +2,9 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <map>
 class SmSymbol;
+class SmProductYearMonth;
 class SmCategory
 {
 public:
@@ -59,5 +61,7 @@ private:
 	/// </summary>
 	std::string _MarketCode;
 	std::vector<std::shared_ptr<SmSymbol>> _SymbolList;
+	std::map<std::string, std::shared_ptr<SmProductYearMonth>> _YearMonthMap;
+	void AddToYearMonth(std::string symbol_code, std::shared_ptr<SmSymbol> symbol);
 };
 

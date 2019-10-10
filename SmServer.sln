@@ -5,6 +5,8 @@ VisualStudioVersion = 16.0.28803.352
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SmServer", "SmServer\SmServer.vcxproj", "{513137B3-9F51-4F34-B249-EAE4F7383E43}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GridCtrl", "..\GridCtrl-master\GridCtrl-master\project\GridCtrl.vcxproj", "{A8267B22-5A84-42D0-8687-9303B193B6C9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +23,14 @@ Global
 		{513137B3-9F51-4F34-B249-EAE4F7383E43}.Release|x64.Build.0 = Release|x64
 		{513137B3-9F51-4F34-B249-EAE4F7383E43}.Release|x86.ActiveCfg = Release|Win32
 		{513137B3-9F51-4F34-B249-EAE4F7383E43}.Release|x86.Build.0 = Release|Win32
+		{A8267B22-5A84-42D0-8687-9303B193B6C9}.Debug|x64.ActiveCfg = Debug|x64
+		{A8267B22-5A84-42D0-8687-9303B193B6C9}.Debug|x64.Build.0 = Debug|x64
+		{A8267B22-5A84-42D0-8687-9303B193B6C9}.Debug|x86.ActiveCfg = Debug|Win32
+		{A8267B22-5A84-42D0-8687-9303B193B6C9}.Debug|x86.Build.0 = Debug|Win32
+		{A8267B22-5A84-42D0-8687-9303B193B6C9}.Release|x64.ActiveCfg = Release|x64
+		{A8267B22-5A84-42D0-8687-9303B193B6C9}.Release|x64.Build.0 = Release|x64
+		{A8267B22-5A84-42D0-8687-9303B193B6C9}.Release|x86.ActiveCfg = Release|Win32
+		{A8267B22-5A84-42D0-8687-9303B193B6C9}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

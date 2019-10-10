@@ -74,6 +74,9 @@
     <Filter Include="Utf">
       <UniqueIdentifier>{9aa686b7-bfa1-448c-affc-8167fbd80d59}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Grid">
+      <UniqueIdentifier>{22fec5ac-5cfa-459c-bf9d-6e32982cbd35}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SmChartServer.h">
@@ -355,6 +358,36 @@
     <ClInclude Include="SmGlobal.h">
       <Filter>Global</Filter>
     </ClInclude>
+    <ClInclude Include="Grid\CellRange.h">
+      <Filter>Grid</Filter>
+    </ClInclude>
+    <ClInclude Include="Grid\GridCell.h">
+      <Filter>Grid</Filter>
+    </ClInclude>
+    <ClInclude Include="Grid\GridCellBase.h">
+      <Filter>Grid</Filter>
+    </ClInclude>
+    <ClInclude Include="Grid\GridCtrl.h">
+      <Filter>Grid</Filter>
+    </ClInclude>
+    <ClInclude Include="Grid\GridDropTarget.h">
+      <Filter>Grid</Filter>
+    </ClInclude>
+    <ClInclude Include="Grid\InPlaceEdit.h">
+      <Filter>Grid</Filter>
+    </ClInclude>
+    <ClInclude Include="Grid\MemDC.h">
+      <Filter>Grid</Filter>
+    </ClInclude>
+    <ClInclude Include="Grid\TitleTip.h">
+      <Filter>Grid</Filter>
+    </ClInclude>
+    <ClInclude Include="CShowChartData.h">
+      <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="SmProductYearMonth.h">
+      <Filter>Market</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SmChartServer.cpp">
@@ -530,6 +563,30 @@
     </ClCompile>
     <ClCompile Include="SmGlobal.cpp">
       <Filter>Global</Filter>
+    </ClCompile>
+    <ClCompile Include="Grid\GridCell.cpp">
+      <Filter>Grid</Filter>
+    </ClCompile>
+    <ClCompile Include="Grid\GridCellBase.cpp">
+      <Filter>Grid</Filter>
+    </ClCompile>
+    <ClCompile Include="Grid\GridCtrl.cpp">
+      <Filter>Grid</Filter>
+    </ClCompile>
+    <ClCompile Include="Grid\GridDropTarget.cpp">
+      <Filter>Grid</Filter>
+    </ClCompile>
+    <ClCompile Include="Grid\InPlaceEdit.cpp">
+      <Filter>Grid</Filter>
+    </ClCompile>
+    <ClCompile Include="Grid\TitleTip.cpp">
+      <Filter>Grid</Filter>
+    </ClCompile>
+    <ClCompile Include="CShowChartData.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
+    <ClCompile Include="SmProductYearMonth.cpp">
+      <Filter>Market</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

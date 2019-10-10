@@ -39,6 +39,8 @@
 #include "SmTotalPositionManager.h"
 #include "SmOrderNumberGenerator.h"
 #include "Json/json.hpp"
+#include "SmConfigManager.h"
+#include "Xml/pugixml.hpp"
 #include <windows.h>
 
 using namespace nlohmann;
@@ -63,6 +65,20 @@ using bsoncxx::builder::stream::open_document;
 SmMongoDBManager::SmMongoDBManager()
 {
 	InitDatabase();
+	SmConfigManager* configMgr = SmConfigManager::GetInstance();
+	std::string appPath = configMgr->GetApplicationPath();
+	std::string configPath = appPath;
+	configPath.append("\\Config\\Config.xml");
+	pugi::xml_document doc;
+	pugi::xml_parse_result result = doc.load_file(configPath.c_str());
+	pugi::xml_node app = doc.first_child();
+	pugi::xml_node domestic_list_node = doc.child("application").child("domestic_list");
+	pugi::xml_node domestic_node = domestic_list_node.first_child();
+	while (domestic_node) {
+		std::string code = domestic_node.text().as_string();
+		_DomesticList.insert(code);
+		domestic_node = domestic_node.next_sibling();
+	}
 }
 
 SmMongoDBManager::~SmMongoDBManager()
@@ -244,6 +260,12 @@ void SmMongoDBManager::LoadMarketList()
 				std::string exchange_code = product["exchange_code"];
 				std::string market_name2 = product["market_name"];
 				market_name2 = SmUtfUtil::Utf8ToAnsi(market_name2);
+
+				if (product_code.length() > 2 && std::isdigit(product_code.at(2))) {
+					auto it = _DomesticList.find(product_code);
+					if (it == _DomesticList.end())
+						continue;
+				}
 				
 				SmCategory* category = newMarket->AddCategory(product_code);
 				category->Code(product_code);

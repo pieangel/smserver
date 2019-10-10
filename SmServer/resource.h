@@ -21,6 +21,9 @@
 #define ID_VIEW_APPLOOK_WINDOWS_7       219
 #define IDD_DIALOG1                     310
 #define IDD_HD_CTRL                     310
+#define IDD_SHOW_CHART_DATA             312
+#define IDC_GRID                        1000
+#define IDC_COMBO_CHART_DATA            1001
 #define ID_SERVER_START                 32771
 #define ID_SERVER_STOP                  32772
 #define ID_SERVER_STARTSCHEDULE         32773
@@ -34,14 +37,15 @@
 #define ID_SERVER_REGISTERALLRECENTSYMBOL 32781
 #define ID_SERVER_DELETEMEASURE         32782
 #define ID_SERVER_CREATEDATABASE        32783
+#define ID_SERVER_SHOWCHARTDATA         32784
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        312
-#define _APS_NEXT_COMMAND_VALUE         32784
-#define _APS_NEXT_CONTROL_VALUE         1000
+#define _APS_NEXT_RESOURCE_VALUE        314
+#define _APS_NEXT_COMMAND_VALUE         32785
+#define _APS_NEXT_CONTROL_VALUE         1002
 #define _APS_NEXT_SYMED_VALUE           310
 #endif
 #endif

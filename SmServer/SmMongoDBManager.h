@@ -5,6 +5,7 @@
 #include <tuple>
 #include <string>
 #include <vector>
+#include <set>
 namespace mongocxx
 {
 	MONGOCXX_INLINE_NAMESPACE_BEGIN
@@ -83,4 +84,5 @@ private:
 	int _SendDataSplitSize = 20;
 	bool _SendingHoga = false;
 	std::mutex _mutex;
+	std::set<std::string> _DomesticList;
 };

@@ -196,6 +196,7 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="CShowChartData.h" />
     <ClInclude Include="Database\influxdb.hpp" />
     <ClInclude Include="Format\core.h" />
     <ClInclude Include="Format\format-inl.h" />
@@ -207,6 +208,14 @@
     <ClInclude Include="Format\time.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="Global\TemplateSingleton.h" />
+    <ClInclude Include="Grid\CellRange.h" />
+    <ClInclude Include="Grid\GridCell.h" />
+    <ClInclude Include="Grid\GridCellBase.h" />
+    <ClInclude Include="Grid\GridCtrl.h" />
+    <ClInclude Include="Grid\GridDropTarget.h" />
+    <ClInclude Include="Grid\InPlaceEdit.h" />
+    <ClInclude Include="Grid\MemDC.h" />
+    <ClInclude Include="Grid\TitleTip.h" />
     <ClInclude Include="HDCtrl\hdfcommagent.h" />
     <ClInclude Include="Json\json.hpp" />
     <ClInclude Include="Log\loguru.hpp" />
@@ -239,6 +248,7 @@
     <ClInclude Include="SmAccountOrderManager.h" />
     <ClInclude Include="SmOrderNumberGenerator.h" />
     <ClInclude Include="SmPosition.h" />
+    <ClInclude Include="SmProductYearMonth.h" />
     <ClInclude Include="SmQuoteDefine.h" />
     <ClInclude Include="SmServieReqNumGenerator.h" />
     <ClInclude Include="SmSessionNumberGenerator.h" />
@@ -291,6 +301,7 @@
     <ClInclude Include="Xml\tinyxml2.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CShowChartData.cpp" />
     <ClCompile Include="Format\format.cc">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
@@ -301,6 +312,12 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Grid\GridCell.cpp" />
+    <ClCompile Include="Grid\GridCellBase.cpp" />
+    <ClCompile Include="Grid\GridCtrl.cpp" />
+    <ClCompile Include="Grid\GridDropTarget.cpp" />
+    <ClCompile Include="Grid\InPlaceEdit.cpp" />
+    <ClCompile Include="Grid\TitleTip.cpp" />
     <ClCompile Include="HDCtrl\hdfcommagent.cpp" />
     <ClCompile Include="Log\loguru.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
@@ -340,6 +357,7 @@
     <ClCompile Include="SmOrderManager.cpp" />
     <ClCompile Include="SmAccountOrderManager.cpp" />
     <ClCompile Include="SmOrderNumberGenerator.cpp" />
+    <ClCompile Include="SmProductYearMonth.cpp" />
     <ClCompile Include="SmServieReqNumGenerator.cpp" />
     <ClCompile Include="SmSessionNumberGenerator.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
