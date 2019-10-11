@@ -1869,7 +1869,7 @@ void SmMongoDBManager::LoadFilledOrderList()
 			order->SymbolCode = json_object["symbol_code"];
 			order->OrderPrice = json_object["order_price"];
 			order->OrderNo = json_object["order_no"];
-			SmOrderNumberGenerator::SetID(order->OrderNo);
+			//SmOrderNumberGenerator::SetID(order->OrderNo);
 			order->OrderAmount = json_object["order_amount"];
 			order->OriOrderNo = json_object["ori_order_no"];
 			order->FilledDate = json_object["filled_date"];
@@ -1926,7 +1926,7 @@ void SmMongoDBManager::LoadAcceptedOrderList()
 			order->SymbolCode = json_object["symbol_code"];
 			order->OrderPrice = json_object["order_price"];
 			order->OrderNo = json_object["order_no"];
-			SmOrderNumberGenerator::SetID(order->OrderNo);
+			//SmOrderNumberGenerator::SetID(order->OrderNo);
 			order->OrderAmount = json_object["order_amount"];
 			order->OriOrderNo = json_object["ori_order_no"];
 			order->FilledDate = json_object["filled_date"];
@@ -2036,6 +2036,18 @@ void SmMongoDBManager::SaveChartDataRequest(SmChartDataRequest req)
 	}
 }
 
+void SmMongoDBManager::SendOrderList(int session_id, std::string account_no, std::string date_time)
+{
+	try
+	{
+		std::vector<std::shared_ptr<SmOrder>> order_list = GetOrderList(date_time, account_no);
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+}
+
 void SmMongoDBManager::SaveAccountNo(int first, int second, int last)
 {
 	try
@@ -2079,6 +2091,80 @@ void SmMongoDBManager::SaveAccountNo(int first, int second, int last)
 		std::string error;
 		error = e.what();
 	}
+}
+
+void SmMongoDBManager::SaveCurrentOrderNo(int order_no)
+{
+	try
+	{
+		//std::lock_guard<std::mutex> lock(_mutex);
+
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		// 먼저 시장이 있는지 검색한다. 
+		// 그리고 시장 속에 상품이 있는지 검색한다.
+		mongocxx::collection coll = db["order_no"];
+
+		builder::stream::document builder{};
+
+		bsoncxx::stdx::optional<bsoncxx::document::value> fount_no =
+			coll.find_one(bsoncxx::builder::stream::document{} << "current_no" << "current_no" << finalize);
+		if (fount_no) {
+			coll.update_one(bsoncxx::builder::stream::document{} << "current_no" << "current_no" << finalize,
+				bsoncxx::builder::stream::document{} << "$set"
+				<< open_document
+				<< "current_no" << "current_no"
+				<< "order_no" << order_no
+				<< close_document << finalize);
+		}
+		else {
+			bsoncxx::document::value doc_value = builder
+				<< "current_no" << "current_no"
+				<< "order_no" << order_no
+				<< bsoncxx::builder::stream::finalize;
+			auto res = db["order_no"].insert_one(std::move(doc_value));
+		}
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+}
+
+int SmMongoDBManager::GetOrderNo()
+{
+	try
+	{
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		mongocxx::collection coll = db["order_no"];
+
+
+		bsoncxx::stdx::optional<bsoncxx::document::value> maybe_result =
+			coll.find_one(bsoncxx::builder::stream::document{} << "current_no" << "current_no" << finalize);
+		if (maybe_result) {
+			std::string message = bsoncxx::to_json(*maybe_result);
+			auto json_object = json::parse(message);
+			int order_no = json_object["order_no"];
+			return order_no;
+		}
+		else {
+			return 1;
+		}
+
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+
+	return 1;
 }
 
 void SmMongoDBManager::SaveMarketsToDatabase()

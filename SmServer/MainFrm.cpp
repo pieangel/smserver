@@ -44,6 +44,7 @@
 #include "SmMarket.h"
 #include "SmAccountManager.h"
 #include "CShowChartData.h"
+#include "SmOrderNumberGenerator.h"
 
 using namespace std;
 
@@ -243,6 +244,10 @@ void CMainFrame::OnServerStart()
 
 	SmScheduler* timer = SmScheduler::GetInstance();
 	timer->RepeatSymbolService();
+
+	// 여기서 데이터베이스에 저장한 마지막 주문번호를 읽어 온다.
+	// 다음 주문은 이번호에서 시작한다.
+	SmOrderNumberGenerator::LoadOrderNo();
 
 }
 

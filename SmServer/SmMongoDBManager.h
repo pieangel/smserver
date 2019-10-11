@@ -35,6 +35,8 @@ public:
 	void SendHoga(std::string symbol_code);
 	void SendChartCycleData(SmChartDataRequest data_req);
 	void SaveAccountNo(int first, int middle, int last);
+	void SaveCurrentOrderNo(int order_no);
+	int GetOrderNo();
 	std::tuple<int, int, int> GetAccountNo();
 	void SaveUserInfo(std::string user_id, std::string pwd);
 	std::pair<std::string, std::string> GetUserInfo(std::string user_id);
@@ -73,6 +75,7 @@ public:
 	// 현재 존재하는 모든 포지션을 로드한다.
 	void LoadPositionList();
 	void SaveChartDataRequest(SmChartDataRequest req);
+	void SendOrderList(int session_id, std::string account_no, std::string date_time);
 private:
 	void SaveMarketsToDatabase();
 	void SaveSymbolsToDatabase();

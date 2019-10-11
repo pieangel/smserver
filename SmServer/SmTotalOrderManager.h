@@ -22,6 +22,7 @@ public:
 	// 주문 목록을 최신 것 부터 보낸다.
 	void SendOrderList(int session_id, std::string account_no, int count = 50);
 	void SendResponse(std::shared_ptr<SmOrder> order, SmProtocol protocol);
+	void SendOrderList(int session_id, std::string account_no, std::string date_time);
 private:
 	std::shared_ptr<SmOrder> CreateOrder();
 	void OnOrderNew(std::shared_ptr<SmOrder> order);

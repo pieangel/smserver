@@ -172,7 +172,6 @@ void SmProtocolManager::OnReqLogin(nlohmann::json& obj, SmWebsocketSession* sock
 	try {
 		std::string id = obj["user_id"];
 		std::string pwd = obj["pwd"];
-		int session_id = obj["session_id"];
 		SmUserManager* userMgr = SmUserManager::GetInstance();
 		userMgr->OnLogin(id, pwd, socket);
 	}
@@ -754,6 +753,30 @@ void SmProtocolManager::OnReqRegisterUser(nlohmann::json& obj)
 	acntMgr->SendAccountList(session_id, user_id);
 }
 
+void SmProtocolManager::OnReqRegisterUser(nlohmann::json& obj, SmWebsocketSession* socket)
+{
+	std::string user_id = obj["user_id"];
+	std::string password = obj["password"];
+	int session_id = obj["session_id"];
+	// 사용자 정보를 데이터베이스에 저장한다.
+	SmMongoDBManager* mongoMgr = SmMongoDBManager::GetInstance();
+	mongoMgr->SaveUserInfo(user_id, password);
+
+	// 계좌를 만들고 데이터베이스에 저장한다.
+	SmAccountManager* acntMgr = SmAccountManager::GetInstance();
+	acntMgr->CreateAccount(user_id, password);
+
+	// 등록 결과 메시지를 보낸다.
+	obj["res_id"] = (int)SmProtocol::res_register_user;
+	obj["message"] = "Registered a user successfully!";
+	obj["user_id"] = user_id;
+	obj["password"] = password;
+	std::string content = obj.dump(4);
+	SmGlobal* global = SmGlobal::GetInstance();
+	std::shared_ptr<SmSessionManager> sessMgr = global->GetSessionManager();
+	sessMgr->send(session_id, content);
+}
+
 void SmProtocolManager::OnReqUnregisterUser(nlohmann::json& obj)
 {
 	std::string user_id = obj["user_id"];
@@ -845,7 +868,8 @@ void SmProtocolManager::OnReqOrderList(nlohmann::json& obj)
 		std::string user_id = obj["user_id"];
 		int session_id = obj["session_id"];
 		std::string account_no = obj["account_no"];
-		SmTotalOrderManager::GetInstance()->SendOrderList(session_id, account_no);
+		std::string request_date = obj["request_date"];
+		SmTotalOrderManager::GetInstance()->SendOrderList(session_id, account_no, request_date);
 	}
 	catch (std::exception e) {
 		std::string error = e.what();

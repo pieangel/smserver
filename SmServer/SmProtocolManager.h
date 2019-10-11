@@ -40,6 +40,7 @@ private:
 	void OnReqUpdateHoga(nlohmann::json& obj);
 	void OnReqUpdateChartData(nlohmann::json& obj);
 	void OnReqRegisterUser(nlohmann::json& obj);
+	void OnReqRegisterUser(nlohmann::json& obj, SmWebsocketSession* socket);
 	void OnReqUnregisterUser(nlohmann::json& obj);
 	void OnReqChartDataOneByOne(nlohmann::json& obj, SmWebsocketSession* socket);
 	void OnReqAccountList(nlohmann::json& obj);
