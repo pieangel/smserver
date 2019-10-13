@@ -1438,7 +1438,7 @@ std::vector<std::shared_ptr<SmOrder>> SmMongoDBManager::GetOrderList(std::string
 		std::pair<std::string, std::string> date_time = VtStringUtil::GetCurrentDateTime();
 		// 현재 날짜에 해당하는 것만 가져온다.
 		mongocxx::cursor cursor = coll.find(bsoncxx::builder::stream::document{}
-			<< "order_date" << date_time.first
+			//<< "order_date" << date_time.first
 			<< "account_no" << account_no
 			<< finalize);
 		for (auto doc : cursor) {
@@ -1497,7 +1497,7 @@ std::vector<std::shared_ptr<SmOrder>> SmMongoDBManager::GetOrderList(std::string
 
 		// 현재 날짜에 해당하는 것만 가져온다.
 		mongocxx::cursor cursor = coll.find(bsoncxx::builder::stream::document{}
-			<< "order_date" << date
+			//<< "order_date" << date
 			<< "account_no" << account_no
 			<< finalize);
 		for (auto doc : cursor) {
@@ -1623,9 +1623,8 @@ std::vector<std::shared_ptr<SmPosition>> SmMongoDBManager::GetPositionList(std::
 		builder::stream::document builder{};
 
 		std::pair<std::string, std::string> date_time = VtStringUtil::GetCurrentDateTime();
-		// 현재 날짜에 해당하는 것만 가져온다.
+		
 		mongocxx::cursor cursor = coll.find(bsoncxx::builder::stream::document{}
-			<< "created_date" << date_time.first
 			<< "account_no" << account_no
 			<< finalize);
 		for (auto doc : cursor) {
