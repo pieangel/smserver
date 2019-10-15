@@ -23,6 +23,7 @@
 #include "SmTotalPositionManager.h"
 #include "SmAccount.h"
 #include "SmSymbol.h"
+#include "Log/loguru.hpp"
 #include "SmSymbolManager.h"
 using namespace nlohmann;
 SmProtocolManager::SmProtocolManager()
@@ -271,6 +272,7 @@ void SmProtocolManager::OnReqResendChartDataOneByOne(nlohmann::json& obj)
 	char buffer[4096];
 	sprintf(buffer, "SendChartDataOnebyOne%s : %s\n", date.c_str() , time.c_str());
 	OutputDebugString(buffer);
+	LOG_F(INFO, "OnReqResendCharrtDataOneByOne %s", data.GetDataKey().c_str());
 
 	// 차트데이터에 추가한다.
 	std::shared_ptr<SmChartData> chart_data = SmChartDataManager::GetInstance()->AddChartData(data);
@@ -479,6 +481,7 @@ void SmProtocolManager::OnReqChartData(nlohmann::json& obj, SmWebsocketSession* 
 		int cycle = obj["cycle"];
 		int count = obj["count"];
 		std::string data_key = SmChartData::MakeDataKey(symCode, chart_type, cycle);
+		LOG_F(INFO, "OnReqChartData : %s", data_key.c_str());
 		std::shared_ptr<SmChartData> chart_data = SmChartDataManager::GetInstance()->AddChartData(symCode, chart_type, cycle);
 		size_t data_count = chart_data->GetDataCount();
 		// 데이터가 없으면 증권사 서버에 요청을 한다.
@@ -491,8 +494,10 @@ void SmProtocolManager::OnReqChartData(nlohmann::json& obj, SmWebsocketSession* 
 			req.session_id = socket->SessionID();
 			SmTimeSeriesServiceManager::GetInstance()->ResendChartDataRequest(req);
 			SmMongoDBManager::GetInstance()->SaveChartDataRequest(req);
+			LOG_F(INFO, "OnReqChartData data_count = 0: %s", data_key.c_str());
 		} 
 		else { // 데이터가 있으면 바로 보낸다.
+			LOG_F(INFO, "OnReqChartData direct send : %s", data_key.c_str());
 			SmTimeSeriesServiceManager::GetInstance()->SendChartData(socket->SessionID(), chart_data);
 		}
 	}

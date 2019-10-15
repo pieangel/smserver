@@ -226,7 +226,7 @@ void SmTimeSeriesServiceManager::ResendChartDataRequest(SmChartDataRequest req)
 	send_object["count"] = req.count;
 	std::string content = send_object.dump(4);
 	char buffer[512];
-	sprintf(buffer, "%s", req.symbolCode.c_str());
+	sprintf(buffer, "%s", req.GetDataKey().c_str());
 
 	OutputDebugString(buffer);
 	LOG_F(INFO, "ResendChartDataRequest", buffer);

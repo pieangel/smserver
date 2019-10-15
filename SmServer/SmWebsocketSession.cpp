@@ -16,7 +16,7 @@ on_send(boost::shared_ptr<std::string const> const& ss)
 
 	// Are we already writing?
 	if (queue_.size() > 1) {
-		LOG_F(INFO, "on_send qsize = %d", queue_.size());
+		//LOG_F(INFO, "on_send qsize = %d", queue_.size());
 		return;
 	}
 
