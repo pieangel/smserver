@@ -388,6 +388,9 @@
     <ClInclude Include="SmProductYearMonth.h">
       <Filter>Market</Filter>
     </ClInclude>
+    <ClInclude Include="SmFee.h">
+      <Filter>Position</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SmChartServer.cpp">

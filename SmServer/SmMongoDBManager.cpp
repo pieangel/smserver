@@ -42,6 +42,7 @@
 #include "SmConfigManager.h"
 #include "Xml/pugixml.hpp"
 #include <windows.h>
+#include "SmAccountManager.h"
 
 using namespace nlohmann;
 
@@ -807,6 +808,8 @@ void SmMongoDBManager::SaveAccountInfo(std::shared_ptr<SmAccount> acnt)
 				<< "initial_balance" << acnt->InitialBalance()
 				<< "trade_profit_loss" << acnt->TradePL()
 				<< "open_profit_loss" << acnt->OpenPL()
+				<< "total_trade_profit_loss" << acnt->TotalTradePL()
+				<< "fee" << acnt->GetTotalFee()
 				<< close_document << finalize);
 		}
 		else {
@@ -818,6 +821,8 @@ void SmMongoDBManager::SaveAccountInfo(std::shared_ptr<SmAccount> acnt)
 				<< "initial_balance" << acnt->InitialBalance()
 				<< "trade_profit_loss" << acnt->TradePL()
 				<< "open_profit_loss" << acnt->OpenPL()
+				<< "total_trade_profit_loss" << acnt->TotalTradePL()
+				<< "fee" << acnt->GetTotalFee()
 				<< bsoncxx::builder::stream::finalize;
 			auto res = db["account_list"].insert_one(std::move(doc_value));
 		}
@@ -852,8 +857,11 @@ void SmMongoDBManager::UpdateAccountInfo(std::shared_ptr<SmAccount> acnt)
 			coll.update_one(bsoncxx::builder::stream::document{} << "account_no" << acnt->AccountNo() << finalize,
 				bsoncxx::builder::stream::document{} << "$set"
 				<< open_document
+				<< "initial_balance" << acnt->InitialBalance()
 				<< "trade_profit_loss" << acnt->TradePL()
 				<< "open_profit_loss" << acnt->OpenPL()
+				<< "total_trade_profit_loss" << acnt->TotalTradePL()
+				<< "fee" << acnt->GetTotalFee()
 				<< close_document << finalize);
 		}
 	}
@@ -891,6 +899,8 @@ std::vector<std::shared_ptr<SmAccount>> SmMongoDBManager::GetAccountList(std::st
 			double initial_valance = json_object["initial_balance"];
 			double trade_profit_loss = json_object["trade_profit_loss"];
 			double open_profit_loss = json_object["open_profit_loss"];
+			double total_trade_profit_loss = json_object["total_trade_profit_loss"];
+			double fee = json_object["fee"];
 			acnt->AccountNo(account_no);
 			acnt->AccountName(account_name);
 			acnt->UserID(user_id);
@@ -898,6 +908,8 @@ std::vector<std::shared_ptr<SmAccount>> SmMongoDBManager::GetAccountList(std::st
 			acnt->InitialBalance(initial_valance);
 			acnt->TradePL(trade_profit_loss);
 			acnt->OpenPL(open_profit_loss);
+			acnt->Fee(fee);
+			acnt->TotalTradePL(total_trade_profit_loss);
 			account_list.push_back(acnt);
 		}
 	}
@@ -1038,33 +1050,38 @@ void SmMongoDBManager::UpdatePosition(std::shared_ptr<SmPosition> posi)
 				<< "symbol_code" << posi->SymbolCode
 				<< finalize);
 		if (found_posi) {
+			coll.update_one(bsoncxx::builder::stream::document{}
+				<< "account_no" << posi->AccountNo
+				<< "symbol_code" << posi->SymbolCode
+				<< finalize,
+				bsoncxx::builder::stream::document{} << "$set"
+				<< open_document
+				<< "created_date" << posi->CreatedDate
+				<< "created_time" << posi->CreatedTime
+				<< "account_no" << posi->AccountNo
+				<< "symbol_code" << posi->SymbolCode
+				<< "position_type" << (int)posi->Position
+				<< "open_qty" << posi->OpenQty
+				<< "fee" << posi->Fee
+				<< "trade_profitloss" << posi->TradePL
+				<< "average_price" << posi->AvgPrice
+				<< "current_price" << posi->CurPrice
+				<< "open_profitloss" << posi->OpenPL
+				<< close_document << finalize);
+
+			/*
 			// 잔고가 있을 때는 포지션을 업데이트 한다.
 			if (posi->OpenQty != 0) {
-				coll.update_one(bsoncxx::builder::stream::document{}
-					<< "account_no" << posi->AccountNo
-					<< "symbol_code" << posi->SymbolCode
-					<< finalize,
-					bsoncxx::builder::stream::document{} << "$set"
-					<< open_document
-					<< "created_date" << posi->CreatedDate
-					<< "created_time" << posi->CreatedTime
-					<< "account_no" << posi->AccountNo
-					<< "symbol_code" << posi->SymbolCode
-					<< "position_type" << (int)posi->Position
-					<< "open_qty" << posi->OpenQty
-					<< "fee" << posi->Fee
-					<< "trade_profitloss" << posi->TradePL
-					<< "average_price" << posi->AvgPrice
-					<< "current_price" << posi->CurPrice
-					<< "open_profitloss" << posi->OpenPL
-					<< close_document << finalize);
+				
 			}
+			
 			else { // 잔고가 없을 때는 포지션을 없앤다.
 				coll.delete_one(bsoncxx::builder::stream::document{} 
 					<< "account_no" << posi->AccountNo
 					<< "symbol_code" << posi->SymbolCode
 					<< finalize);
 			}
+			*/
 		}
 		else { // 포지션이 없을 때는 삽입해 준다.
 			bsoncxx::document::value doc_value = builder
@@ -1818,9 +1835,11 @@ void SmMongoDBManager::LoadAccountList()
 			std::string user_id = json_object["user_id"];
 			std::string account_name = json_object["account_name"];
 			std::string password = json_object["password"];
-			double initial_valance = json_object["initial_valance"];
+			double initial_valance = json_object["initial_balance"];
 			double trade_profit_loss = json_object["trade_profit_loss"];
 			double open_profit_loss = json_object["open_profit_loss"];
+			double total_trade_profit_loss = json_object["total_trade_profit_loss"];
+			double fee = json_object["fee"];
 			acnt->AccountNo(account_no);
 			acnt->AccountName(account_name);
 			acnt->UserID(user_id);
@@ -1828,6 +1847,8 @@ void SmMongoDBManager::LoadAccountList()
 			acnt->InitialBalance(initial_valance);
 			acnt->TradePL(trade_profit_loss);
 			acnt->OpenPL(open_profit_loss);
+			acnt->TotalTradePL(total_trade_profit_loss);
+			acnt->Fee(fee);
 			acntMgr->AddAccount(acnt);
 		}
 	}
@@ -1969,10 +1990,13 @@ void SmMongoDBManager::LoadPositionList()
 		SmTotalPositionManager* tpMgr = SmTotalPositionManager::GetInstance();
 		
 		// 잔고가 0보다 큰 모든 포지션을 가져온다.
+		/*
 		mongocxx::cursor cursor = coll.find(
-			bsoncxx::builder::stream::document{} << "i" << open_document <<
+			bsoncxx::builder::stream::document{} << "open_qty" << open_document <<
 			"$gt" << 0
 			<< close_document << finalize);
+			*/
+		mongocxx::cursor cursor = coll.find({});
 		for (auto doc : cursor) {
 			std::string message = bsoncxx::to_json(doc);
 			auto json_object = json::parse(message);
@@ -1981,15 +2005,14 @@ void SmMongoDBManager::LoadPositionList()
 			posi->CreatedDate = json_object["created_date"];
 			posi->CreatedTime = json_object["created_time"];
 			posi->SymbolCode = json_object["symbol_code"];
-			posi->FundName = json_object["fund_name"];
 			posi->AccountNo = json_object["account_no"];
 			posi->Position = json_object["position_type"];
 			posi->OpenQty = json_object["open_qty"];
 			posi->Fee = json_object["fee"];
-			posi->TradePL = json_object["trade_pl"];
-			posi->AvgPrice = json_object["avg_price"];
-			posi->CurPrice = json_object["cur_price"];
-			posi->OpenPL = json_object["open_pl"];
+			posi->TradePL = json_object["trade_profitloss"];
+			posi->AvgPrice = json_object["average_price"];
+			posi->CurPrice = json_object["current_price"];
+			posi->OpenPL = json_object["open_profitloss"];
 
 			tpMgr->AddPosition(posi);
 		}
@@ -2040,6 +2063,122 @@ void SmMongoDBManager::SendOrderList(int session_id, std::string account_no, std
 	try
 	{
 		std::vector<std::shared_ptr<SmOrder>> order_list = GetOrderList(date_time, account_no);
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+}
+
+
+void SmMongoDBManager::SaveFee(std::shared_ptr<SmFee> fee)
+{
+	try
+	{
+		//std::lock_guard<std::mutex> lock(_mutex);
+
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		// 먼저 시장이 있는지 검색한다. 
+		// 그리고 시장 속에 상품이 있는지 검색한다.
+		mongocxx::collection coll = db["fee_info"];
+
+		builder::stream::document builder{};
+
+		bsoncxx::document::value doc_value = builder
+			<< "account_no" << fee->AccountNo
+			<< "symbol_code" << fee->SymbolCode
+			<< "date" << fee->Date
+			<< "time" << fee->Time
+			<< "amount" << fee->Amount
+			<< "position" << fee->Position
+			<< "fee" << fee->Fee
+			<< bsoncxx::builder::stream::finalize;
+		auto res = db["fee_info"].insert_one(std::move(doc_value));
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+}
+
+void SmMongoDBManager::LoadFee()
+{
+	try
+	{
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		mongocxx::collection coll = db["fee_info"];
+
+		builder::stream::document builder{};
+
+		std::string date = VtStringUtil::getCurentDate();
+
+		// 현재 날짜에 해당하는 것만 가져온다.
+		mongocxx::cursor cursor = coll.find(bsoncxx::builder::stream::document{}
+			<< "date" << date
+			<< finalize);
+		for (auto doc : cursor) {
+			std::string message = bsoncxx::to_json(doc);
+			auto json_object = json::parse(message);
+			std::string account_no = json_object["account_no"];
+			std::shared_ptr<SmAccount> account = SmAccountManager::GetInstance()->FindAccount(account_no);
+			if (account) {
+				std::shared_ptr<SmFee> fee = std::make_shared<SmFee>();
+				std::string symbol_code = json_object["symbol_code"];
+				fee->SymbolCode = symbol_code;
+				fee->AccountNo = account_no;
+				fee->Amount = json_object["amount"];
+				fee->Date = json_object["date"];
+				fee->Fee = json_object["fee"];
+				//account->AddFee(symbol_code, fee);
+			}
+		}
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+}
+
+void SmMongoDBManager::SaveTradePL(std::shared_ptr<SmAccount> account, std::shared_ptr<SmPosition> posi, double current_tradePL)
+{
+	if (!account)
+		return;
+
+	std::pair<std::string, std::string> date_time = VtStringUtil::GetCurrentDateTime();
+	try
+	{
+		//std::lock_guard<std::mutex> lock(_mutex);
+
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		// 먼저 시장이 있는지 검색한다. 
+		// 그리고 시장 속에 상품이 있는지 검색한다.
+		mongocxx::collection coll = db["trade_profit_loss_history"];
+
+		builder::stream::document builder{};
+
+		bsoncxx::document::value doc_value = builder
+			<< "date" << date_time.first
+			<< "time" << date_time.second
+			<< "account_no" << account->AccountNo()
+			<< "symbol_code" << posi->SymbolCode
+			<< "current_profit_loss" << current_tradePL // 지금 발생한 수익
+			<< "trade_profit_loss" << posi->TradePL // 종목 누적 수익
+			<< "acc_profit_loss" << account->TradePL() // 계좌 누적 수익
+			<< "total_profit_loss" << account->TotalTradePL() // 계좌 개설 후 총 누적 수익
+			<< bsoncxx::builder::stream::finalize;
+		auto res = db["trade_profit_loss_history"].insert_one(std::move(doc_value));
 	}
 	catch (std::exception e) {
 		std::string error;

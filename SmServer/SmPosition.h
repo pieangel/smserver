@@ -19,8 +19,9 @@ struct SmPosition
 	SmPositionType Position = SmPositionType::None; 
 	// 포지션의 잔고
 	int OpenQty;
-	double Fee; //		수수료
-	double TradePL; //	매매손익
+	// 당일 수수료만 나타낸다. 포지션별 누적 수수료는 다른 경로를 통해 확인할 수 있다.
+	double Fee = 0.0f; //		수수료
+	double TradePL = 0.0f; //	매매손익
 	double	AvgPrice = 0.0f;	/*평균가*/
 	double	CurPrice = 0.0f;	/*현재가*/
 	double	OpenPL = 0.0f;		/*평가손익*/

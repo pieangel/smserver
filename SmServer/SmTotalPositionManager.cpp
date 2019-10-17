@@ -47,6 +47,25 @@ std::shared_ptr<SmPosition> SmTotalPositionManager::CreatePosition(std::shared_p
 	return position;
 }
 
+std::shared_ptr<SmPosition> SmTotalPositionManager::CreatePosition(std::string account_no, std::string symbol_code)
+{
+	SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
+	std::shared_ptr<SmSymbol> sym = symMgr->FindSymbol(symbol_code);
+	if (!sym)
+		return nullptr;
+	std::pair<std::string, std::string> date_time = VtStringUtil::GetCurrentDateTime();
+
+	std::shared_ptr<SmPosition> position = std::make_shared<SmPosition>();
+	position->CreatedDate = date_time.first;
+	position->CreatedTime = date_time.second;
+	position->AccountNo = account_no;
+	position->SymbolCode =symbol_code;
+
+	AddPosition(position);
+
+	return position;
+}
+
 std::shared_ptr<SmPosition> SmTotalPositionManager::FindPosition(std::string acntNo, std::string symbolCode)
 {
 	auto it = _AccountPositionManagerMap.find(acntNo);
@@ -54,6 +73,16 @@ std::shared_ptr<SmPosition> SmTotalPositionManager::FindPosition(std::string acn
 		return nullptr;
 	SmAccountPositionManager* acntPosiMgr = it->second;
 	return acntPosiMgr->FindPosition(symbolCode);
+}
+
+std::shared_ptr<SmPosition> SmTotalPositionManager::FindAddPosition(std::string acntNo, std::string symbolCode)
+{
+	std::shared_ptr<SmPosition> posi = FindPosition(acntNo, symbolCode);
+	if (!posi) {
+		posi = CreatePosition(acntNo, symbolCode);
+	}
+
+	return posi;
 }
 
 void SmTotalPositionManager::AddPosition(std::shared_ptr<SmPosition> posi)
@@ -74,24 +103,39 @@ void SmTotalPositionManager::SendPositionList(int session_id, std::string accoun
 	send_object["total_position_count"] = (int)position_list.size();
 	for (size_t j = 0; j < position_list.size(); ++j) {
 		std::shared_ptr<SmPosition> position = position_list[j];
-		send_object["position"][j] = {
-			{ "created_date",  position->CreatedDate },
-			{ "created_time", position->CreatedTime },
-			{ "symbol_code",  position->SymbolCode },
-			{ "position_type",  (int)position->Position },
-			{ "account_no",  position->AccountNo },
-			{ "open_qty",  position->OpenQty },
-			{ "fee",  position->Fee },
-			{ "trade_profitloss",  position->TradePL },
-			{ "average_price",  position->AvgPrice },
-			{ "current_price",  position->CurPrice },
-			{ "open_profitloss",  position->OpenPL }
-		};
-
+		// 잔고가 있는 것만 보낸다.
+		if (position->OpenQty != 0) {
+			send_object["position"][j] = {
+				{ "created_date",  position->CreatedDate },
+				{ "created_time", position->CreatedTime },
+				{ "symbol_code",  position->SymbolCode },
+				{ "position_type",  (int)position->Position },
+				{ "account_no",  position->AccountNo },
+				{ "open_qty",  position->OpenQty },
+				{ "fee",  position->Fee },
+				{ "trade_profitloss",  position->TradePL },
+				{ "average_price",  position->AvgPrice },
+				{ "current_price",  position->CurPrice },
+				{ "open_profitloss",  position->OpenPL }
+			};
+		}
 	}
 
 	std::shared_ptr<SmSessionManager> session_mgr = SmGlobal::GetInstance()->GetSessionManager();
 	session_mgr->send(session_id, send_object.dump());
+}
+
+void SmTotalPositionManager::CheckUptoDate(std::shared_ptr<SmPosition> posi)
+{
+	if (!posi)
+		return;
+	std::pair<std::string, std::string> date_time = VtStringUtil::GetCurrentDateTime();
+	if (posi->CreatedDate.compare(date_time.first) != 0) {
+		posi->CreatedDate = date_time.first;
+		posi->CreatedTime = date_time.second;
+		SmMongoDBManager::GetInstance()->UpdatePosition(posi);
+	}
+
 }
 
 SmAccountPositionManager* SmTotalPositionManager::FindAddAccountPositionManager(std::string accountNo)

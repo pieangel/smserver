@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <set>
+#include "SmFee.h"
 namespace mongocxx
 {
 	MONGOCXX_INLINE_NAMESPACE_BEGIN
@@ -76,6 +77,9 @@ public:
 	void LoadPositionList();
 	void SaveChartDataRequest(SmChartDataRequest req);
 	void SendOrderList(int session_id, std::string account_no, std::string date_time);
+	void SaveFee(std::shared_ptr<SmFee> fee);
+	void LoadFee();
+	void SaveTradePL(std::shared_ptr<SmAccount> account, std::shared_ptr<SmPosition> posi, double current_tradePL);
 private:
 	void SaveMarketsToDatabase();
 	void SaveSymbolsToDatabase();

@@ -239,6 +239,7 @@
     <ClInclude Include="SmChartServer.h" />
     <ClInclude Include="SmCommon.h" />
     <ClInclude Include="SmConfigManager.h" />
+    <ClInclude Include="SmFee.h" />
     <ClInclude Include="SmGlobal.h" />
     <ClInclude Include="SmHogaDefine.h" />
     <ClInclude Include="SmMongoDBManager.h" />

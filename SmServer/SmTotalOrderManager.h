@@ -10,6 +10,9 @@ class SmAccountOrderManager;
 class SmTotalOrderManager : public TemplateSingleton<SmTotalOrderManager>, public SmOrderManager
 {
 public:
+	static double FeeForAbroad;
+	static double FeeForDomestic;
+	void LoadFees();
 	SmTotalOrderManager();
 	virtual ~SmTotalOrderManager();
 	void OnRequestOrder(SmOrderRequest&& req);

@@ -475,14 +475,17 @@ void CMainFrame::OnShowWindow(BOOL bShow, UINT nStatus)
 	
 	mongoMgr->LoadSymbolList();
 
-	SmMarketManager* marketMgr = SmMarketManager::GetInstance();
-	SmCategory* cat = marketMgr->FindCategory("");
+	mongoMgr->LoadAccountList();
+	
+	mongoMgr->LoadPositionList();
 
-	SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
-	std::shared_ptr<SmSymbol> sym = symMgr->FindSymbol("ss");
+	mongoMgr->LoadFee();
 
 	SmAccountManager* acntMgr = SmAccountManager::GetInstance();
-	std::string acnt = acntMgr->GenAccountNo();
+	std::shared_ptr<SmAccount> acnt = acntMgr->FindAccount("");
+
+	SmTotalOrderManager* toMgr = SmTotalOrderManager::GetInstance();
+	toMgr->LoadFees();
 }
 
 

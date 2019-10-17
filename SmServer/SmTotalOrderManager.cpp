@@ -16,8 +16,30 @@
 #include "SmGlobal.h"
 #include "SmSessionManager.h"
 #include "SmMongoDBManager.h"
+#include "SmConfigManager.h"
+#include "Xml/pugixml.hpp"
+
 using namespace std::chrono;
 using namespace nlohmann;
+
+double SmTotalOrderManager::FeeForDomestic = 5000.0;
+double SmTotalOrderManager::FeeForAbroad = 4.0;
+
+void SmTotalOrderManager::LoadFees()
+{
+	SmConfigManager* configMgr = SmConfigManager::GetInstance();
+	std::string appPath = configMgr->GetApplicationPath();
+	std::string configPath = appPath;
+	configPath.append(_T("\\Config\\Config.xml"));
+	pugi::xml_document doc;
+	pugi::xml_parse_result result = doc.load_file(configPath.c_str());
+	pugi::xml_node app = doc.first_child();
+	pugi::xml_node fee_info = doc.child("application").child("fee_info");
+
+	FeeForDomestic = fee_info.child("domestic").text().as_double();
+	FeeForAbroad = fee_info.child("abroad").text().as_double();
+
+}
 
 SmTotalOrderManager::SmTotalOrderManager()
 {
@@ -335,10 +357,10 @@ void SmTotalOrderManager::OnOrderFilled(std::shared_ptr<SmOrder> order)
 	acntOrderMgr->OnOrderFilled(order);
 	SmOrderManager::OnOrderFilled(order);
 	// 체결된 주문만 보낸다. 청산된 주문은 이미 처리되었음.
-	if (order->OrderState == SmOrderState::Filled)
-		SendResponse(order, SmProtocol::res_order_filled);
+	//if (order->OrderState == SmOrderState::Filled)
+	//	SendResponse(order, SmProtocol::res_order_filled);
 	// 잔고를 보낸다.
-	SendRemain(order);
+	//SendRemain(order);
 }
 
 void SmTotalOrderManager::OnOrder(std::shared_ptr<SmOrder> order)

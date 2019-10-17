@@ -12,6 +12,12 @@
 #include "SmMongoDBManager.h"
 #include "SmTotalOrderManager.h"
 #include "SmServiceDefine.h"
+#include "SmFee.h"
+#include "SmUserManager.h"
+#include "Json/json.hpp"
+#include "Log/loguru.hpp"
+using namespace nlohmann;
+
 SmSymbolOrderManager::SmSymbolOrderManager()
 {
 
@@ -65,6 +71,7 @@ void SmSymbolOrderManager::OnOrderFilled(std::shared_ptr<SmOrder> order)
 	SmMongoDBManager::GetInstance()->OnFilledOrder(order);
 	// 포지션을 계산한다.
 	CalcPosition(order);
+	// 체결 주문 목록에 추가한다.
 	SmOrderManager::OnOrderFilled(order);
 }
 
@@ -84,6 +91,35 @@ void SmSymbolOrderManager::OnOrder(std::shared_ptr<SmOrder> order)
 	SmOrderManager::OnOrder(order);
 }
 
+void SmSymbolOrderManager::CalcFee(std::shared_ptr<SmPosition> posi, std::shared_ptr<SmAccount> acnt, std::shared_ptr<SmOrder> filledOrder)
+{
+	if (!posi || !filledOrder || !acnt)
+		return;
+	std::shared_ptr<SmFee> fee = std::make_shared<SmFee>();
+	fee->AccountNo = filledOrder->AccountNo;
+	fee->Amount = filledOrder->FilledQty;
+	std::pair<std::string, std::string> date_time = VtStringUtil::GetCurrentDateTime();
+	fee->Date = date_time.first;
+	fee->Time = date_time.second;
+	fee->Position = filledOrder->Position == SmPositionType::Buy ? 1 : 2;
+	fee->SymbolCode = filledOrder->SymbolCode;
+
+	if (std::isdigit(posi->SymbolCode.at(2))) { // 국내 상품
+		posi->Fee += filledOrder->FilledQty * SmTotalOrderManager::FeeForDomestic;
+		fee->Fee = filledOrder->FilledQty * SmTotalOrderManager::FeeForDomestic;
+	}
+	else { // 해외 상품
+		posi->Fee += filledOrder->FilledQty * SmTotalOrderManager::FeeForAbroad;
+		fee->Fee = filledOrder->FilledQty * SmTotalOrderManager::FeeForAbroad;
+	}
+
+	// 계좌에 수수료를 저장한다.
+	acnt->AddFee(fee->SymbolCode, fee);
+
+	// 데이터베이스에 수수료를 저장한다.
+	SmMongoDBManager::GetInstance()->SaveFee(fee);
+}
+
 void SmSymbolOrderManager::CalcPosition(std::shared_ptr<SmOrder> order)
 {
 	if (!order)
@@ -96,12 +132,15 @@ void SmSymbolOrderManager::CalcPosition(std::shared_ptr<SmOrder> order)
 	std::shared_ptr<SmSymbol> sym = symMgr->FindSymbol(order->SymbolCode);
 	if (!sym)
 		return;
+	SmMongoDBManager* dbMgr = SmMongoDBManager::GetInstance();
 
 	SmTotalPositionManager* posiMgr = SmTotalPositionManager::GetInstance();
 	// 계좌에서 현재 포지션을 가져온다.
 	std::shared_ptr<SmPosition> posi = posiMgr->FindPosition(order->AccountNo, order->SymbolCode);
-
+	// 포지션을 최신 날짜에 맞게 업데이트 한다.
+	posiMgr->CheckUptoDate(posi);
 	double curClose = sym->Quote.Close / pow(10, sym->Decimal());
+	double current_profit_loss = 0.0;
 	// 주문 포지션에 따른 부호 결정
 	int buho = order->Position == SmPositionType::Buy ? 1 : -1;
 	if (!posi) { // 포지션이 없는 경우
@@ -115,14 +154,25 @@ void SmSymbolOrderManager::CalcPosition(std::shared_ptr<SmOrder> order)
 			if (posi->OpenQty > 0) { // 보유수량이 매수			
 				if (posi->OpenQty >= order->FilledQty) { //보유수량이 크거나 같은 경우
 					posi->OpenQty = posi->OpenQty - order->FilledQty;
-					posi->TradePL += double(-order->FilledQty * (posi->AvgPrice - filledPrice) * sym->Seungsu());
+					// 실현손익 발생 - 데이터베이스에 저장한다.
+					current_profit_loss = double(-order->FilledQty * (posi->AvgPrice - filledPrice) * sym->Seungsu());
+					// 여기서 데이터베이스에 저장을 해준다.
+					posi->TradePL += current_profit_loss;
 					posi->OpenPL = posi->OpenQty * (curClose - posi->AvgPrice) * sym->Seungsu();
+					acnt->UpdateTradePL(current_profit_loss);
+					//dbMgr->UpdateAccountInfo(acnt);
+					dbMgr->SaveTradePL(acnt, posi, current_profit_loss);
 				}
 				else { //체결수량이 큰 경우
-					posi->TradePL += double(posi->OpenQty * (filledPrice - posi->AvgPrice) * sym->Seungsu());
+					// 실현손익 발생 - 데이터베이스에 저장한다.
+					current_profit_loss = double(posi->OpenQty * (filledPrice - posi->AvgPrice) * sym->Seungsu());
+					posi->TradePL += current_profit_loss;
 					posi->AvgPrice = filledPrice;
 					posi->OpenQty = posi->OpenQty - order->FilledQty;
 					posi->OpenPL = posi->OpenQty * (curClose - posi->AvgPrice) * sym->Seungsu();
+					acnt->UpdateTradePL(current_profit_loss);
+					//dbMgr->UpdateAccountInfo(acnt);
+					dbMgr->SaveTradePL(acnt, posi, current_profit_loss);
 				}
 			}
 			else { // 보유수량이 매도 ( 보유수량이매도/체결수량이매도 인 경우)
@@ -140,14 +190,24 @@ void SmSymbolOrderManager::CalcPosition(std::shared_ptr<SmOrder> order)
 			else { //보유수량이 매도
 				if (abs(posi->OpenQty) >= order->FilledQty) { //보유수량이 큰경우
 					posi->OpenQty = posi->OpenQty + order->FilledQty;
-					posi->TradePL += double(order->FilledQty * (posi->AvgPrice - filledPrice) * sym->Seungsu());
+					// 실현손익 발생 - 데이터베이스에 저장한다.
+					current_profit_loss = double(order->FilledQty * (posi->AvgPrice - filledPrice) * sym->Seungsu());
+					posi->TradePL += current_profit_loss;
 					posi->OpenPL = posi->OpenQty * (curClose - posi->AvgPrice) * sym->Seungsu();
+					acnt->UpdateTradePL(current_profit_loss);
+					//dbMgr->UpdateAccountInfo(acnt);
+					dbMgr->SaveTradePL(acnt, posi, current_profit_loss);
 				}
-				else { //체결수량이 큰 경우				
-					posi->TradePL += double(posi->OpenQty * (filledPrice - posi->AvgPrice) * sym->Seungsu());
+				else { //체결수량이 큰 경우		
+					// 실현손익 발생 - 데이터베이스에 저장한다.
+					current_profit_loss = double(posi->OpenQty * (filledPrice - posi->AvgPrice) * sym->Seungsu());
+					posi->TradePL += current_profit_loss;
 					posi->AvgPrice = filledPrice;
 					posi->OpenQty = posi->OpenQty + order->FilledQty;
 					posi->OpenPL = posi->OpenQty * (curClose - posi->AvgPrice) * sym->Seungsu();
+					acnt->UpdateTradePL(current_profit_loss);
+					//dbMgr->UpdateAccountInfo(acnt);
+					dbMgr->SaveTradePL(acnt, posi, current_profit_loss);
 				}
 			}
 		}
@@ -171,7 +231,19 @@ void SmSymbolOrderManager::CalcPosition(std::shared_ptr<SmOrder> order)
 	else { // 주문 잔고와 포지션 잔고가 맞지 않을 경우 심각한 오류이다.
 		int error = -1;
 		error = error;
+		LOG_F(INFO, "주문계산 오류 발생 계좌 : %s, 종목 : %s", posi->AccountNo.c_str(), posi->SymbolCode.c_str());
 	}
+
+	// 체결된 주문만 보낸다. 청산된 주문은 이미 처리되었음.
+	if (order->OrderState == SmOrderState::Filled)
+		SendResponse(order, SmProtocol::res_order_filled);
+	// 포지션에 수수료를 부과한다.
+	// 수수료는 현재 체결된 주문의 갯수에 따라 부과된다.
+	CalcFee(posi, acnt, order);
+	dbMgr->UpdateAccountInfo(acnt);
+	// 잔고를 보낸다.
+	SendRemain(order, acnt);
+
 	// 여기서 데이터베이스의 포지션을 상태를 업데이트한다.
 	SmMongoDBManager::GetInstance()->UpdatePosition(posi);
 }
@@ -188,6 +260,7 @@ int SmSymbolOrderManager::CalcRemain(std::shared_ptr<SmOrder> newOrder)
 		std::shared_ptr<SmOrder> oldOrder = *it;
 		
 		// 현재 들어온 주문이 맨 마지막 주문과 같으면 바로 나간다.
+		// 새로운 주문은 결과를 보고 밑에서 다시 처리한다.
 		if (oldOrder->Position == newOrder->Position) {
 			break;
 		}
@@ -258,4 +331,73 @@ int SmSymbolOrderManager::CalcTotalRemain()
 	}
 
 	return totalRemain;
+}
+
+void SmSymbolOrderManager::SendRemain(std::shared_ptr<SmOrder> order, std::shared_ptr<SmAccount> acnt)
+{
+	if (!order || !acnt)
+		return;
+	SmTotalPositionManager* totalPosiMgr = SmTotalPositionManager::GetInstance();
+	std::shared_ptr<SmPosition> posi = totalPosiMgr->FindPosition(order->AccountNo, order->SymbolCode);
+
+	json send_object;
+	send_object["res_id"] = SmProtocol::res_symbol_position;
+	send_object["created_date"] = posi->CreatedDate;
+	send_object["created_time"] = posi->CreatedTime;
+	send_object["symbol_code"] = posi->SymbolCode;
+	send_object["fund_name"] = posi->FundName;
+	send_object["account_no"] = posi->AccountNo;
+	send_object["position_type"] = posi->Position;
+	send_object["open_qty"] = posi->OpenQty;
+	send_object["symbol_fee"] = posi->Fee;
+	send_object["trade_pl"] = posi->TradePL;
+	send_object["avg_price"] = posi->AvgPrice;
+	send_object["cur_price"] = posi->CurPrice;
+	send_object["open_pl"] = posi->OpenPL;
+	send_object["account_fee"] = acnt->GetTotalFee();
+	send_object["account_trade_pl"] = acnt->TradePL();
+	send_object["account_total_trade_pl"] = acnt->TotalTradePL();
+
+	std::string content = send_object.dump();
+	SmUserManager* userMgr = SmUserManager::GetInstance();
+	userMgr->SendResultMessage(order->UserID, content);
+}
+
+void SmSymbolOrderManager::SendResponse(std::shared_ptr<SmOrder> order, SmProtocol protocol)
+{
+	if (!order)
+		return;
+
+	json send_object;
+	send_object["res_id"] = protocol;
+	send_object["request_id"] = order->RequestID;
+	send_object["account_no"] = order->AccountNo;
+	send_object["order_type"] = (int)order->OrderType;
+	send_object["position_type"] = (int)order->Position;
+	send_object["price_type"] = (int)order->PriceType;
+	send_object["symbol_code"] = order->SymbolCode;
+	send_object["order_price"] = order->OrderPrice;
+	send_object["order_no"] = order->OrderNo;
+	send_object["order_amount"] = order->OrderAmount;
+	send_object["ori_order_no"] = order->OriOrderNo;
+	send_object["filled_date"] = order->FilledDate;
+	send_object["filled_time"] = order->FilledTime;
+	send_object["order_date"] = order->OrderDate;
+	send_object["order_time"] = order->OrderTime;
+	send_object["filled_qty"] = order->FilledQty;
+	send_object["filled_price"] = order->FilledPrice;
+	send_object["order_state"] = (int)order->OrderState;
+	send_object["filled_condition"] = (int)order->FilledCondition;
+	send_object["symbol_decimal"] = order->SymbolDecimal;
+	send_object["remain_qty"] = order->RemainQty;
+	send_object["strategy_name"] = order->StrategyName;
+	send_object["system_name"] = order->SystemName;
+	send_object["fund_name"] = order->FundName;
+	for (size_t i = 0; i < order->SettledOrders.size(); ++i) {
+		send_object["settled_orders"][i] = order->SettledOrders[i];
+	}
+
+	std::string content = send_object.dump();
+	SmUserManager* userMgr = SmUserManager::GetInstance();
+	userMgr->SendResultMessage(order->UserID, content);
 }

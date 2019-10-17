@@ -132,5 +132,19 @@ enum class SmProtocol {
 	// 주기 데이터를 하나씩 보낸다.
 	req_cycle_data_resend_onebyone,
 	// 주문이 청산되었음을 보낸다.
-	res_order_settled
+	res_order_settled,
+	// 계좌 수수료 요청
+	req_account_fee,
+	// 계좌 수수료 응답
+	res_account_fee,
+	// 심볼 수수료 요청
+	req_symbol_fee,
+	// 심볼 수수료 응답
+	res_symbol_fee,
+	// 거래 발생에 따른 수수료 전송
+	res_trade_fee,
+	// 모의 계좌 초기화 요청
+	req_reset_account,
+	// 모의 계좌 초기화 응답
+	res_reset_account
 };
