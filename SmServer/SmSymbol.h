@@ -35,6 +35,12 @@ public:
 	void TickSize(double val) { _TickSize = val; }
 	int Index() const { return _Index; }
 	void Index(int val) { _Index = val; }
+	int Atm() const { return _Atm; }
+	void Atm(int val) { _Atm = val; }
+	int NearMonth() const { return _NearMonth; }
+	void NearMonth(int val) { _NearMonth = val; }
+	std::string LastDate() const { return _LastDate; }
+	void LastDate(std::string val) { _LastDate = val; }
 private:
 	// 품목에서 차지하는 인덱스
 	int _Index = 0;
@@ -64,5 +70,11 @@ private:
 	std::string _CategoryCode;
 	// 시장 이름
 	std::string _MarketName;
+	/* ATM구분 1:ATM, 2:ITM, 3:OTM					*/
+	int _Atm = 0; // 
+	// 근월물
+	int _NearMonth;
+	// 최종 거래일
+	std::string _LastDate;
 };
 

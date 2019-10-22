@@ -33,6 +33,8 @@ public:
 		return _MarketList;
 	}
 private:
+	std::shared_ptr<SmSymbol> GetRecentSymbol(std::string market_name, std::string product_name);
+	std::shared_ptr<SmSymbol> GetRecentSymbol(std::string product_name);
 	void SendSymbolMaster(std::string user_id, std::shared_ptr<SmSymbol> sym);
 	void SendSymbolMaster(int session_id, std::shared_ptr<SmSymbol> sym);
 	std::vector<SmMarket*> _MarketList;

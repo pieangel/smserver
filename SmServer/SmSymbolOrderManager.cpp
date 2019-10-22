@@ -107,15 +107,17 @@ void SmSymbolOrderManager::CalcFee(std::shared_ptr<SmPosition> posi, std::shared
 	if (std::isdigit(posi->SymbolCode.at(2))) { // 국내 상품
 		posi->Fee += filledOrder->FilledQty * SmTotalOrderManager::FeeForDomestic;
 		fee->Fee = filledOrder->FilledQty * SmTotalOrderManager::FeeForDomestic;
+		LOG_F(INFO, "CalcFee: symbol_code = %s, fee = %.0f", posi->SymbolCode.c_str(), posi->Fee);
 	}
 	else { // 해외 상품
 		posi->Fee += filledOrder->FilledQty * SmTotalOrderManager::FeeForAbroad;
 		fee->Fee = filledOrder->FilledQty * SmTotalOrderManager::FeeForAbroad;
+		LOG_F(INFO, "CalcFee: symbol_code = %s, fee = %.0f", posi->SymbolCode.c_str(), posi->Fee);
 	}
 
 	// 계좌에 수수료를 저장한다.
 	acnt->AddFee(fee->SymbolCode, fee);
-
+	LOG_F(INFO, "CalcFee2: symbol_code = %s, fee = %.0f", posi->SymbolCode.c_str(), posi->Fee);
 	// 데이터베이스에 수수료를 저장한다.
 	SmMongoDBManager::GetInstance()->SaveFee(fee);
 }
@@ -353,10 +355,13 @@ void SmSymbolOrderManager::SendRemain(std::shared_ptr<SmOrder> order, std::share
 	send_object["trade_pl"] = posi->TradePL;
 	send_object["avg_price"] = posi->AvgPrice;
 	send_object["cur_price"] = posi->CurPrice;
+	send_object["fee"] = posi->Fee;
 	send_object["open_pl"] = posi->OpenPL;
 	send_object["account_fee"] = acnt->GetTotalFee();
 	send_object["account_trade_pl"] = acnt->TradePL();
 	send_object["account_total_trade_pl"] = acnt->TotalTradePL();
+
+	LOG_F(INFO, "SendRemain: symbol_code = %s, fee = %.0f", posi->SymbolCode.c_str(), posi->Fee);
 
 	std::string content = send_object.dump();
 	SmUserManager* userMgr = SmUserManager::GetInstance();

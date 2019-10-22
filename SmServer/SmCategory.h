@@ -31,6 +31,9 @@ public:
 		return _SymbolList;
 	}
 	std::shared_ptr<SmSymbol> GetRecentMonthSymbol();
+
+	std::shared_ptr<SmProductYearMonth> GetRecentYearMonth();
+	std::shared_ptr<SmProductYearMonth> GetNextYearMonth();
 private:
 	// 품목코드
 	std::string _Code;

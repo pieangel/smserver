@@ -31,6 +31,22 @@ std::shared_ptr<SmSymbol> SmCategory::GetRecentMonthSymbol()
 	return _SymbolList[0];
 }
 
+std::shared_ptr<SmProductYearMonth> SmCategory::GetRecentYearMonth()
+{
+	if (_YearMonthMap.size() == 0)
+		return nullptr;
+	else
+		return _YearMonthMap.begin()->second;
+}
+
+std::shared_ptr<SmProductYearMonth> SmCategory::GetNextYearMonth()
+{
+	if (_YearMonthMap.size() <= 1)
+		return nullptr;
+	else
+		return (++_YearMonthMap.begin())->second;
+}
+
 void SmCategory::AddToYearMonth(std::string symbol_code, std::shared_ptr<SmSymbol> symbol)
 {
 	if (!symbol)

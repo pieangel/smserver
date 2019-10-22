@@ -318,6 +318,9 @@ void SmMongoDBManager::LoadSymbolList()
 			int seungsu = json_object["seungsu"];
 			double tick_size = json_object["tick_size"];
 			double tick_value = json_object["tick_value"];
+			int atm = json_object["atm"];
+			int near_month = json_object["near_month"];
+			std::string last_date = json_object["last_date"];
 			std::shared_ptr<SmSymbol> symbol = foundCategory->AddSymbol(symbol_code);
 			symbol->Index(symbol_index);
 			symbol->SymbolCode(symbol_code);
@@ -330,6 +333,9 @@ void SmMongoDBManager::LoadSymbolList()
 			symbol->Decimal(decimal);
 			symbol->Seungsu(seungsu);
 			symbol->MarketName(market_name);
+			symbol->Atm(atm);
+			symbol->NearMonth(near_month);
+			symbol->LastDate(last_date);
 		}
 	}
 	catch (std::exception e) {

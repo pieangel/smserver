@@ -20,6 +20,7 @@
 #include "SmCategory.h"
 #include "SmGlobal.h"
 #include "SmSessionManager.h"
+#include "SmProductYearMonth.h"
 
 
 using namespace std::chrono;
@@ -97,6 +98,7 @@ SmCategory* SmMarketManager::FindCategory(std::string cat_code)
 	return nullptr;
 }
 
+/*
 std::vector<std::shared_ptr<SmSymbol>> SmMarketManager::GetRecentMonthSymbolList()
 {
 	std::vector<std::shared_ptr<SmSymbol>> symvec;
@@ -107,6 +109,36 @@ std::vector<std::shared_ptr<SmSymbol>> SmMarketManager::GetRecentMonthSymbolList
 			std::shared_ptr<SmSymbol> sym = (*itc)->GetRecentMonthSymbol();
 			if (sym)
 				symvec.push_back(sym);
+		}
+	}
+
+	return symvec;
+}
+*/
+
+
+std::vector<std::shared_ptr<SmSymbol>> SmMarketManager::GetRecentMonthSymbolList()
+{
+	std::vector<std::shared_ptr<SmSymbol>> symvec;
+	for (auto it = _MarketList.begin(); it != _MarketList.end(); ++it) {
+		SmMarket* mrkt = *it;
+		auto cat_vec = mrkt->GetCategoryList();
+		for (auto itc = cat_vec.begin(); itc != cat_vec.end(); ++itc) {
+			
+			std::shared_ptr<SmProductYearMonth> ym = (*itc)->GetRecentYearMonth();
+			if (ym) {
+				if (ym->ProductCode.compare("175") == 0) {
+					std::shared_ptr<SmSymbol> recent_symbol = GetRecentSymbol(ym->ProductCode);
+					std::string current_date = VtStringUtil::getCurentDate();
+					if (current_date.compare(recent_symbol->LastDate()) >= 0) {
+						ym = (*itc)->GetNextYearMonth();
+					}
+				}
+				for (auto itym = ym->SymbolList.begin(); itym != ym->SymbolList.end(); ++itym) {
+					(*itym)->Quote.SymbolCode = (*itym)->SymbolCode();
+					symvec.push_back(*itym);
+				}
+			}
 		}
 	}
 
@@ -230,6 +262,30 @@ int SmMarketManager::GetTotalSymbolCount()
 	return total;
 }
 
+std::shared_ptr<SmSymbol> SmMarketManager::GetRecentSymbol(std::string product_name)
+{
+	auto it = _CategoryToMarketMap.find(product_name);
+	if (it == _CategoryToMarketMap.end())
+		return nullptr;
+	std::string market_name = it->second;
+
+	return GetRecentSymbol(market_name, product_name);
+}
+
+std::shared_ptr<SmSymbol> SmMarketManager::GetRecentSymbol(std::string market_name, std::string product_name)
+{
+	SmMarket* market = FindMarket(market_name);
+	if (!market)
+		return nullptr;
+	SmCategory* product = market->FindCategory(product_name);
+	if (!product)
+		return nullptr;
+	std::shared_ptr<SmProductYearMonth> ym = product->GetRecentYearMonth();
+	if (ym->SymbolList.size() == 0)
+		return nullptr;
+	return *ym->SymbolList.begin();
+}
+
 void SmMarketManager::SendSymbolMaster(std::string user_id, std::shared_ptr<SmSymbol> sym)
 {
 	if (!sym)
@@ -272,6 +328,9 @@ void SmMarketManager::SendSymbolMaster(int session_id, std::shared_ptr<SmSymbol>
 	send_object["seungsu"] = sym->Seungsu();
 	send_object["tick_size"] = sym->TickSize();
 	send_object["tick_value"] = sym->TickValue();
+	send_object["atm"] = sym->Atm();
+	send_object["near_month"] = sym->NearMonth();
+	send_object["last_date"] = sym->LastDate();
 
 	std::string content = send_object.dump(4);
 	SmGlobal* global = SmGlobal::GetInstance();
