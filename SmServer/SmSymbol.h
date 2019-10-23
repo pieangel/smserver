@@ -19,6 +19,10 @@ public:
 	SmHoga  Hoga;
 	std::string GetQuoteByJson();
 	std::string GetHogaByJson();
+	std::string GetQuoteByJson(int total, int current);
+	static std::string GetDummyQuoteByJson(int total, int current);
+	std::string GetHogaByJson(int total, int current);
+	static std::string GetDummyHogaByJson(int total, int current);
 	int Decimal() const { return _Decimal; }
 	void Decimal(int val) { _Decimal = val; }
 	int Seungsu() const { return _Seungsu; }

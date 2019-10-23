@@ -344,6 +344,160 @@ void SmMongoDBManager::LoadSymbolList()
 	}
 }
 
+void SmMongoDBManager::LoadRecentQuoteList()
+{
+	try
+	{
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+		mongocxx::collection coll = db["quote"];
+		SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
+		mongocxx::cursor cursor = coll.find({});
+		for (auto doc : cursor) {
+			std::string object = bsoncxx::to_json(doc);
+			auto json_object = json::parse(object);
+			std::string symbol_code = json_object["symbol_code"];
+			std::string sign_to_preday = json_object["sign_to_preday"];
+			int gap_from_preday = json_object["gap_from_preday"];
+			std::string ratio_to_preday = json_object["ratio_to_preday"];
+			int acc_volume = json_object["acc_volume"];
+			int open = json_object["open"];
+			int high = json_object["high"];
+			int low = json_object["low"];
+			int close = json_object["close"];
+			std::shared_ptr<SmSymbol> sym = symMgr->FindSymbol(symbol_code);
+			if (sym) {
+				sym->Quote.SignToPreDay = sign_to_preday;
+				sym->Quote.GapFromPreDay = gap_from_preday;
+				sym->Quote.RatioToPreday = ratio_to_preday;
+				sym->Quote.accVolume = acc_volume;
+				sym->Quote.Open = open;
+				sym->Quote.High = high;
+				sym->Quote.Low = low;
+				sym->Quote.Close = close;
+			}
+		}
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+}
+
+void SmMongoDBManager::LoadRecentHogaList()
+{
+	try
+	{
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+		mongocxx::collection coll = db["hoga"];
+		SmSymbolManager* symMgr = SmSymbolManager::GetInstance();
+		mongocxx::cursor cursor = coll.find({});
+		for (auto doc : cursor) {
+			std::string object = bsoncxx::to_json(doc);
+			auto json_object = json::parse(object);
+			std::string symbol_code = json_object["symbol_code"];
+			
+			std::shared_ptr<SmSymbol> sym = symMgr->FindSymbol(symbol_code);
+			if (sym) {
+				int buy_price1 = json_object["buy_price1"];
+				int buy_qty1 = json_object["buy_qty1"];
+				int buy_cnt1 = json_object["buy_cnt1"];
+				int sell_price1 = json_object["sell_price1"];
+				int sell_qty1 = json_object["sell_qty1"];
+				int sell_cnt1 = json_object["sell_cnt1"];
+
+				sym->Hoga.Ary[0].BuyPrice = buy_price1;
+				sym->Hoga.Ary[0].BuyQty = buy_qty1;
+				sym->Hoga.Ary[0].BuyCnt = buy_cnt1;
+				sym->Hoga.Ary[0].SellPrice = sell_price1;
+				sym->Hoga.Ary[0].SellQty = sell_qty1;
+				sym->Hoga.Ary[0].SellCnt = sell_cnt1;
+
+				int buy_price2 = json_object["buy_price2"];
+				int buy_qty2 = json_object["buy_qty2"];
+				int buy_cnt2 = json_object["buy_cnt2"];
+				int sell_price2 = json_object["sell_price2"];
+				int sell_qty2 = json_object["sell_qty2"];
+				int sell_cnt2 = json_object["sell_cnt2"];
+
+				sym->Hoga.Ary[1].BuyPrice = buy_price2;
+				sym->Hoga.Ary[1].BuyQty = buy_qty2;
+				sym->Hoga.Ary[1].BuyCnt = buy_cnt2;
+				sym->Hoga.Ary[1].SellPrice = sell_price2;
+				sym->Hoga.Ary[1].SellQty = sell_qty2;
+				sym->Hoga.Ary[1].SellCnt = sell_cnt2;
+
+				int buy_price3 = json_object["buy_price3"];
+				int buy_qty3 = json_object["buy_qty3"];
+				int buy_cnt3 = json_object["buy_cnt3"];
+				int sell_price3 = json_object["sell_price3"];
+				int sell_qty3 = json_object["sell_qty3"];
+				int sell_cnt3 = json_object["sell_cnt3"];
+
+				sym->Hoga.Ary[2].BuyPrice = buy_price3;
+				sym->Hoga.Ary[2].BuyQty = buy_qty3;
+				sym->Hoga.Ary[2].BuyCnt = buy_cnt3;
+				sym->Hoga.Ary[2].SellPrice = sell_price3;
+				sym->Hoga.Ary[2].SellQty = sell_qty3;
+				sym->Hoga.Ary[2].SellCnt = sell_cnt3;
+
+				int buy_price4 = json_object["buy_price4"];
+				int buy_qty4 = json_object["buy_qty4"];
+				int buy_cnt4 = json_object["buy_cnt4"];
+				int sell_price4 = json_object["sell_price4"];
+				int sell_qty4 = json_object["sell_qty4"];
+				int sell_cnt4 = json_object["sell_cnt4"];
+
+				sym->Hoga.Ary[3].BuyPrice = buy_price4;
+				sym->Hoga.Ary[3].BuyQty = buy_qty4;
+				sym->Hoga.Ary[3].BuyCnt = buy_cnt4;
+				sym->Hoga.Ary[3].SellPrice = sell_price4;
+				sym->Hoga.Ary[3].SellQty = sell_qty4;
+				sym->Hoga.Ary[3].SellCnt = sell_cnt4;
+
+				int buy_price5 = json_object["buy_price5"];
+				int buy_qty5 = json_object["buy_qty5"];
+				int buy_cnt5 = json_object["buy_cnt5"];
+				int sell_price5 = json_object["sell_price5"];
+				int sell_qty5 = json_object["sell_qty5"];
+				int sell_cnt5 = json_object["sell_cnt5"];
+
+				sym->Hoga.Ary[4].BuyPrice = buy_price5;
+				sym->Hoga.Ary[4].BuyQty = buy_qty5;
+				sym->Hoga.Ary[4].BuyCnt = buy_cnt5;
+				sym->Hoga.Ary[4].SellPrice = sell_price5;
+				sym->Hoga.Ary[4].SellQty = sell_qty5;
+				sym->Hoga.Ary[4].SellCnt = sell_cnt5;
+
+				int tot_buy_qty = json_object["tot_buy_qty"];
+				int tot_buy_cnt = json_object["tot_buy_cnt"];
+				int tot_sell_qty = json_object["tot_sell_qty"];
+				int tot_sell_cnt = json_object["tot_sell_cnt"];
+				std::string domestic_date = json_object["domestic_date"];
+				std::string domestic_time = json_object["domestic_time"];
+				std::string time = json_object["time"];
+
+				sym->Hoga.TotBuyCnt = tot_buy_cnt;
+				sym->Hoga.TotBuyQty = tot_buy_qty;
+				sym->Hoga.TotSellCnt = tot_sell_cnt;
+				sym->Hoga.TotSellQty = tot_sell_qty;
+				sym->Hoga.DomesticDate = domestic_date;
+				sym->Hoga.DomesticTime = domestic_time;
+				sym->Hoga.Time = time;
+			}
+		}
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+}
+
 void SmMongoDBManager::SendChartDataFromDB(SmChartDataRequest&& data_req)
 {
 	try
@@ -2143,7 +2297,7 @@ void SmMongoDBManager::LoadFee()
 				fee->Amount = json_object["amount"];
 				fee->Date = json_object["date"];
 				fee->Fee = json_object["fee"];
-				//account->AddFee(symbol_code, fee);
+				account->AddFee(symbol_code, fee);
 			}
 		}
 	}

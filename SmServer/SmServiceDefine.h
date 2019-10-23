@@ -146,5 +146,13 @@ enum class SmProtocol {
 	// 모의 계좌 초기화 요청
 	req_reset_account,
 	// 모의 계좌 초기화 응답
-	res_reset_account
+	res_reset_account,
+	// 수익 목록 요청
+	req_trade_list,
+	// 수익 목록 응답
+	res_trade_list,
+	// 최근 심볼에 대한 호가 정보
+	req_recent_hoga_data_all,
+	// 최근 심볼에 대한 호가 정보
+	res_recent_hoga_data_all
 };

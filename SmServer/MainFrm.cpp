@@ -481,6 +481,10 @@ void CMainFrame::OnShowWindow(BOOL bShow, UINT nStatus)
 
 	mongoMgr->LoadFee();
 
+	mongoMgr->LoadRecentQuoteList();
+
+	mongoMgr->LoadRecentHogaList();
+
 	SmAccountManager* acntMgr = SmAccountManager::GetInstance();
 	std::shared_ptr<SmAccount> acnt = acntMgr->FindAccount("");
 

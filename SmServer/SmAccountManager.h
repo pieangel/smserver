@@ -17,6 +17,7 @@ public:
 	void LoadAccountFromDB();
 	std::shared_ptr<SmAccount> CreateAccount(std::string user_id, std::string password);
 	void SendAccountList(int session_id, std::string user_id);
+	int ResetAccount(std::string account_no);
 private:
 	SmAccountNumGenerator _NumGen;
 	std::map<std::string, std::shared_ptr<SmAccount>> _AccountMap;

@@ -158,6 +158,12 @@ void SmProtocolManager::ParseMessage(std::string message, SmWebsocketSession* so
 		case SmProtocol::req_cycle_data_resend_onebyone:
 			OnReqCycleDataResendOneByOne(json_object);
 			break;
+		case SmProtocol::req_reset_account:
+			OnReqResetAccount(json_object);
+			break;
+		case SmProtocol::req_recent_hoga_data_all:
+			OnReqRecentHogaDataAll(json_object);
+			break;
 		default:
 			break;
 		}
@@ -324,6 +330,23 @@ void SmProtocolManager::OnReqCycleDataResendOneByOne(nlohmann::json& obj)
 
 	SmTimeSeriesServiceManager* tsMgr = SmTimeSeriesServiceManager::GetInstance();
 	tsMgr->BroadcastChartData(data);
+}
+
+
+void SmProtocolManager::OnReqResetAccount(nlohmann::json& obj)
+{
+	std::string account_no = obj["account_no"];
+	int session_id = obj["session_id"];
+	int result = SmAccountManager::GetInstance()->ResetAccount(account_no);
+	std::string msg = "";
+	if (result == -1) {
+		msg = "계좌 정보가 없습니다.";
+	}
+	else {
+		msg = "계좌가 초기화 되었습니다.";
+	}
+
+	SendResult(session_id, result, msg);
 }
 
 void SmProtocolManager::OnRegisterSymbol(nlohmann::json& obj)
@@ -597,22 +620,60 @@ void SmProtocolManager::OnReqSiseDataAll(nlohmann::json& obj)
 void SmProtocolManager::OnReqRecentSiseDataAll(nlohmann::json& obj)
 {
 	try {
+		int session_id = obj["session_id"];
+		std::string content = "";
 		SmMarketManager* symMgr = SmMarketManager::GetInstance();
 		std::vector<std::shared_ptr<SmSymbol>> symVec = symMgr->GetRecentMonthSymbolList();
-		for (auto it = symVec.begin(); it != symVec.end(); ++it) {
-			std::string id = obj["user_id"];
-			std::string symCode = (*it)->SymbolCode();
-			SmSiseDataRequest req;
-			req.symbol_code = symCode;
-			req.user_id = id;
-			SmTimeSeriesServiceManager* timeSvcMgr = SmTimeSeriesServiceManager::GetInstance();
-			timeSvcMgr->OnSiseDataRequest(std::move(req));
+		int total = (int)symVec.size();
+		int current = 1;
+		for (size_t i = 0; i < symVec.size(); ++i) {
+			std::string symCode = symVec[i]->SymbolCode();
+			std::shared_ptr<SmSymbol> sym = SmSymbolManager::GetInstance()->FindSymbol(symCode);
+			if (sym)
+				content = sym->GetQuoteByJson(total, current);
+			else // 심볼이 없을 때는 빈값을 전송한다.
+				content = SmSymbol::GetDummyQuoteByJson(total, current);
+			current++;
+			// 바로 전송한다.
+			SmGlobal* global = SmGlobal::GetInstance();
+			std::shared_ptr<SmSessionManager> sessMgr = global->GetSessionManager();
+			sessMgr->send(session_id, content);
 		}
 	}
 	catch (std::exception e) {
 		std::string error = e.what();
 	}
 }
+
+
+void SmProtocolManager::OnReqRecentHogaDataAll(nlohmann::json& obj)
+{
+	try {
+		int session_id = obj["session_id"];
+		std::string content = "";
+		SmMarketManager* symMgr = SmMarketManager::GetInstance();
+		std::vector<std::shared_ptr<SmSymbol>> symVec = symMgr->GetRecentMonthSymbolList();
+		int total = (int)symVec.size();
+		int current = 1;
+		for (size_t i = 0; i < symVec.size(); ++i) {
+			std::string symCode = symVec[i]->SymbolCode();
+			std::shared_ptr<SmSymbol> sym = SmSymbolManager::GetInstance()->FindSymbol(symCode);
+			if (sym)
+				content = sym->GetHogaByJson(total, current);
+			else // 심볼이 없을 때는 빈값을 전송한다.
+				content = SmSymbol::GetDummyHogaByJson(total, current);
+			current++;
+			// 바로 전송한다.
+			SmGlobal* global = SmGlobal::GetInstance();
+			std::shared_ptr<SmSessionManager> sessMgr = global->GetSessionManager();
+			sessMgr->send(session_id, content);
+		}
+	}
+	catch (std::exception e) {
+		std::string error = e.what();
+	}
+}
+
 
 void SmProtocolManager::OnReqRegisterRecentRealtimeSiseAll(nlohmann::json& obj)
 {
@@ -680,24 +741,26 @@ void SmProtocolManager::OnReqChartDataResend(nlohmann::json& obj)
 void SmProtocolManager::OnReqUpdateQuote(nlohmann::json& obj)
 {
 	obj["res_id"] = (int)SmProtocol::res_realtime_sise;
-
 	std::string symbol_code = obj["symbol_code"];
-	int gap_from_preday = obj["gap_from_preday"];
-	std::string sign_to_preday = obj["sign_to_preday"];
-	std::string ratio_to_preday = obj["ratio_to_preday"];
-	int open = obj["open"];
-	int high = obj["high"];
-	int low = obj["low"];
-	int close = obj["close"];
-	int acc_volume = obj["acc_volume"];
-
 	std::shared_ptr<SmSymbol> sym = SmSymbolManager::GetInstance()->FindSymbol(symbol_code);
 	if (sym) {
+		int gap_from_preday = obj["gap_from_preday"];
+		std::string sign_to_preday = obj["sign_to_preday"];
+		std::string ratio_to_preday = obj["ratio_to_preday"];
+		int open = obj["open"];
+		int high = obj["high"];
+		int low = obj["low"];
+		int close = obj["close"];
+		int acc_volume = obj["acc_volume"];
 		sym->Quote.accVolume = acc_volume;
 		sym->Quote.Open = open;
 		sym->Quote.High = high;
 		sym->Quote.Low = low;
 		sym->Quote.Close = close;
+		sym->Quote.accVolume = acc_volume;
+		sym->Quote.GapFromPreDay = gap_from_preday;
+		sym->Quote.RatioToPreday = ratio_to_preday;
+		sym->Quote.SignToPreDay = sign_to_preday;
 	}
 
 	std::string content = obj.dump(4);
@@ -709,6 +772,27 @@ void SmProtocolManager::OnReqUpdateQuote(nlohmann::json& obj)
 void SmProtocolManager::OnReqUpdateHoga(nlohmann::json& obj)
 {
 	obj["res_id"] = (int)SmProtocol::res_realtime_hoga;
+	std::string symbol_code = obj["symbol_code"];
+	std::shared_ptr<SmSymbol> sym = SmSymbolManager::GetInstance()->FindSymbol(symbol_code);
+	if (sym) {
+		sym->Hoga.Time = obj["time"];
+		sym->Hoga.DomesticDate = obj["domestic_date"];
+		sym->Hoga.DomesticTime = obj["domestic_time"];
+		sym->Hoga.TotBuyQty = obj["tot_buy_qty"];
+		sym->Hoga.TotSellQty = obj["tot_sell_qty"];
+		sym->Hoga.TotBuyCnt = obj["tot_buy_cnt"];
+		sym->Hoga.TotSellCnt = obj["tot_sell_cnt"];
+
+		for (int i = 0; i < 5; i++) {
+			sym->Hoga.Ary[i].BuyPrice = obj["obj_items"][i]["buy_price"];
+			sym->Hoga.Ary[i].BuyCnt = obj["obj_items"][i]["buy_cnt"];
+			sym->Hoga.Ary[i].BuyQty = obj["obj_items"][i]["buy_qty"];
+			sym->Hoga.Ary[i].SellPrice = obj["obj_items"][i]["sell_price"];
+			sym->Hoga.Ary[i].SellCnt = obj["obj_items"][i]["sell_cnt"];
+			sym->Hoga.Ary[i].SellQty = obj["obj_items"][i]["sell_qty"];
+		}
+	}
+
 	std::string content = obj.dump(4);
 	SmGlobal* global = SmGlobal::GetInstance();
 	std::shared_ptr<SmSessionManager> sessMgr = global->GetSessionManager();

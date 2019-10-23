@@ -13,6 +13,14 @@ using namespace nlohmann;
 void SmAccount::Reset()
 {
 	_InitialBalance = 100000000;
+	// 매매로 이루어진 수익 - 당일 매매로 인한 수익
+	_TradePL = 0.0;
+	// 현재 청산되지 않은 주문으로 인한 평가 손익
+	_OpenPL = 0.0;
+	// 누적된 매매 수익 - 초기 자본금에서 시작된 이후 모든 수익을 더한 값임
+	_TotalTradePL = 0.0;
+	// 당일 통합 수수료를 나타낸다. 누적 수수료는 다르게 확인할 수 있다.
+	_Fee = 0.0;
 }
 
 double SmAccount::GetSymbolFee(std::string symbol_code)

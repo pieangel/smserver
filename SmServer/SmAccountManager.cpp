@@ -118,3 +118,19 @@ void SmAccountManager::SendAccountList(int session_id, std::string user_id)
 	std::shared_ptr<SmSessionManager> session_mgr = SmGlobal::GetInstance()->GetSessionManager();
 	session_mgr->send(session_id, send_object.dump());
 }
+
+int SmAccountManager::ResetAccount(std::string account_no)
+{
+	int result = 0;
+
+	std::shared_ptr<SmAccount> account = FindAccount(account_no);
+	// 계좌 없음 오류 
+	if (!account)
+		return -1;
+	// 계좌를 초기화 한다.
+	account->Reset();
+	// 데이터베이스에 정보를 업데이트 한다. 
+	SmMongoDBManager::GetInstance()->UpdateAccountInfo(account);
+
+	return result;
+}

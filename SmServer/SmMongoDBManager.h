@@ -29,6 +29,8 @@ public:
 	void ReadSymbol();
 	void LoadMarketList();
 	void LoadSymbolList();
+	void LoadRecentQuoteList();
+	void LoadRecentHogaList();
 	void SendChartDataFromDB(SmChartDataRequest&& data_req);
 	void SendChartData(SmChartDataRequest data_req);
 	void SendChartDataOneByOne(SmChartDataRequest data_req);
