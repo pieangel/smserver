@@ -16,6 +16,7 @@ public:
 	std::shared_ptr<SmPosition> FindAddPosition(std::string acntNo, std::string symbolCode);
 	void AddPosition(std::shared_ptr<SmPosition> posi);
 	void SendPositionList(int session_id, std::string account_no);
+	void SendPositionList(int session_id, std::vector<std::string> account_no_list);
 	void CheckUptoDate(std::shared_ptr<SmPosition> posi);
 private:
 	std::shared_ptr<SmPosition> CreatePosition(std::string account_no, std::string symbol_code);

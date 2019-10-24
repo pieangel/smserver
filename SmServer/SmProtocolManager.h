@@ -49,13 +49,16 @@ private:
 	void OnReqUpdateHoga(nlohmann::json& obj);
 	void OnReqUpdateChartData(nlohmann::json& obj);
 	void OnReqRegisterUser(nlohmann::json& obj);
-	void OnReqRegisterUser(nlohmann::json& obj, SmWebsocketSession* socket);
 	void OnReqUnregisterUser(nlohmann::json& obj);
 	void OnReqChartDataOneByOne(nlohmann::json& obj, SmWebsocketSession* socket);
 	void OnReqAccountList(nlohmann::json& obj);
+	// 접수확인 주문들을 보낸다.
 	void OnReqAcceptedList(nlohmann::json& obj);
+	// 체결된 주문들을 보낸다.
 	void OnReqFilledList(nlohmann::json& obj);
+	// 요청한 주문들을 보낸다.
 	void OnReqOrderList(nlohmann::json& obj);
+	// 요청한 포지션들을 보낸다.
 	void OnReqPositionList(nlohmann::json& obj);
 	void SendResult(std::string user_id, SmProtocol protocol, int result_code, std::string result_msg);
 	void SendResult(int session_id, SmProtocol protocol, int result_code, std::string result_msg);

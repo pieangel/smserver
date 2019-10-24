@@ -3,13 +3,13 @@
 #include "SmMongoDBManager.h"
 #include <tuple>
 
-std::string SmAccountNumGenerator::GetNewAccountNumber()
+std::string SmAccountNumGenerator::GetNewAccountNumber(int type)
 {
 	std::string first, second, last, whole;
 
 	SmMongoDBManager* mongoMgr = SmMongoDBManager::GetInstance();
 	
-	std::tuple acc_no = mongoMgr->GetAccountNo();
+	std::tuple acc_no = mongoMgr->GetAccountNo(type);
 	_First = std::get<0>(acc_no);
 	_Second = std::get<1>(acc_no);
 	_Last = std::get<2>(acc_no);
@@ -31,13 +31,13 @@ std::string SmAccountNumGenerator::GetNewAccountNumber()
 	last = std::to_string(_Last);
 	whole = first + second + last;
 
-	SaveAccountNumber();
+	SaveAccountNumber(type);
 
 	return whole;
 }
 
-void SmAccountNumGenerator::SaveAccountNumber()
+void SmAccountNumGenerator::SaveAccountNumber(int type)
 {
 	SmMongoDBManager* mongoMgr = SmMongoDBManager::GetInstance();
-	mongoMgr->SaveAccountNo(_First, _Second, _Last);
+	mongoMgr->SaveAccountNo(type, _First, _Second, _Last);
 }

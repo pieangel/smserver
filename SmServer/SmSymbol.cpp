@@ -42,6 +42,7 @@ std::string SmSymbol::GetQuoteByJson(int total, int current)
 	quote["low"] = Quote.Low;
 	quote["open"] = Quote.Open;
 	quote["close"] = Quote.Close;
+	quote["acc_volume"] = Quote.accVolume;
 	quote["sign_to_preday"] = Quote.SignToPreDay;
 	quote["gap_from_preday"] = Quote.GapFromPreDay;
 	quote["ratio_to_preday"] = Quote.RatioToPreday;
@@ -61,6 +62,7 @@ std::string SmSymbol::GetDummyQuoteByJson(int total, int current)
 	quote["low"] = 0;
 	quote["open"] = 0;
 	quote["close"] = 0;
+	quote["acc_volume"] = 0;
 	quote["sign_to_preday"] = "";
 	quote["gap_from_preday"] = 0;
 	quote["ratio_to_preday"] = "";

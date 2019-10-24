@@ -53,6 +53,7 @@ std::shared_ptr<SmAccount> SmAccountManager::FindAccount(std::string accountNo)
 	return nullptr;
 }
 
+/*
 std::shared_ptr<SmAccount> SmAccountManager::FindAddAccount(std::string accountNo)
 {
 	auto it = _AccountMap.find(accountNo);
@@ -63,11 +64,7 @@ std::shared_ptr<SmAccount> SmAccountManager::FindAddAccount(std::string accountN
 	_AccountMap[accountNo] = acnt;
 	return acnt;
 }
-
-std::string SmAccountManager::GenAccountNo()
-{
-	return _NumGen.GetNewAccountNumber();
-}
+*/
 
 void SmAccountManager::LoadAccountFromDB()
 {
@@ -75,16 +72,23 @@ void SmAccountManager::LoadAccountFromDB()
 	mongoMgr->LoadAccountList();
 }
 
-std::shared_ptr<SmAccount> SmAccountManager::CreateAccount(std::string user_id, std::string password)
+std::shared_ptr<SmAccount> SmAccountManager::CreateAccount(std::string user_id, std::string password, int type)
 {
-	std::string account_no = _NumGen.GetNewAccountNumber();
+	std::string account_no = _NumGen.GetNewAccountNumber(type);
 	std::shared_ptr<SmAccount> acnt = FindAccount(account_no);
 	if (acnt)
 		return acnt;
 
 	acnt = std::make_shared<SmAccount>();
+	// 계좌 형태
+	acnt->AccountType(type);
+	// 계좌 번호
 	acnt->AccountNo(account_no);
+	// 사용자 아이디
 	acnt->UserID(user_id);
+	// 계좌 비밀번호
+	acnt->Password(password);
+	// 맵에 저장한다.
 	_AccountMap[account_no] = acnt;
 
 	SmMongoDBManager* mongoMgr = SmMongoDBManager::GetInstance();
@@ -102,6 +106,7 @@ void SmAccountManager::SendAccountList(int session_id, std::string user_id)
 	for (size_t j = 0; j < account_list.size(); ++j) {
 		std::shared_ptr<SmAccount> acnt = account_list[j];
 		send_object["account"][j] = {
+			{ "account_type",  acnt->AccountType() },
 			{ "account_no",  acnt->AccountNo() },
 			{ "account_name", SmUtfUtil::AnsiToUtf8((char*)acnt->AccountName().c_str()) },
 			{ "user_id",  acnt->UserID() },

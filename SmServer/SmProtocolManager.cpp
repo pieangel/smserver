@@ -752,6 +752,8 @@ void SmProtocolManager::OnReqUpdateQuote(nlohmann::json& obj)
 		int low = obj["low"];
 		int close = obj["close"];
 		int acc_volume = obj["acc_volume"];
+		std::string time = obj["time"];
+		sym->Quote.OriginTime = time;
 		sym->Quote.accVolume = acc_volume;
 		sym->Quote.Open = open;
 		sym->Quote.High = high;
@@ -784,12 +786,12 @@ void SmProtocolManager::OnReqUpdateHoga(nlohmann::json& obj)
 		sym->Hoga.TotSellCnt = obj["tot_sell_cnt"];
 
 		for (int i = 0; i < 5; i++) {
-			sym->Hoga.Ary[i].BuyPrice = obj["obj_items"][i]["buy_price"];
-			sym->Hoga.Ary[i].BuyCnt = obj["obj_items"][i]["buy_cnt"];
-			sym->Hoga.Ary[i].BuyQty = obj["obj_items"][i]["buy_qty"];
-			sym->Hoga.Ary[i].SellPrice = obj["obj_items"][i]["sell_price"];
-			sym->Hoga.Ary[i].SellCnt = obj["obj_items"][i]["sell_cnt"];
-			sym->Hoga.Ary[i].SellQty = obj["obj_items"][i]["sell_qty"];
+			sym->Hoga.Ary[i].BuyPrice = obj["hoga_items"][i]["buy_price"];
+			sym->Hoga.Ary[i].BuyCnt = obj["hoga_items"][i]["buy_cnt"];
+			sym->Hoga.Ary[i].BuyQty = obj["hoga_items"][i]["buy_qty"];
+			sym->Hoga.Ary[i].SellPrice = obj["hoga_items"][i]["sell_price"];
+			sym->Hoga.Ary[i].SellCnt = obj["hoga_items"][i]["sell_cnt"];
+			sym->Hoga.Ary[i].SellQty = obj["hoga_items"][i]["sell_qty"];
 		}
 	}
 
@@ -826,34 +828,10 @@ void SmProtocolManager::OnReqRegisterUser(nlohmann::json& obj)
 
 	// 계좌를 만들고 데이터베이스에 저장한다.
 	SmAccountManager* acntMgr = SmAccountManager::GetInstance();
-	acntMgr->CreateAccount(user_id, password);
-
-	// 등록 결과 메시지를 보낸다.
-	obj["res_id"] = (int)SmProtocol::res_register_user;
-	obj["message"] = "Registered a user successfully!";
-	obj["user_id"] = user_id;
-	obj["password"] = password;
-	std::string content = obj.dump(4);
-	SmGlobal* global = SmGlobal::GetInstance();
-	std::shared_ptr<SmSessionManager> sessMgr = global->GetSessionManager();
-	sessMgr->send(session_id, content);
-
-	// 여기서 계좌 정보를 보내 준다.
-	acntMgr->SendAccountList(session_id, user_id);
-}
-
-void SmProtocolManager::OnReqRegisterUser(nlohmann::json& obj, SmWebsocketSession* socket)
-{
-	std::string user_id = obj["user_id"];
-	std::string password = obj["password"];
-	int session_id = obj["session_id"];
-	// 사용자 정보를 데이터베이스에 저장한다.
-	SmMongoDBManager* mongoMgr = SmMongoDBManager::GetInstance();
-	mongoMgr->SaveUserInfo(user_id, password);
-
-	// 계좌를 만들고 데이터베이스에 저장한다.
-	SmAccountManager* acntMgr = SmAccountManager::GetInstance();
-	acntMgr->CreateAccount(user_id, password);
+	// 해외 계좌를 먼저 만든다.
+	acntMgr->CreateAccount(user_id, password, 0);
+	// 국내 계좌도 만든다.
+	acntMgr->CreateAccount(user_id, password, 1);
 
 	// 등록 결과 메시지를 보낸다.
 	obj["res_id"] = (int)SmProtocol::res_register_user;
@@ -928,8 +906,13 @@ void SmProtocolManager::OnReqAcceptedList(nlohmann::json& obj)
 
 		std::string user_id = obj["user_id"];
 		int session_id = obj["session_id"];
-		std::string account_no = obj["account_no"];
-		SmTotalOrderManager::GetInstance()->SendAcceptedOrderList(session_id, account_no);
+		auto account_no_list = obj["account_no_list"];
+		std::vector<std::string> account_vec;
+		for (size_t i = 0; i < account_no_list.size(); ++i) {
+			account_vec.push_back(account_no_list[i]);
+		}
+		
+		SmTotalOrderManager::GetInstance()->SendAcceptedOrderList(session_id, account_vec);
 	}
 	catch (std::exception e) {
 		std::string error = e.what();
@@ -942,8 +925,12 @@ void SmProtocolManager::OnReqFilledList(nlohmann::json& obj)
 
 		std::string user_id = obj["user_id"];
 		int session_id = obj["session_id"];
-		std::string account_no = obj["account_no"];
-		SmTotalOrderManager::GetInstance()->SendFilledOrderList(session_id, account_no);
+		auto account_no_list = obj["account_no_list"];
+		std::vector<std::string> account_vec;
+		for (size_t i = 0; i < account_no_list.size(); ++i) {
+			account_vec.push_back(account_no_list[i]);
+		}
+		SmTotalOrderManager::GetInstance()->SendFilledOrderList(session_id, account_vec);
 	}
 	catch (std::exception e) {
 		std::string error = e.what();
@@ -971,8 +958,12 @@ void SmProtocolManager::OnReqPositionList(nlohmann::json& obj)
 
 		std::string user_id = obj["user_id"];
 		int session_id = obj["session_id"];
-		std::string account_no = obj["account_no"];
-		SmTotalPositionManager::GetInstance()->SendPositionList(session_id, account_no);
+		auto account_no_list = obj["account_no_list"];
+		std::vector<std::string> account_vec;
+		for (size_t i = 0; i < account_no_list.size(); ++i) {
+			account_vec.push_back(account_no_list[i]);
+		}
+		SmTotalPositionManager::GetInstance()->SendPositionList(session_id, account_vec);
 	}
 	catch (std::exception e) {
 		std::string error = e.what();

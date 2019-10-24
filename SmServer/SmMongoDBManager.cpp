@@ -401,6 +401,9 @@ void SmMongoDBManager::LoadRecentHogaList()
 			std::string object = bsoncxx::to_json(doc);
 			auto json_object = json::parse(object);
 			std::string symbol_code = json_object["symbol_code"];
+
+			OutputDebugString("\n");
+			OutputDebugString(symbol_code.c_str());
 			
 			std::shared_ptr<SmSymbol> sym = symMgr->FindSymbol(symbol_code);
 			if (sym) {
@@ -803,7 +806,7 @@ void SmMongoDBManager::SendChartCycleData(SmChartDataRequest data_req)
 	}
 }
 
-std::tuple<int, int, int> SmMongoDBManager::GetAccountNo()
+std::tuple<int, int, int> SmMongoDBManager::GetAccountNo(int type)
 {
 	try
 	{
@@ -814,9 +817,11 @@ std::tuple<int, int, int> SmMongoDBManager::GetAccountNo()
 
 		mongocxx::collection coll = db["account_no"];
 
+		std::string account_type;
+		type == 0 ? account_type = "abroad" : account_type = "domestic";
 
 		bsoncxx::stdx::optional<bsoncxx::document::value> maybe_result =
-			coll.find_one(bsoncxx::builder::stream::document{} << "current_no" << "current_no" << finalize);
+			coll.find_one(bsoncxx::builder::stream::document{} << "account_type" << account_type << finalize);
 		if (maybe_result) {
 			std::string message = bsoncxx::to_json(*maybe_result);
 			auto json_object = json::parse(message);
@@ -826,7 +831,10 @@ std::tuple<int, int, int> SmMongoDBManager::GetAccountNo()
 			return std::make_tuple(first, second, last);
 		}
 		else {
-			return std::make_tuple(100, 1000, 1000);
+			if (type == 0) // 해외
+				return std::make_tuple(100, 1000, 1000);
+			else // 국내
+				return std::make_tuple(300, 1000, 1000);
 		}
 
 	}
@@ -961,6 +969,7 @@ void SmMongoDBManager::SaveAccountInfo(std::shared_ptr<SmAccount> acnt)
 			coll.update_one(bsoncxx::builder::stream::document{} << "account_no" << acnt->AccountNo() << finalize,
 				bsoncxx::builder::stream::document{} << "$set"
 				<< open_document
+				<< "account_type" << acnt->AccountType()
 				<< "account_no" << acnt->AccountNo()
 				<< "user_id" << acnt->UserID()
 				<< "account_name" << acnt->AccountName()
@@ -974,6 +983,7 @@ void SmMongoDBManager::SaveAccountInfo(std::shared_ptr<SmAccount> acnt)
 		}
 		else {
 			bsoncxx::document::value doc_value = builder
+				<< "account_type" << acnt->AccountType()
 				<< "account_no" << acnt->AccountNo()
 				<< "user_id" << acnt->UserID()
 				<< "account_name" << acnt->AccountName()
@@ -1061,6 +1071,8 @@ std::vector<std::shared_ptr<SmAccount>> SmMongoDBManager::GetAccountList(std::st
 			double open_profit_loss = json_object["open_profit_loss"];
 			double total_trade_profit_loss = json_object["total_trade_profit_loss"];
 			double fee = json_object["fee"];
+			int account_type = json_object["account_type"];
+			acnt->AccountType(account_type);
 			acnt->AccountNo(account_no);
 			acnt->AccountName(account_name);
 			acnt->UserID(user_id);
@@ -1108,6 +1120,8 @@ std::shared_ptr<SmAccount> SmMongoDBManager::GetAccount(std::string account_no)
 			double initial_valance = json_object["initial_balance"];
 			double trade_profit_loss = json_object["trade_profit_loss"];
 			double open_profit_loss = json_object["open_profit_loss"];
+			int account_type = json_object["account_type"];
+			acnt->AccountType(account_type);
 			acnt->AccountNo(account_no);
 			acnt->AccountName(account_name);
 			acnt->UserID(user_id);
@@ -1990,6 +2004,7 @@ void SmMongoDBManager::LoadAccountList()
 		for (auto doc : cursor) {
 			std::string message = bsoncxx::to_json(doc);
 			auto json_object = json::parse(message);
+			auto id = json_object["$oid"];
 			std::shared_ptr<SmAccount> acnt = std::make_shared<SmAccount>();
 			std::string account_no = json_object["account_no"];
 			std::string user_id = json_object["user_id"];
@@ -2346,7 +2361,7 @@ void SmMongoDBManager::SaveTradePL(std::shared_ptr<SmAccount> account, std::shar
 	}
 }
 
-void SmMongoDBManager::SaveAccountNo(int first, int second, int last)
+void SmMongoDBManager::SaveAccountNo(int type, int first, int second, int last)
 {
 	try
 	{
@@ -2363,13 +2378,17 @@ void SmMongoDBManager::SaveAccountNo(int first, int second, int last)
 
 		builder::stream::document builder{};
 
+		std::string account_type;
+
+		type == 0 ? account_type = "abroad" : account_type = "domestic";
+
 		bsoncxx::stdx::optional<bsoncxx::document::value> fount_no =
-			coll.find_one(bsoncxx::builder::stream::document{} << "current_no" << "current_no" << finalize);
+			coll.find_one(bsoncxx::builder::stream::document{} << "account_type" << account_type << finalize);
 		if (fount_no) {
-			coll.update_one(bsoncxx::builder::stream::document{} << "current_no" << "current_no" << finalize,
+			coll.update_one(bsoncxx::builder::stream::document{} << "account_type" << account_type << finalize,
 				bsoncxx::builder::stream::document{} << "$set"
 				<< open_document
-				<< "current_no" << "current_no"
+				<< "account_type" << account_type
 				<< "first" << first
 				<< "second" << second
 				<< "last" << last
@@ -2377,7 +2396,7 @@ void SmMongoDBManager::SaveAccountNo(int first, int second, int last)
 		}
 		else {
 			bsoncxx::document::value doc_value = builder
-				<< "current_no" << "current_no"
+				<< "account_type" << account_type
 				<< "first" << first
 				<< "second" << second
 				<< "last" << last

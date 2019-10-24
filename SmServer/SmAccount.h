@@ -28,6 +28,8 @@ private:
 	typedef std::vector<std::shared_ptr<SmFee>> SmFeeVector;
 	// key : symbol code, value : SmFeeVector
 	std::map<std::string, SmFeeVector> SymbolFeeMap;
+	// 계좌 형태 :: 0 : 해외, 1 : 국내
+	int _AccountType = 0;
 public:
 	void UpdateFee(double fee) {
 		_Fee += fee;
@@ -65,5 +67,7 @@ public:
 	void TotalTradePL(double val) { _TotalTradePL = val; }
 	double Fee() const { return _Fee; }
 	void Fee(double val) { _Fee = val; }
+	int AccountType() const { return _AccountType; }
+	void AccountType(int val) { _AccountType = val; }
 };
 

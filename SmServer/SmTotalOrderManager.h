@@ -20,8 +20,11 @@ public:
 	virtual void AddAcceptedOrder(std::shared_ptr<SmOrder> order);
 	// 접수확인된 주문들을 보낸다.
 	void SendAcceptedOrderList(int session_id, std::string account_no);
+	// 접수확인된 주문들을 보낸다.
+	void SendAcceptedOrderList(int session_id, std::vector<std::string> account_no_vec);
 	// 체결된(이미 청산된 주문은 체외) 주문들을 보낸다.
 	void SendFilledOrderList(int session_id, std::string account_no);
+	void SendFilledOrderList(int session_id, std::vector<std::string> account_no_vec);
 	// 주문 목록을 최신 것 부터 보낸다.
 	void SendOrderList(int session_id, std::string account_no, int count = 50);
 	void SendResponse(std::shared_ptr<SmOrder> order, SmProtocol protocol);

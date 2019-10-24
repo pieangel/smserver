@@ -37,10 +37,10 @@ public:
 	void SendQuote(std::string symbol_code);
 	void SendHoga(std::string symbol_code);
 	void SendChartCycleData(SmChartDataRequest data_req);
-	void SaveAccountNo(int first, int middle, int last);
+	void SaveAccountNo(int type, int first, int middle, int last);
 	void SaveCurrentOrderNo(int order_no);
 	int GetOrderNo();
-	std::tuple<int, int, int> GetAccountNo();
+	std::tuple<int, int, int> GetAccountNo(int type = 0);
 	void SaveUserInfo(std::string user_id, std::string pwd);
 	std::pair<std::string, std::string> GetUserInfo(std::string user_id);
 	bool RemoveUserInfo(std::string user_id);

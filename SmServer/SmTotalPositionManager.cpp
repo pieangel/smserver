@@ -125,6 +125,44 @@ void SmTotalPositionManager::SendPositionList(int session_id, std::string accoun
 	session_mgr->send(session_id, send_object.dump());
 }
 
+void SmTotalPositionManager::SendPositionList(int session_id, std::vector<std::string> account_no_list)
+{
+	std::vector<std::shared_ptr<SmPosition>> total_position_list;
+	for (size_t i = 0; i < account_no_list.size(); ++i) {
+		std::vector<std::shared_ptr<SmPosition>> order_list = SmMongoDBManager::GetInstance()->GetPositionList(account_no_list[i]);
+		total_position_list.insert(total_position_list.end(), order_list.begin(), order_list.end());
+	}
+
+	json send_object;
+	send_object["res_id"] = SmProtocol::res_position_list;
+	int total_count = 0;
+	for (size_t j = 0; j < total_position_list.size(); ++j) {
+		std::shared_ptr<SmPosition> position = total_position_list[j];
+		// 잔고가 있는 것만 보낸다.
+		if (position->OpenQty != 0) {
+			total_count++;
+			send_object["position"][j] = {
+				{ "created_date",  position->CreatedDate },
+				{ "created_time", position->CreatedTime },
+				{ "symbol_code",  position->SymbolCode },
+				{ "position_type",  (int)position->Position },
+				{ "account_no",  position->AccountNo },
+				{ "open_qty",  position->OpenQty },
+				{ "fee",  position->Fee },
+				{ "trade_profitloss",  position->TradePL },
+				{ "average_price",  position->AvgPrice },
+				{ "current_price",  position->CurPrice },
+				{ "open_profitloss",  position->OpenPL }
+			};
+		}
+	}
+
+	send_object["total_position_count"] = total_count;
+
+	std::shared_ptr<SmSessionManager> session_mgr = SmGlobal::GetInstance()->GetSessionManager();
+	session_mgr->send(session_id, send_object.dump());
+}
+
 void SmTotalPositionManager::CheckUptoDate(std::shared_ptr<SmPosition> posi)
 {
 	if (!posi)
