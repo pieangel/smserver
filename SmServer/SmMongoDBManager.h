@@ -53,7 +53,13 @@ public:
 	void AddOrder(std::shared_ptr<SmOrder> order);
 	void OnAcceptedOrder(std::shared_ptr<SmOrder> order);
 	void OnFilledOrder(std::shared_ptr<SmOrder> order);
+	// 체결된 주문을 저장한다.
+	void SaveFilledOrder(std::shared_ptr<SmOrder> order);
+	// 체결된 주문 목록에서 주어진 조건의 주문을 삭제한다.
+	void RemoveFilledOrder(std::string order_date, int order_no);
 	void ChangeOrderState(std::shared_ptr<SmOrder> order);
+	// 체결된 모든 주문을 로드한다.
+	void LoadFilledOrders();
 	std::vector<std::shared_ptr<SmOrder>> GetAcceptedOrderList(std::string account_no);
 	std::vector<std::shared_ptr<SmOrder>> GetFilledOrderList(std::string account_no);
 	std::vector<std::shared_ptr<SmOrder>> GetOrderList(std::string account_no);

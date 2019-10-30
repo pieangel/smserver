@@ -8,9 +8,7 @@ struct SmFee {
 	std::string Time;
 	std::string AccountNo;
 	std::string SymbolCode;
-	int Amount;
-	int Position;
-	double Fee;
+	int FeeCount;
 };
 
 struct SmAccountFee {

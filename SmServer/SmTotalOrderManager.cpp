@@ -288,7 +288,7 @@ void SmTotalOrderManager::SendRemain(std::shared_ptr<SmOrder> order)
 	send_object["account_no"] = posi->AccountNo;
 	send_object["position_type"] = posi->Position;
 	send_object["open_qty"] = posi->OpenQty;
-	send_object["fee"] = posi->Fee;
+	send_object["fee_count"] = posi->FeeCount;
 	send_object["trade_pl"] = posi->TradePL;
 	send_object["avg_price"] = posi->AvgPrice;
 	send_object["cur_price"] = posi->CurPrice;
@@ -356,11 +356,13 @@ void SmTotalOrderManager::OnOrderFilled(std::shared_ptr<SmOrder> order)
 	SmAccountOrderManager* acntOrderMgr = FindAddOrderManager(order->AccountNo);
 	acntOrderMgr->OnOrderFilled(order);
 	SmOrderManager::OnOrderFilled(order);
-	// 체결된 주문만 보낸다. 청산된 주문은 이미 처리되었음.
-	//if (order->OrderState == SmOrderState::Filled)
-	//	SendResponse(order, SmProtocol::res_order_filled);
-	// 잔고를 보낸다.
-	//SendRemain(order);
+}
+
+void SmTotalOrderManager::OnOrderSettled(std::shared_ptr<SmOrder> order)
+{
+	SmAccountOrderManager* acntOrderMgr = FindAddOrderManager(order->AccountNo);
+	acntOrderMgr->OnOrderSettled(order);
+	SmOrderManager::OnOrderSettled(order);
 }
 
 void SmTotalOrderManager::OnOrder(std::shared_ptr<SmOrder> order)

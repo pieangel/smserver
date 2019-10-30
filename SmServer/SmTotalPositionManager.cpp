@@ -112,7 +112,7 @@ void SmTotalPositionManager::SendPositionList(int session_id, std::string accoun
 				{ "position_type",  (int)position->Position },
 				{ "account_no",  position->AccountNo },
 				{ "open_qty",  position->OpenQty },
-				{ "fee",  position->Fee },
+				{ "fee_count",  position->FeeCount },
 				{ "trade_profitloss",  position->TradePL },
 				{ "average_price",  position->AvgPrice },
 				{ "current_price",  position->CurPrice },
@@ -140,20 +140,20 @@ void SmTotalPositionManager::SendPositionList(int session_id, std::vector<std::s
 		std::shared_ptr<SmPosition> position = total_position_list[j];
 		// 잔고가 있는 것만 보낸다.
 		if (position->OpenQty != 0) {
-			total_count++;
-			send_object["position"][j] = {
+			send_object["position"][total_count] = {
 				{ "created_date",  position->CreatedDate },
 				{ "created_time", position->CreatedTime },
 				{ "symbol_code",  position->SymbolCode },
 				{ "position_type",  (int)position->Position },
 				{ "account_no",  position->AccountNo },
 				{ "open_qty",  position->OpenQty },
-				{ "fee",  position->Fee },
+				{ "fee_count",  position->FeeCount },
 				{ "trade_profitloss",  position->TradePL },
 				{ "average_price",  position->AvgPrice },
 				{ "current_price",  position->CurPrice },
 				{ "open_profitloss",  position->OpenPL }
 			};
+			total_count++;
 		}
 	}
 

@@ -471,20 +471,23 @@ void CMainFrame::OnShowWindow(BOOL bShow, UINT nStatus)
 	CFrameWnd::OnShowWindow(bShow, nStatus);
 
 	SmMongoDBManager* mongoMgr = SmMongoDBManager::GetInstance();
+	// 시장목록 로드
 	mongoMgr->LoadMarketList();
-	
+	// 심볼 목록 로드
 	mongoMgr->LoadSymbolList();
-
+	// 계좌 목록 로드
 	mongoMgr->LoadAccountList();
-	
+	// 포지션 목록 로드
 	mongoMgr->LoadPositionList();
-
-	mongoMgr->LoadFee();
-
+	// 시세 로드
 	mongoMgr->LoadRecentQuoteList();
-
+	// 호가 로드
 	mongoMgr->LoadRecentHogaList();
-
+	// 접수확인 목록 로드
+	mongoMgr->LoadAcceptedOrderList();
+	// 체결확인 목록 로드
+	mongoMgr->LoadFilledOrderList();
+	
 	SmAccountManager* acntMgr = SmAccountManager::GetInstance();
 	std::shared_ptr<SmAccount> acnt = acntMgr->FindAccount("");
 

@@ -23,16 +23,16 @@ private:
 	double _OpenPL = 0.0;
 	// 누적된 매매 수익 - 초기 자본금에서 시작된 이후 모든 수익을 더한 값임
 	double _TotalTradePL = 0.0;
-	// 당일 통합 수수료를 나타낸다. 누적 수수료는 다르게 확인할 수 있다.
-	double _Fee = 0.0;
+	// 수수료는 부과된 횟수만 기록한다. 실제적인 수수료는 개인이 설정한 값에서 결정된다.
+	int _FeeCount; //		수수료
 	typedef std::vector<std::shared_ptr<SmFee>> SmFeeVector;
 	// key : symbol code, value : SmFeeVector
 	std::map<std::string, SmFeeVector> SymbolFeeMap;
 	// 계좌 형태 :: 0 : 해외, 1 : 국내
 	int _AccountType = 0;
 public:
-	void UpdateFee(double fee) {
-		_Fee += fee;
+	void UpdateFee(int fee_count) {
+		_FeeCount += fee_count;
 	}
 	// 매매 손익을 업데이트 한다.
 	void UpdateTradePL(double trade_pl) {
@@ -45,9 +45,6 @@ public:
 	}
 	// 계좌를 완전히 초기화 시킨다. 모의 매매에 할당된 금액을 다시 설정한다.
 	void Reset();
-	double GetSymbolFee(std::string symbol_code);
-	double GetTotalFee();
-	void AddFee(std::string symbol_code, std::shared_ptr<SmFee> fee);
 	std::string GetAccountInfoByJSon();
 	std::string AccountNo() const { return _AccountNo; }
 	void AccountNo(std::string val) { _AccountNo = val; }
@@ -65,9 +62,9 @@ public:
 	void OpenPL(double val) { _OpenPL = val; }
 	double TotalTradePL() const { return _TotalTradePL; }
 	void TotalTradePL(double val) { _TotalTradePL = val; }
-	double Fee() const { return _Fee; }
-	void Fee(double val) { _Fee = val; }
 	int AccountType() const { return _AccountType; }
 	void AccountType(int val) { _AccountType = val; }
+	int FeeCount() const { return _FeeCount; }
+	void FeeCount(int val) { _FeeCount = val; }
 };
 

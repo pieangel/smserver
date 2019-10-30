@@ -52,6 +52,13 @@ void SmAccountOrderManager::OnOrderFilled(std::shared_ptr<SmOrder> order)
 	SmOrderManager::OnOrderFilled(order);
 }
 
+void SmAccountOrderManager::OnOrderSettled(std::shared_ptr<SmOrder> order)
+{
+	if (!order)
+		return;
+	SmOrderManager::OnOrderSettled(order);
+}
+
 void SmAccountOrderManager::OnOrder(std::shared_ptr<SmOrder> order)
 {
 	if (!order)

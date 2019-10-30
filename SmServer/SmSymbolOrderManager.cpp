@@ -71,8 +71,11 @@ void SmSymbolOrderManager::OnOrderFilled(std::shared_ptr<SmOrder> order)
 	SmMongoDBManager::GetInstance()->OnFilledOrder(order);
 	// 포지션을 계산한다.
 	CalcPosition(order);
-	// 체결 주문 목록에 추가한다.
-	SmOrderManager::OnOrderFilled(order);
+}
+
+void SmSymbolOrderManager::OnOrderSettled(std::shared_ptr<SmOrder> order)
+{
+	
 }
 
 void SmSymbolOrderManager::OnOrder(std::shared_ptr<SmOrder> order)
@@ -97,27 +100,25 @@ void SmSymbolOrderManager::CalcFee(std::shared_ptr<SmPosition> posi, std::shared
 		return;
 	std::shared_ptr<SmFee> fee = std::make_shared<SmFee>();
 	fee->AccountNo = filledOrder->AccountNo;
-	fee->Amount = filledOrder->FilledQty;
 	std::pair<std::string, std::string> date_time = VtStringUtil::GetCurrentDateTime();
 	fee->Date = date_time.first;
 	fee->Time = date_time.second;
-	fee->Position = filledOrder->Position == SmPositionType::Buy ? 1 : 2;
 	fee->SymbolCode = filledOrder->SymbolCode;
 
 	if (std::isdigit(posi->SymbolCode.at(2))) { // 국내 상품
-		posi->Fee += filledOrder->FilledQty * SmTotalOrderManager::FeeForDomestic;
-		fee->Fee = filledOrder->FilledQty * SmTotalOrderManager::FeeForDomestic;
-		LOG_F(INFO, "CalcFee: symbol_code = %s, fee = %.0f", posi->SymbolCode.c_str(), posi->Fee);
+		posi->FeeCount += filledOrder->FilledQty;
+		fee->FeeCount = filledOrder->FilledQty;
+		LOG_F(INFO, "CalcFee: symbol_code = %s, feeCount = %d", posi->SymbolCode.c_str(), posi->FeeCount);
 	}
 	else { // 해외 상품
-		posi->Fee += filledOrder->FilledQty * SmTotalOrderManager::FeeForAbroad;
-		fee->Fee = filledOrder->FilledQty * SmTotalOrderManager::FeeForAbroad;
-		LOG_F(INFO, "CalcFee: symbol_code = %s, fee = %.0f", posi->SymbolCode.c_str(), posi->Fee);
+		posi->FeeCount += filledOrder->FilledQty;
+		fee->FeeCount = filledOrder->FilledQty;
+		LOG_F(INFO, "CalcFee: symbol_code = %s, feeCount = %d", posi->SymbolCode.c_str(), posi->FeeCount);
 	}
 
 	// 계좌에 수수료를 저장한다.
-	acnt->AddFee(fee->SymbolCode, fee);
-	LOG_F(INFO, "CalcFee2: symbol_code = %s, fee = %.0f", posi->SymbolCode.c_str(), posi->Fee);
+	acnt->UpdateFee(fee->FeeCount);
+	LOG_F(INFO, "CalcFee2: symbol_code = %s, feeCount = %d", posi->SymbolCode.c_str(), posi->FeeCount);
 	// 데이터베이스에 수수료를 저장한다.
 	SmMongoDBManager::GetInstance()->SaveFee(fee);
 }
@@ -162,7 +163,7 @@ void SmSymbolOrderManager::CalcPosition(std::shared_ptr<SmOrder> order)
 					posi->TradePL += current_profit_loss;
 					posi->OpenPL = posi->OpenQty * (curClose - posi->AvgPrice) * sym->Seungsu();
 					acnt->UpdateTradePL(current_profit_loss);
-					//dbMgr->UpdateAccountInfo(acnt);
+					
 					dbMgr->SaveTradePL(acnt, posi, current_profit_loss);
 				}
 				else { //체결수량이 큰 경우
@@ -173,7 +174,7 @@ void SmSymbolOrderManager::CalcPosition(std::shared_ptr<SmOrder> order)
 					posi->OpenQty = posi->OpenQty - order->FilledQty;
 					posi->OpenPL = posi->OpenQty * (curClose - posi->AvgPrice) * sym->Seungsu();
 					acnt->UpdateTradePL(current_profit_loss);
-					//dbMgr->UpdateAccountInfo(acnt);
+					
 					dbMgr->SaveTradePL(acnt, posi, current_profit_loss);
 				}
 			}
@@ -197,7 +198,7 @@ void SmSymbolOrderManager::CalcPosition(std::shared_ptr<SmOrder> order)
 					posi->TradePL += current_profit_loss;
 					posi->OpenPL = posi->OpenQty * (curClose - posi->AvgPrice) * sym->Seungsu();
 					acnt->UpdateTradePL(current_profit_loss);
-					//dbMgr->UpdateAccountInfo(acnt);
+					
 					dbMgr->SaveTradePL(acnt, posi, current_profit_loss);
 				}
 				else { //체결수량이 큰 경우		
@@ -208,7 +209,7 @@ void SmSymbolOrderManager::CalcPosition(std::shared_ptr<SmOrder> order)
 					posi->OpenQty = posi->OpenQty + order->FilledQty;
 					posi->OpenPL = posi->OpenQty * (curClose - posi->AvgPrice) * sym->Seungsu();
 					acnt->UpdateTradePL(current_profit_loss);
-					//dbMgr->UpdateAccountInfo(acnt);
+					
 					dbMgr->SaveTradePL(acnt, posi, current_profit_loss);
 				}
 			}
@@ -217,7 +218,7 @@ void SmSymbolOrderManager::CalcPosition(std::shared_ptr<SmOrder> order)
 	// 포지션 현재가를 넣어준다.
 	posi->CurPrice = curClose;
 	// 주문 잔고를 계산한다.
-	int totalRemain = CalcRemain(order);
+	int totalRemain = CalcRemainOrder(order);
 	if (totalRemain == posi->OpenQty) {
 		// 잔고 수량에 따라 포지션을 다시 결정해 준다.
 		if (posi->OpenQty > 0) { // 매수 포지션 설정 : 양수임
@@ -249,17 +250,19 @@ void SmSymbolOrderManager::CalcPosition(std::shared_ptr<SmOrder> order)
 	// 여기서 데이터베이스의 포지션을 상태를 업데이트한다.
 	SmMongoDBManager::GetInstance()->UpdatePosition(posi);
 }
-int SmSymbolOrderManager::CalcRemain(std::shared_ptr<SmOrder> newOrder)
+// 이 함수는 남아있는 주문과 새로운 주문 처리를 하여 남아있는 주문을 계산한다.
+// 주문은 먼저 들어온 주문이 먼저 처리 된다.
+int SmSymbolOrderManager::CalcRemainOrder(std::shared_ptr<SmOrder> newOrder)
 {
 	// 잔고 주문이 없다면 맨뒤에 추가하고 나간다.
 	// 잔고 주문은 오래된 주문이 맨 앞에 있다.
-	if (_RemainOrderMap.size() == 0) {
-		_RemainOrderMap.push_back(newOrder);
+	if (_FilledOrderMap.size() == 0) {
+		_FilledOrderMap[newOrder->OrderNo] = newOrder;
 		return CalcTotalRemain();
 	}
-	// 잔고 주문이 남아 있을 경우 처리
-	for (auto it = _RemainOrderMap.begin(); it != _RemainOrderMap.end(); ++it) {
-		std::shared_ptr<SmOrder> oldOrder = *it;
+	// 잔고 주문이 남아 있을 경우 처리 - 주문 번호가 빠른 것 부터 처리한다.
+	for (auto it = _FilledOrderMap.begin(); it != _FilledOrderMap.end(); ++it) {
+		std::shared_ptr<SmOrder> oldOrder = it->second;
 		
 		// 현재 들어온 주문이 맨 마지막 주문과 같으면 바로 나간다.
 		// 새로운 주문은 결과를 보고 밑에서 다시 처리한다.
@@ -268,58 +271,87 @@ int SmSymbolOrderManager::CalcRemain(std::shared_ptr<SmOrder> newOrder)
 		}
 		// 들어온 주문과 현재 주문과 갯수가 같을 경우
 		if (std::abs(newOrder->RemainQty) == std::abs(oldOrder->RemainQty)) {
-			newOrder->RemainQty = 0;
+			// 기존 주문에 대한 처리
+			// 잔고 초기화
 			oldOrder->RemainQty = 0;
-			newOrder->OrderState = SmOrderState::Settled;
-			// 여기서 주문 상태를 데이터베이스에 저장해 준다.
-			SmMongoDBManager::GetInstance()->ChangeOrderState(newOrder);
+			// 청산확인 설정
+			oldOrder->OrderState = SmOrderState::Settled;
 			// 새로운 주문이 청산 시킨 주문은 목록에 넣어 준다.
 			newOrder->SettledOrders.push_back(oldOrder->OrderNo);
-			oldOrder->OrderState = SmOrderState::Settled;
 			// 청산 주문 메시지를 보낸다.
 			SmTotalOrderManager::GetInstance()->SendResponse(oldOrder, SmProtocol::res_order_settled);
+			// 여기서 주문 상태를 데이터베이스에 저장해 준다.
+			SmMongoDBManager::GetInstance()->ChangeOrderState(oldOrder);
+			// 체결확인 목록에서 지워준다.
+			_FilledOrderMap.erase(it);
+			_SettledMap[oldOrder->OrderNo] = oldOrder;
+			SmTotalOrderManager::GetInstance()->OnOrderSettled(oldOrder);
+			// 새로운 주문에 대한 처리
+			// 잔고 설정
+			newOrder->RemainQty = 0;
+			// 청산확인 설정
+			newOrder->OrderState = SmOrderState::Settled;
 			// 청산 주문 메시지를 보낸다.
 			SmTotalOrderManager::GetInstance()->SendResponse(newOrder, SmProtocol::res_order_settled);
 			// 여기서 주문 상태를 데이터베이스에 저장해 준다.
-			SmMongoDBManager::GetInstance()->ChangeOrderState(oldOrder);
-			// 잔고에서 지워준다.
-			_RemainOrderMap.erase(it);
+			SmMongoDBManager::GetInstance()->ChangeOrderState(newOrder);
+			// 청산확인 목록에 추가해 준다.
+			SmTotalOrderManager::GetInstance()->OnOrderSettled(newOrder);
+			// 청산확인 목록에 추가해 준다.
+			_SettledMap[newOrder->OrderNo] = newOrder;
 			break;
 		} 
 		// 신규 주문잔고가 더 클 경우 - 이 경우 신규 주문의 잔고는 줄어든다.
 		// 기존 주문은 잔고가 0이 된다.
 		else if (std::abs(newOrder->RemainQty) > std::abs(oldOrder->RemainQty)) {
+			// 신규 주문 잔고를 조절해 준다.
 			newOrder->RemainQty += oldOrder->RemainQty;
+			// 기존 주문에 대한 처리
+			// 잔고 초기화
 			oldOrder->RemainQty = 0;
+			// 청산확인 설정
+			oldOrder->OrderState = SmOrderState::Settled;
 			// 새로운 주문이 청산 시킨 주문은 목록에 넣어 준다.
 			newOrder->SettledOrders.push_back(oldOrder->OrderNo);
-			oldOrder->OrderState = SmOrderState::Settled;
 			// 청산 주문 메시지를 보낸다.
 			SmTotalOrderManager::GetInstance()->SendResponse(oldOrder, SmProtocol::res_order_settled);
 			// 여기서 주문 상태를 데이터베이스에 저장해 준다.
 			SmMongoDBManager::GetInstance()->ChangeOrderState(oldOrder);
 			// 기존 주문을 목록에서 지워준다.
-			it = _RemainOrderMap.erase(it);
+			it = _FilledOrderMap.erase(it);
+			// 청산확인 목록에 추가해 준다.
+			_SettledMap[oldOrder->OrderNo] = oldOrder;
+			// 청산확인 목록에 추가해 준다.
+			SmTotalOrderManager::GetInstance()->OnOrderSettled(oldOrder);
 			// iterator를 하나 후퇴시킨다.
 			--it;
 		} 
 		// 신규 주문잔고가 더 작을 경우 - 이 경우 신규 주문은 잔고가 0이된다.
 		// 기존 주문은 신규 주문으로 잔고가 줄어든다.
 		else if (std::abs(newOrder->RemainQty) < std::abs(oldOrder->RemainQty)) {
-			newOrder->RemainQty = 0;
+			// 기존 주문에 대한 처리
 			oldOrder->RemainQty += newOrder->RemainQty;
+			// 신규 주문 처리
+			// 신규 주문 잔고 초기화
+			newOrder->RemainQty = 0;
+			// 청산확인 설정
 			newOrder->OrderState = SmOrderState::Settled;
 			// 청산 주문 메시지를 보낸다.
 			SmTotalOrderManager::GetInstance()->SendResponse(oldOrder, SmProtocol::res_order_settled);
 			// 여기서 주문 상태를 데이터베이스에 저장해 준다.
 			SmMongoDBManager::GetInstance()->ChangeOrderState(newOrder);
+			// 청산확인 목록에 추가해 준다.
+			SmTotalOrderManager::GetInstance()->OnOrderSettled(newOrder);
+			// 청산확인 목록에 추가해 준다.
+			_SettledMap[newOrder->OrderNo] = newOrder;
 			break;
 		}
 	}
 
 	// 신규 주문이 잔고가 남아 있다면 잔고 목록에 추가한다.
 	if (newOrder->RemainQty != 0 && newOrder->OrderState == SmOrderState::Filled) {
-		_RemainOrderMap.push_back(newOrder);
+		// 체결 목록에 넣어 준다.
+		SmOrderManager::OnOrderFilled(newOrder);
 	}
 
 	return CalcTotalRemain();
@@ -328,8 +360,8 @@ int SmSymbolOrderManager::CalcRemain(std::shared_ptr<SmOrder> newOrder)
 int SmSymbolOrderManager::CalcTotalRemain()
 {
 	int totalRemain = 0;
-	for (auto it = _RemainOrderMap.begin(); it != _RemainOrderMap.end(); ++it) {
-		totalRemain += (*it)->RemainQty;
+	for (auto it = _FilledOrderMap.begin(); it != _FilledOrderMap.end(); ++it) {
+		totalRemain += it->second->RemainQty;
 	}
 
 	return totalRemain;
@@ -351,17 +383,16 @@ void SmSymbolOrderManager::SendRemain(std::shared_ptr<SmOrder> order, std::share
 	send_object["account_no"] = posi->AccountNo;
 	send_object["position_type"] = posi->Position;
 	send_object["open_qty"] = posi->OpenQty;
-	send_object["symbol_fee"] = posi->Fee;
+	send_object["symbol_fee_count"] = posi->FeeCount;
 	send_object["trade_pl"] = posi->TradePL;
 	send_object["avg_price"] = posi->AvgPrice;
 	send_object["cur_price"] = posi->CurPrice;
-	send_object["fee"] = posi->Fee;
 	send_object["open_pl"] = posi->OpenPL;
-	send_object["account_fee"] = acnt->GetTotalFee();
+	send_object["account_fee_count"] = acnt->FeeCount();
 	send_object["account_trade_pl"] = acnt->TradePL();
 	send_object["account_total_trade_pl"] = acnt->TotalTradePL();
 
-	LOG_F(INFO, "SendRemain: symbol_code = %s, fee = %.0f", posi->SymbolCode.c_str(), posi->Fee);
+	LOG_F(INFO, "SendRemain: symbol_code = %s, feeCount = %d", posi->SymbolCode.c_str(), posi->FeeCount);
 
 	std::string content = send_object.dump();
 	SmUserManager* userMgr = SmUserManager::GetInstance();

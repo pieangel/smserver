@@ -15,10 +15,7 @@ void SmOrderManager::AddFilledOrder(std::shared_ptr<SmOrder> order)
 {
 	if (!order)
 		return;
-	auto it = _AcceptedOrderMap.find(order->OrderNo);
-	if (it != _AcceptedOrderMap.end()) {
-		_AcceptedOrderMap.erase(it);
-	}
+	_FilledOrderMap[order->OrderNo] = order;
 }
 
 void SmOrderManager::AddAcceptedOrder(std::shared_ptr<SmOrder> order)
@@ -33,7 +30,7 @@ void SmOrderManager::OnOrderAccepted(std::shared_ptr<SmOrder> order)
 {
 	if (!order)
 		return;
-
+	// 접수 확인 목록에 추가 한다.
 	_AcceptedOrderMap[order->OrderNo] = order;
 }
 
@@ -41,10 +38,26 @@ void SmOrderManager::OnOrderFilled(std::shared_ptr<SmOrder> order)
 {
 	if (!order)
 		return;
+	// 주문확인 목록에서 제거해 준다.
 	auto it = _AcceptedOrderMap.find(order->OrderNo);
 	if (it != _AcceptedOrderMap.end()) {
 		_AcceptedOrderMap.erase(it);
 	}
+	// 체결 확인 목록에 추가해 준다.
+	_FilledOrderMap[order->OrderNo] = order;
+}
+
+void SmOrderManager::OnOrderSettled(std::shared_ptr<SmOrder> order)
+{
+	if (!order)
+		return;
+	// 체결확인 목록에서 제거해 준다.
+	auto it = _FilledOrderMap.find(order->OrderNo);
+	if (it != _FilledOrderMap.end()) {
+		_FilledOrderMap.erase(it);
+	}
+	// 청산 확인 목록에 추가해 준다.
+	_SettledMap[order->OrderNo] = order;
 }
 
 std::shared_ptr<SmOrder> SmOrderManager::AddOrder(int orderNo)

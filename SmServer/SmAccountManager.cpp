@@ -114,7 +114,7 @@ void SmAccountManager::SendAccountList(int session_id, std::string user_id)
 			{ "initial_balance",  acnt->InitialBalance() },
 			{ "trade_profit_loss",  acnt->TradePL() },
 			{ "open_profit_loss",  acnt->OpenPL() },
-			{ "fee",  acnt->Fee() },
+			{ "fee_count",  acnt->FeeCount() },
 			{ "total_trade_pl",  acnt->TotalTradePL() }
 		};
 		

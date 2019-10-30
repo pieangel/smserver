@@ -89,14 +89,11 @@ BOOL CShowChartData::OnInitDialog()
 	m_Grid.SetColumnWidth(7, 80);
 
 	// fill rows/cols with text
-	for (int row = 1; row < m_Grid.GetRowCount(); row++)
-	{
-		for (int col = 0; col < m_Grid.GetColumnCount(); col++)
-		{
+	for (int row = 1; row < m_Grid.GetRowCount(); row++) {
+		for (int col = 0; col < m_Grid.GetColumnCount(); col++) {
 			CString text;
 			
-			switch (col)
-			{
+			switch (col) {
 			case 0:
 				text.Format("%d", row);
 				m_Grid.SetItemText(row, col, text);

@@ -29,7 +29,15 @@ public:
 	void SendOrderList(int session_id, std::string account_no, int count = 50);
 	void SendResponse(std::shared_ptr<SmOrder> order, SmProtocol protocol);
 	void SendOrderList(int session_id, std::string account_no, std::string date_time);
-private:
+	// 주문이 처음 도착했을 때 이벤트 처리
+	virtual void OnOrder(std::shared_ptr<SmOrder> order);
+	// 주문 접수확인 때 이벤트 처리
+	virtual void OnOrderAccepted(std::shared_ptr<SmOrder> order);
+	// 주문 체결 확인 때 이벤트 처리
+	virtual void OnOrderFilled(std::shared_ptr<SmOrder> order);
+	// 주문 청산 확인 이벤트 처리
+	virtual void OnOrderSettled(std::shared_ptr<SmOrder> order);
+protected:
 	std::shared_ptr<SmOrder> CreateOrder();
 	void OnOrderNew(std::shared_ptr<SmOrder> order);
 	void OnOrderModify(std::shared_ptr<SmOrder> order);
@@ -40,9 +48,7 @@ private:
 	void SendError(SmOrderError ErrorCode);
 	void SendError(SmOrderError ErrorCode, SmOrderRequest& req);
 	void SendError(SmOrderError ErrorCode, SmOrder& order);
-	virtual void OnOrderAccepted(std::shared_ptr<SmOrder> order);
-	virtual void OnOrderFilled(std::shared_ptr<SmOrder> order);
-	virtual void OnOrder(std::shared_ptr<SmOrder> order);
+	
 	SmAccountOrderManager* FindAddOrderManager(std::string acntNo);
 	std::map<std::string, SmAccountOrderManager*> _OrderManagerMap;
 	void SendConfirmModify(std::shared_ptr<SmOrder> order);
