@@ -88,6 +88,7 @@ public:
 	void SaveFee(std::shared_ptr<SmFee> fee);
 	void LoadFee();
 	void SaveTradePL(std::shared_ptr<SmAccount> account, std::shared_ptr<SmPosition> posi, double current_tradePL);
+	void LoadDailyChartData(SmChartDataRequest req);
 private:
 	void SaveMarketsToDatabase();
 	void SaveSymbolsToDatabase();

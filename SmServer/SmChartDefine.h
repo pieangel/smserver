@@ -37,6 +37,7 @@ struct SmChartDataRequest
 	SmChartDataReqestType reqType = SmChartDataReqestType::FIRST;
 	// Socket id
 	int session_id;
+	std::string product_code;
 	std::string chart_id;
 	std::string user_id;
 	std::string symbolCode;
@@ -50,6 +51,15 @@ struct SmChartDataRequest
 	bool domestic = false;
 	std::string GetDataKey() {
 		std::string key = symbolCode;
+		key.append(":");
+		key.append(std::to_string((int)chartType));
+		key.append(":");
+		key.append(std::to_string(cycle));
+		return key;
+	}
+
+	std::string GetDailyKey() {
+		std::string key = product_code;
 		key.append(":");
 		key.append(std::to_string((int)chartType));
 		key.append(":");

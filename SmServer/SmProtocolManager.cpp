@@ -504,6 +504,24 @@ void SmProtocolManager::OnReqChartData(nlohmann::json& obj, SmWebsocketSession* 
 		int cycle = obj["cycle"];
 		int count = obj["count"];
 		std::string data_key = SmChartData::MakeDataKey(symCode, chart_type, cycle);
+		// 요청이 일별 데이터이면 먼저 데이터베이스에서 찾아 본다.
+		if (chart_type == 3) {
+			std::shared_ptr<SmSymbol> symbol = SmSymbolManager::GetInstance()->FindSymbol(symCode);
+			if (symbol) {
+				SmChartDataRequest req;
+				req.symbolCode = symCode;
+				req.chartType = (SmChartType)chart_type;
+				req.cycle = cycle;
+				req.count = count;
+				req.product_code = symbol->CategoryCode();
+				req.session_id = socket->SessionID();
+				SmMongoDBManager::GetInstance()->LoadDailyChartData(req);
+				SmTimeSeriesServiceManager::GetInstance()->ResendChartDataRequest(req);
+				LOG_F(INFO, "OnReqChartData data_count = 0: %s", data_key.c_str());
+				return;
+			}
+		}
+
 		LOG_F(INFO, "OnReqChartData : %s", data_key.c_str());
 		std::shared_ptr<SmChartData> chart_data = SmChartDataManager::GetInstance()->AddChartData(symCode, chart_type, cycle);
 		size_t data_count = chart_data->GetDataCount();

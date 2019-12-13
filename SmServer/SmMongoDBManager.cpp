@@ -2489,6 +2489,78 @@ void SmMongoDBManager::SaveTradePL(std::shared_ptr<SmAccount> account, std::shar
 	}
 }
 
+void SmMongoDBManager::LoadDailyChartData(SmChartDataRequest req)
+{
+	try
+	{
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		mongocxx::collection coll = db[req.GetDailyKey()];
+
+		// @begin: cpp-query-sort
+		mongocxx::options::find opts;
+
+		opts.sort(make_document(kvp("date_time", -1)));
+
+		auto item_count = db[req.GetDailyKey()].count_documents({});
+		if (item_count == 0)
+			return;
+
+		int limit = item_count > req.count ? req.count : item_count;
+		// 과거의 것이 앞에 오도록 한다.
+		//opts.sort(make_document(kvp("date_time", 1)));
+		opts.limit(limit);
+
+		mongocxx::cursor cursor = coll.find({}, opts);
+		SmChartDataManager* chartDataMgr = SmChartDataManager::GetInstance();
+		std::shared_ptr<SmChartData> chart_data = chartDataMgr->AddChartData(req);
+		int count = 1;
+		for (auto&& doc : cursor) {
+			std::string object = bsoncxx::to_json(doc);
+			auto json_object = json::parse(object);
+			std::string date_time = json_object["date_time"];
+			std::string date = json_object["local_date"];
+			std::string time = json_object["local_time"];
+			int o = json_object["o"];
+			int h = json_object["h"];
+			int l = json_object["l"];
+			int c = json_object["c"];
+			int v = json_object["v"];
+
+			SmChartDataItem data;
+			data.current_count = count;
+			data.total_count = limit;
+			data.symbolCode = req.symbolCode;
+			data.chartType = req.chartType;
+			data.cycle = req.cycle;
+			data.date = date;
+			data.time = "";
+			data.h = h;
+			data.l = l;
+			data.o = o;
+			data.c = c;
+			data.v = v;
+
+			char buffer[4096];
+			sprintf(buffer, "SendChartDataOnebyOne count = %d, o = %d, h = %d, l = %d, c = %d, %s\n", count, o, h, l, c, date_time.c_str());
+			OutputDebugString(buffer);
+
+			SmTimeSeriesServiceManager* tsMgr = SmTimeSeriesServiceManager::GetInstance();
+			tsMgr->SendChartData(req, data);
+			count++;
+
+		}
+		
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+}
+
 void SmMongoDBManager::SaveAccountNo(int type, int first, int second, int last)
 {
 	try
