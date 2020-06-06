@@ -34,6 +34,10 @@
 //      mailto:chinajoe@aol.com
 //      http://users.aol.com/chinajoe
 
+#include <algorithm> 
+using namespace std;
+
+
 class CCellID
 {    
 // Attributes

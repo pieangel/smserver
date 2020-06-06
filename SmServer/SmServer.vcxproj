@@ -94,12 +94,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_WINSOCK_DEPRECATED_NO_WARNINGS;_DEBUG;_CRT_SECURE_NO_WARNINGS;_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>C:\Project\json-develop\json-develop\single_include;C:\Project\boost_1_70_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\Project\json-develop\json-develop\single_include;C:\Project\smserver\Include\sklearn;C:\Project\smserver\Include;C:\Project\boost_1_70_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>Default</LanguageStandard>
+      <ExceptionHandling>Async</ExceptionHandling>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalLibraryDirectories>C:\Project\boost_1_70_0\stage\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Project\smserver\Lib;C:\Project\boost_1_70_0\stage\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>ta_abstract_cdr.lib;ta_common_cdr.lib;ta_func_cdr.lib;ta_libc_cdr.lib;</AdditionalDependencies>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -148,14 +150,15 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;_WINSOCK_DEPRECATED_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>C:\Project\json-develop\json-develop\single_include;C:\Project\boost_1_70_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\Project\json-develop\json-develop\single_include;C:\Project\smserver\Include\sklearn;C:\Project\smserver\Include;C:\Project\boost_1_70_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>Default</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>C:\Project\boost_1_70_0\stage\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Project\smserver\Lib;C:\Project\boost_1_70_0\stage\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>ta_abstract_cdr.lib;ta_common_cdr.lib;ta_func_cdr.lib;ta_libc_cdr.lib;</AdditionalDependencies>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -196,6 +199,7 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="BlockingCollection.h" />
     <ClInclude Include="CShowChartData.h" />
     <ClInclude Include="Database\influxdb.hpp" />
     <ClInclude Include="Format\core.h" />
@@ -228,10 +232,20 @@
     <ClInclude Include="Scheduler\InterruptableSleep.h" />
     <ClInclude Include="Scheduler\Scheduler.h" />
     <ClInclude Include="ServerDefine.h" />
+    <ClInclude Include="sklearn\json.h" />
+    <ClInclude Include="sklearn\logistic_regression.h" />
+    <ClInclude Include="sklearn\lsr.h" />
+    <ClInclude Include="sklearn\matrix.h" />
+    <ClInclude Include="sklearn\mlr.h" />
+    <ClInclude Include="sklearn\naive_bayes.h" />
+    <ClInclude Include="sklearn\noob_pandas.h" />
+    <ClInclude Include="sklearn\preprocessing.h" />
+    <ClInclude Include="sklearn\statx.h" />
     <ClInclude Include="SmAccount.h" />
     <ClInclude Include="SmAccountManager.h" />
     <ClInclude Include="SmAccountNumGenerator.h" />
     <ClInclude Include="SmAccountPositionManager.h" />
+    <ClInclude Include="SmAIIndicatorManager.h" />
     <ClInclude Include="SmCategory.h" />
     <ClInclude Include="SmChartData.h" />
     <ClInclude Include="SmChartDataManager.h" />
@@ -239,6 +253,7 @@
     <ClInclude Include="SmChartServer.h" />
     <ClInclude Include="SmCommon.h" />
     <ClInclude Include="SmConfigManager.h" />
+    <ClInclude Include="SmCorrelationManager.h" />
     <ClInclude Include="SmFee.h" />
     <ClInclude Include="SmGlobal.h" />
     <ClInclude Include="SmHogaDefine.h" />
@@ -277,6 +292,7 @@
     <ClInclude Include="SmTimeSeriesServiceManager.h" />
     <ClInclude Include="SmTotalOrderManager.h" />
     <ClInclude Include="SmTotalPositionManager.h" />
+    <ClInclude Include="SmTrade.h" />
     <ClInclude Include="SmUser.h" />
     <ClInclude Include="SmUserManager.h" />
     <ClInclude Include="SmUtfUtil.h" />
@@ -292,8 +308,6 @@
     <ClInclude Include="Time\ptz.h" />
     <ClInclude Include="Time\tz.h" />
     <ClInclude Include="Time\tz_private.h" />
-    <ClInclude Include="Util\tinyutf8.h" />
-    <ClInclude Include="Util\tinyutf8.hpp" />
     <ClInclude Include="Util\UtfConverter.h" />
     <ClInclude Include="Util\VtStringUtil.h" />
     <ClInclude Include="SmHdCtrl.h" />
@@ -332,13 +346,36 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="sklearn\logistic_regression.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="sklearn\lsr.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="sklearn\mlr.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="sklearn\naive_bayes.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="sklearn\preprocessing.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="SmAccount.cpp" />
     <ClCompile Include="SmAccountManager.cpp" />
     <ClCompile Include="SmAccountNumGenerator.cpp" />
     <ClCompile Include="SmAccountPositionManager.cpp" />
+    <ClCompile Include="SmAIIndicatorManager.cpp" />
     <ClCompile Include="SmCategory.cpp" />
     <ClCompile Include="SmChartData.cpp" />
-    <ClCompile Include="SmChartDataManager.cpp" />
+    <ClCompile Include="SmChartDataManager.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="SmChartServer.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
@@ -350,6 +387,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="SmConfigManager.cpp" />
+    <ClCompile Include="SmCorrelationManager.cpp" />
     <ClCompile Include="SmGlobal.cpp" />
     <ClCompile Include="SmMongoDBManager.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
@@ -444,10 +482,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Time\tz.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="Util\tinyutf8.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>

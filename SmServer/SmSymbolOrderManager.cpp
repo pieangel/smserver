@@ -164,7 +164,7 @@ void SmSymbolOrderManager::CalcPosition(std::shared_ptr<SmOrder> order)
 					posi->OpenPL = posi->OpenQty * (curClose - posi->AvgPrice) * sym->Seungsu();
 					acnt->UpdateTradePL(current_profit_loss);
 					
-					dbMgr->SaveTradePL(acnt, posi, current_profit_loss);
+					dbMgr->SaveTradePL(acnt, posi, current_profit_loss, order->UserID, order->FilledQty, filledPrice);
 				}
 				else { //체결수량이 큰 경우
 					// 실현손익 발생 - 데이터베이스에 저장한다.
@@ -175,7 +175,7 @@ void SmSymbolOrderManager::CalcPosition(std::shared_ptr<SmOrder> order)
 					posi->OpenPL = posi->OpenQty * (curClose - posi->AvgPrice) * sym->Seungsu();
 					acnt->UpdateTradePL(current_profit_loss);
 					
-					dbMgr->SaveTradePL(acnt, posi, current_profit_loss);
+					dbMgr->SaveTradePL(acnt, posi, current_profit_loss, order->UserID, posi->OpenQty, filledPrice);
 				}
 			}
 			else { // 보유수량이 매도 ( 보유수량이매도/체결수량이매도 인 경우)
@@ -199,7 +199,7 @@ void SmSymbolOrderManager::CalcPosition(std::shared_ptr<SmOrder> order)
 					posi->OpenPL = posi->OpenQty * (curClose - posi->AvgPrice) * sym->Seungsu();
 					acnt->UpdateTradePL(current_profit_loss);
 					
-					dbMgr->SaveTradePL(acnt, posi, current_profit_loss);
+					dbMgr->SaveTradePL(acnt, posi, current_profit_loss, order->UserID, order->FilledQty, filledPrice);
 				}
 				else { //체결수량이 큰 경우		
 					// 실현손익 발생 - 데이터베이스에 저장한다.
@@ -210,7 +210,7 @@ void SmSymbolOrderManager::CalcPosition(std::shared_ptr<SmOrder> order)
 					posi->OpenPL = posi->OpenQty * (curClose - posi->AvgPrice) * sym->Seungsu();
 					acnt->UpdateTradePL(current_profit_loss);
 					
-					dbMgr->SaveTradePL(acnt, posi, current_profit_loss);
+					dbMgr->SaveTradePL(acnt, posi, current_profit_loss, order->UserID, posi->OpenQty, filledPrice);
 				}
 			}
 		}
@@ -272,6 +272,8 @@ int SmSymbolOrderManager::CalcRemainOrder(std::shared_ptr<SmOrder> newOrder)
 		// 들어온 주문과 현재 주문과 갯수가 같을 경우
 		if (std::abs(newOrder->RemainQty) == std::abs(oldOrder->RemainQty)) {
 			// 기존 주문에 대한 처리
+			// 사용자 아이디 복사
+			//oldOrder->UserID = newOrder->UserID;
 			// 잔고 초기화
 			oldOrder->RemainQty = 0;
 			// 청산확인 설정

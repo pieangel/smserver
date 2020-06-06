@@ -7,6 +7,8 @@
 #include <vector>
 #include <set>
 #include "SmFee.h"
+#include "SmTrade.h"
+#include <mutex>
 namespace mongocxx
 {
 	MONGOCXX_INLINE_NAMESPACE_BEGIN
@@ -87,8 +89,15 @@ public:
 	void SendOrderList(int session_id, std::string account_no, std::string date_time);
 	void SaveFee(std::shared_ptr<SmFee> fee);
 	void LoadFee();
-	void SaveTradePL(std::shared_ptr<SmAccount> account, std::shared_ptr<SmPosition> posi, double current_tradePL);
+	// 매개변수 : 계좌, 포지션, 현재 실현 손익, 사용자 아이디, 실현손익을 발생시킨 주문의 갯수 
+	void SaveTradePL(std::shared_ptr<SmAccount> account, std::shared_ptr<SmPosition> posi, double current_tradePL, std::string user_id, int liq_count, double liq_value);
 	void LoadDailyChartData(SmChartDataRequest req);
+	// 차트데이터를 가져온다.
+	void LoadChartData(SmChartDataRequest req);
+	// 차트데이터를 가져온다.
+	void GetChartData(SmChartDataRequest req);
+	std::vector<double> GetDailyData(SmChartDataRequest req);
+	std::vector<SmTrade> GetTradeList(std::string user_id);
 private:
 	void SaveMarketsToDatabase();
 	void SaveSymbolsToDatabase();

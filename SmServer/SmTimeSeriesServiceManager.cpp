@@ -147,6 +147,15 @@ void SmTimeSeriesServiceManager::SendChartData(SmChartDataRequest data_req, SmCh
 	send_object["l"] = item.l;
 	send_object["c"] = item.c;
 	send_object["v"] = item.v;
+	std::string values;
+	values.append(std::to_string(item.o));
+	values.append(",");
+	values.append(std::to_string(item.h));
+	values.append(",");
+	values.append(std::to_string(item.l));
+	values.append(",");
+	values.append(std::to_string(item.c));
+	send_object["values"] = values;
 	
 	std::string content = send_object.dump();
 	SmGlobal* global = SmGlobal::GetInstance();
@@ -170,6 +179,15 @@ void SmTimeSeriesServiceManager::SendChartData(int session_id, SmChartDataItem i
 	send_object["l"] = item.l;
 	send_object["c"] = item.c;
 	send_object["v"] = item.v;
+	std::string values;
+	values.append(std::to_string(item.o));
+	values.append(",");
+	values.append(std::to_string(item.h));
+	values.append(",");
+	values.append(std::to_string(item.l));
+	values.append(",");
+	values.append(std::to_string(item.c));
+	send_object["values"] = values;
 
 	std::string content = send_object.dump();
 	SmGlobal* global = SmGlobal::GetInstance();
@@ -206,6 +224,15 @@ void SmTimeSeriesServiceManager::BroadcastChartData(SmChartDataItem item)
 	send_object["l"] = item.l;
 	send_object["c"] = item.c;
 	send_object["v"] = item.v;
+	std::string values;
+	values.append(std::to_string(item.o));
+	values.append(",");
+	values.append(std::to_string(item.h));
+	values.append(",");
+	values.append(std::to_string(item.l));
+	values.append(",");
+	values.append(std::to_string(item.c));
+	send_object["values"] = values;
 
 	std::string content = send_object.dump();
 	SmGlobal* global = SmGlobal::GetInstance();
@@ -230,6 +257,25 @@ void SmTimeSeriesServiceManager::ResendChartDataRequest(SmChartDataRequest req)
 
 	OutputDebugString(buffer);
 	LOG_F(INFO, "ResendChartDataRequest", buffer);
+	SendRequestToSiseServer(content);
+}
+
+void SmTimeSeriesServiceManager::ResendChartCycleDataRequest(SmChartDataRequest req)
+{
+	int service_req_id = _SvcNoGen.GetID();
+	_HistoryDataReqMap[service_req_id] = req;
+	json send_object;
+	send_object["req_id"] = (int)SmProtocol::req_register_chart_cycle_data;
+	send_object["symbol_code"] = req.symbolCode;
+	send_object["chart_type"] = (int)req.chartType;
+	send_object["cycle"] = req.cycle;
+	send_object["count"] = req.count;
+	std::string content = send_object.dump(4);
+	char buffer[512];
+	sprintf(buffer, "%s", req.GetDataKey().c_str());
+
+	OutputDebugString(buffer);
+	LOG_F(INFO, "ResendChartCycleDataRequest", buffer);
 	SendRequestToSiseServer(content);
 }
 
@@ -423,9 +469,9 @@ void SmTimeSeriesServiceManager::SendChartDataFromDB(SmChartDataRequest&& data_r
 			std::string local_date = "";
 			std::string local_time = "";
 			if (!val[6].is_null())
-				local_date = val[6];
+				local_date = val[6].get<std::string>();
 			if (!val[7].is_null())
-				local_time = val[7];
+				local_time = val[7].get<std::string>();
 			//msg.Format(_T("index = %d, datetime = %s, o = %d, h = %d, l = %d, c = %d, v = %d\n"), i, local_date_time.c_str(), item.o, item.h, item.l, item.c, item.v);
 			//TRACE(msg);
 
@@ -471,17 +517,21 @@ void SmTimeSeriesServiceManager::GetChartDataFromSourceServer(SmChartDataRequest
 
 void SmTimeSeriesServiceManager::ClearSiseSocket(SmWebsocketSession* session)
 {
-	if (!session || !_SisiSocket)
+	if (!session || !_SiseSocketVector.size() == 0)
 		return;
-	if (session->SessionID() == _SisiSocket->SessionID()) {
-		_SisiSocket = nullptr;
+	
+	for (auto it = _SiseSocketVector.begin(); it != _SiseSocketVector.end(); ++it) {
+		SmWebsocketSession* socket = *it;
+		if (session->SessionID() == socket->SessionID()) {
+			_SiseSocketVector.erase(it);
+		}
 	}
 }
 
 
 void SmTimeSeriesServiceManager::SendRequestToSiseServer(std::string message)
 {
-	if (!_SisiSocket)
+	if (_SiseSocketVector.size() == 0)
 		return;
 
 	// Put the message in a shared pointer so we can re-use it for each client
@@ -493,8 +543,11 @@ void SmTimeSeriesServiceManager::SendRequestToSiseServer(std::string message)
 	std::vector<std::weak_ptr<SmWebsocketSession>> v;
 	{
 		std::lock_guard<std::mutex> lock(_mutex);
-		v.reserve(1);
-		v.emplace_back(_SisiSocket->weak_from_this());
+		v.reserve(_SiseSocketVector.size());
+		for (auto it = _SiseSocketVector.begin(); it != _SiseSocketVector.end(); ++it) {
+			SmWebsocketSession* socket = *it;
+			v.emplace_back(socket->weak_from_this());
+		}
 	}
 
 	// For each session in our local list, try to acquire a strong
@@ -508,7 +561,10 @@ void SmTimeSeriesServiceManager::OnReqRegisterSiseSocket(SmWebsocketSession* soc
 {
 	if (!socket)
 		return;
-	_SisiSocket = socket;
+	// 시세 소켓 타입으로 전환시켜 준다.
+	socket->Type(1);
+	_SiseSocketVector.push_back(socket);
+
 	std::string result_message = "sise socket registered successfully!";
 
 	json res = {

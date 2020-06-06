@@ -90,6 +90,11 @@ std::shared_ptr<SmAccount> SmAccountManager::CreateAccount(std::string user_id, 
 	acnt->Password(password);
 	// 맵에 저장한다.
 	_AccountMap[account_no] = acnt;
+	// 기본수수료를 설정한다.
+	if (type == 0) // 해외 수수료
+		acnt->Fee(4); // 4달러
+	else
+		acnt->Fee(1000); // 1000원
 
 	SmMongoDBManager* mongoMgr = SmMongoDBManager::GetInstance();
 	mongoMgr->SaveAccountInfo(acnt);

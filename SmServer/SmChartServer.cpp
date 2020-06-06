@@ -39,39 +39,47 @@ void SmChartServer::Start()
 	auto const threads = std::max<int>(1, std::atoi(thread_count.c_str()));
 
 	// The io_context is required for all I/O
-	net::io_context ioc{ threads };
+	//net::io_context ioc{ threads };
+	_context = new net::io_context(threads);
 
 	// Create and launch a listening port
 	std::make_shared<SmListener>(
-		ioc,
+		*_context,
 		tcp::endpoint{ address, server_port },
 		std::make_shared<SmSessionManager>(doc_root))->run();
 
 	// Capture SIGINT and SIGTERM to perform a clean shutdown
-	net::signal_set signals(ioc, SIGINT, SIGTERM);
-	signals.async_wait(
-		[&](beast::error_code const&, int)
-		{
-			// Stop the `io_context`. This will cause `run()`
-			// to return immediately, eventually destroying the
-			// `io_context` and all of the sockets in it.
-			ioc.stop();
-		});
+// 	net::signal_set signals(*_context, SIGINT, SIGTERM);
+// 	signals.async_wait(
+// 		[&](beast::error_code const&, int)
+// 		{
+// 			// Stop the `io_context`. This will cause `run()`
+// 			// to return immediately, eventually destroying the
+// 			// `io_context` and all of the sockets in it.
+// 			ioc.stop();
+// 		});
 
 	// Run the I/O service on the requested number of threads
 	std::vector<std::thread> v;
 	v.reserve(threads - 1);
 	for (auto i = threads - 1; i > 0; --i)
 		v.emplace_back(
-			[&ioc]
+			[&]
 			{
-				ioc.run();
+				_context->run();
 			});
-	ioc.run();
+	_context->run();
 
 	// (If we get here, it means we got a SIGINT or SIGTERM)
 
 	// Block until all the threads exit
 	for (auto& t : v)
 		t.join();
+}
+
+void SmChartServer::Stop()
+{
+	if (_context) {
+		_context->stop();
+	}
 }

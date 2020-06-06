@@ -24,16 +24,22 @@ public:
 	int SendDataSplitSize() const { return _SendDataSplitSize; }
 	void SendDataSplitSize(int val) { _SendDataSplitSize = val; }
 	void OnCompleteChartData(SmChartDataRequest data_req, std::shared_ptr<SmChartData> chart_data);
-	SmWebsocketSession* SisiSocket() const { return _SisiSocket; }
-	void SisiSocket(SmWebsocketSession* val) { _SisiSocket = val; }
+	//SmWebsocketSession* SisiSocket() const { return _SisiSocket; }
+	//void SisiSocket(SmWebsocketSession* val) { _SisiSocket = val; }
 	void ClearSiseSocket(SmWebsocketSession* session);
 	void OnReqRegisterSiseSocket(SmWebsocketSession* socket);
 	void ResendChartDataRequest(SmChartDataRequest req);
+	void ResendChartCycleDataRequest(SmChartDataRequest req);
 	void SendChartData(SmChartDataRequest data_req, std::shared_ptr<SmChartData> chart_data);
 	void SendChartData(SmChartDataRequest data_req, SmChartDataItem item);
 	void SendChartData(int session_id, SmChartDataItem item);
 	void BroadcastChartData(SmChartDataItem item);
 	void SendChartData(int session_id, std::shared_ptr<SmChartData> chart_data);
+	std::vector<SmWebsocketSession*> SiseSocketVector() const { return _SiseSocketVector; }
+	void SiseSocketVector(std::vector<SmWebsocketSession*> val) { _SiseSocketVector = val; }
+	int GetSiseSocketCount() {
+		return _SiseSocketVector.size();
+	}
 private:
 	SmServieReqNumGenerator _SvcNoGen;
 	void RegisterCycleChartDataRequest(SmChartDataRequest data_req);
@@ -49,7 +55,8 @@ private:
 	// 증권사나 데이터 제공 업체에 직접 데이터를 요청한다.
 	void GetChartDataFromSourceServer(SmChartDataRequest&& data_req);
 	
-	SmWebsocketSession* _SisiSocket = nullptr;
+	//SmWebsocketSession* _SisiSocket = nullptr;
+	std::vector<SmWebsocketSession*>  _SiseSocketVector;
 	void SendRequestToSiseServer(std::string message);
 	std::mutex _mutex;
 };

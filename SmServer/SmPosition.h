@@ -25,5 +25,7 @@ struct SmPosition
 	double	AvgPrice = 0.0f;	/*평균가*/
 	double	CurPrice = 0.0f;	/*현재가*/
 	double	OpenPL = 0.0f;		/*평가손익*/
+	// 포지션을 소유한 사용자 아이디
+	std::string UserID;
 };
 

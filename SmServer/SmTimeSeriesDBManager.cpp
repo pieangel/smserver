@@ -183,8 +183,8 @@ std::pair<std::string, std::string> SmTimeSeriesDBManager::GetUserInfo(std::stri
 	}
 
 	values = json_object["results"][0]["series"][0]["values"];
-	str_id = values[0][1];
-	str_pwd = values[0][2];
+	//str_id = (std::string)(values[0][1]);
+	//str_pwd = (std::string)(values[0][2]);
 	return std::make_pair(str_id, str_pwd);
 }
 

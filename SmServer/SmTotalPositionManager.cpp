@@ -41,6 +41,7 @@ std::shared_ptr<SmPosition> SmTotalPositionManager::CreatePosition(std::shared_p
 	position->AvgPrice = order->FilledPrice / pow(10, sym->Decimal());
 	position->CurPrice = order->FilledPrice / pow(10, sym->Decimal());
 	position->FundName = order->FundName;
+	position->UserID = order->UserID;
 
 	AddPosition(position);
 

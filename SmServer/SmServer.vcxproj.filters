@@ -77,6 +77,15 @@
     <Filter Include="Grid">
       <UniqueIdentifier>{22fec5ac-5cfa-459c-bf9d-6e32982cbd35}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Sklearn">
+      <UniqueIdentifier>{1c869d4b-1d50-4c9d-be56-316e8582b2b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Task">
+      <UniqueIdentifier>{36a29afe-3da8-463f-bcd9-2de9bdba5b60}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="AI">
+      <UniqueIdentifier>{a70bac9f-1d6e-467d-b06e-8251fd5b21a1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SmChartServer.h">
@@ -325,12 +334,6 @@
     <ClInclude Include="Util\UtfConverter.h">
       <Filter>Util</Filter>
     </ClInclude>
-    <ClInclude Include="Util\tinyutf8.h">
-      <Filter>Util</Filter>
-    </ClInclude>
-    <ClInclude Include="Util\tinyutf8.hpp">
-      <Filter>Util</Filter>
-    </ClInclude>
     <ClInclude Include="SmUtfUtil.h">
       <Filter>Utf</Filter>
     </ClInclude>
@@ -390,6 +393,45 @@
     </ClInclude>
     <ClInclude Include="SmFee.h">
       <Filter>Position</Filter>
+    </ClInclude>
+    <ClInclude Include="sklearn\json.h">
+      <Filter>Sklearn</Filter>
+    </ClInclude>
+    <ClInclude Include="sklearn\logistic_regression.h">
+      <Filter>Sklearn</Filter>
+    </ClInclude>
+    <ClInclude Include="sklearn\lsr.h">
+      <Filter>Sklearn</Filter>
+    </ClInclude>
+    <ClInclude Include="sklearn\matrix.h">
+      <Filter>Sklearn</Filter>
+    </ClInclude>
+    <ClInclude Include="sklearn\mlr.h">
+      <Filter>Sklearn</Filter>
+    </ClInclude>
+    <ClInclude Include="sklearn\naive_bayes.h">
+      <Filter>Sklearn</Filter>
+    </ClInclude>
+    <ClInclude Include="sklearn\noob_pandas.h">
+      <Filter>Sklearn</Filter>
+    </ClInclude>
+    <ClInclude Include="sklearn\preprocessing.h">
+      <Filter>Sklearn</Filter>
+    </ClInclude>
+    <ClInclude Include="sklearn\statx.h">
+      <Filter>Sklearn</Filter>
+    </ClInclude>
+    <ClInclude Include="BlockingCollection.h">
+      <Filter>Task</Filter>
+    </ClInclude>
+    <ClInclude Include="SmAIIndicatorManager.h">
+      <Filter>AI</Filter>
+    </ClInclude>
+    <ClInclude Include="SmCorrelationManager.h">
+      <Filter>AI</Filter>
+    </ClInclude>
+    <ClInclude Include="SmTrade.h">
+      <Filter>AI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -537,9 +579,6 @@
     <ClCompile Include="Util\UtfConverter.cpp">
       <Filter>Util</Filter>
     </ClCompile>
-    <ClCompile Include="Util\tinyutf8.cpp">
-      <Filter>Util</Filter>
-    </ClCompile>
     <ClCompile Include="SmUtfUtil.cpp">
       <Filter>Utf</Filter>
     </ClCompile>
@@ -590,6 +629,27 @@
     </ClCompile>
     <ClCompile Include="SmProductYearMonth.cpp">
       <Filter>Market</Filter>
+    </ClCompile>
+    <ClCompile Include="sklearn\logistic_regression.cpp">
+      <Filter>Sklearn</Filter>
+    </ClCompile>
+    <ClCompile Include="sklearn\lsr.cpp">
+      <Filter>Sklearn</Filter>
+    </ClCompile>
+    <ClCompile Include="sklearn\mlr.cpp">
+      <Filter>Sklearn</Filter>
+    </ClCompile>
+    <ClCompile Include="sklearn\naive_bayes.cpp">
+      <Filter>Sklearn</Filter>
+    </ClCompile>
+    <ClCompile Include="sklearn\preprocessing.cpp">
+      <Filter>Sklearn</Filter>
+    </ClCompile>
+    <ClCompile Include="SmAIIndicatorManager.cpp">
+      <Filter>AI</Filter>
+    </ClCompile>
+    <ClCompile Include="SmCorrelationManager.cpp">
+      <Filter>AI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

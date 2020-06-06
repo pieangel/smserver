@@ -10,6 +10,8 @@ class SmWebsocketSession : public std::enable_shared_from_this<SmWebsocketSessio
 	std::vector<boost::shared_ptr<std::string const>> queue_;
 	std::shared_ptr<SmSessionManager> session_mgr_;
 	int _SessionID = 0;
+	// 0 : 老馆 家南, 1 : 矫技 家南
+	int _Type = 0;
 public:
 	// Take ownership of the socket
 	explicit
@@ -64,6 +66,8 @@ public:
 	}
 	int SessionID() const { return _SessionID; }
 	void SessionID(int val) { _SessionID = val; }
+	int Type() const { return _Type; }
+	void Type(int val) { _Type = val; }
 private:
 	void on_send(boost::shared_ptr<std::string const> const& ss);
 	void on_accept(beast::error_code ec);

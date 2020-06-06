@@ -45,8 +45,15 @@
 #include "SmAccountManager.h"
 #include "CShowChartData.h"
 #include "SmOrderNumberGenerator.h"
+#include "SmCorrelationManager.h"
+#include "SmAIIndicatorManager.h"
+#include "SmChartDataManager.h"
+#include "SmGlobal.h"
+#include "SmHdClient.h"
+#include "SmMarketManager.h"
+#include "SmTotalPositionManager.h"
+#include "SmScheduler.h"
 
-using namespace std;
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -75,6 +82,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_COMMAND(ID_SERVER_DELETEMEASURE, &CMainFrame::OnServerDeletemeasure)
 	ON_COMMAND(ID_SERVER_CREATEDATABASE, &CMainFrame::OnServerCreatedatabase)
 	ON_COMMAND(ID_SERVER_SHOWCHARTDATA, &CMainFrame::OnServerShowchartdata)
+	ON_COMMAND(ID_SERVER_CALCORRELATION, &CMainFrame::OnServerCalcorrelation)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -411,6 +419,13 @@ void CMainFrame::RegisterProduct()
 
 void CMainFrame::ClearAllResource()
 {
+	SmScheduler::DestroyInstance();
+	SmTotalPositionManager::DestroyInstance();
+	SmHdClient::DestroyInstance();
+	SmGlobal::DestroyInstance();
+	SmChartDataManager::DestroyInstance();
+	SmAIIndicatorManager::DestroyInstance();
+	SmCorrelationManager::DestroyInstance();
 	SmAccountManager::DestroyInstance();
 	SmMongoDBManager::DestroyInstance();
 	SmTimeSeriesServiceManager::DestroyInstance();
@@ -418,7 +433,6 @@ void CMainFrame::ClearAllResource()
 	SmTimeSeriesCollector::DestroyInstance();
 	SmTimeSeriesDBManager::DestroyInstance();
 	SmUserManager::DestroyInstance();
-	SmScheduler::DestroyInstance();
 	SmRealtimeRegisterManager::DestroyInstance();
 	SmHdClient::DestroyInstance();
 	SmConfigManager::DestroyInstance();
@@ -470,34 +484,47 @@ void CMainFrame::OnShowWindow(BOOL bShow, UINT nStatus)
 {
 	CFrameWnd::OnShowWindow(bShow, nStatus);
 
-	SmMongoDBManager* mongoMgr = SmMongoDBManager::GetInstance();
-	// 시장목록 로드
-	mongoMgr->LoadMarketList();
-	// 심볼 목록 로드
-	mongoMgr->LoadSymbolList();
-	// 계좌 목록 로드
-	mongoMgr->LoadAccountList();
-	// 포지션 목록 로드
-	mongoMgr->LoadPositionList();
-	// 시세 로드
-	mongoMgr->LoadRecentQuoteList();
-	// 호가 로드
-	mongoMgr->LoadRecentHogaList();
-	// 접수확인 목록 로드
-	mongoMgr->LoadAcceptedOrderList();
-	// 체결확인 목록 로드
-	mongoMgr->LoadFilledOrderList();
-	
-	SmAccountManager* acntMgr = SmAccountManager::GetInstance();
-	std::shared_ptr<SmAccount> acnt = acntMgr->FindAccount("");
+	// 초기화 되지 않았다면 실행한다.
+	if (!_Init) {
 
-	SmTotalOrderManager* toMgr = SmTotalOrderManager::GetInstance();
-	toMgr->LoadFees();
+		SmMongoDBManager* mongoMgr = SmMongoDBManager::GetInstance();
+		// 시장목록 로드
+		mongoMgr->LoadMarketList();
+		// 심볼 목록 로드
+		mongoMgr->LoadSymbolList();
+		// 계좌 목록 로드
+		mongoMgr->LoadAccountList();
+		// 포지션 목록 로드
+		mongoMgr->LoadPositionList();
+		// 시세 로드
+		mongoMgr->LoadRecentQuoteList();
+		// 호가 로드
+		mongoMgr->LoadRecentHogaList();
+		// 접수확인 목록 로드
+		mongoMgr->LoadAcceptedOrderList();
+		// 체결확인 목록 로드
+		mongoMgr->LoadFilledOrderList();
+
+		SmAccountManager* acntMgr = SmAccountManager::GetInstance();
+		std::shared_ptr<SmAccount> acnt = acntMgr->FindAccount("");
+
+		SmTotalOrderManager* toMgr = SmTotalOrderManager::GetInstance();
+		toMgr->LoadFees();
+
+		// 증권사 클라이언트 초기화
+		SmHdClient::GetInstance()->Login("yjs1974", "3753yang", "#*sm1026jw");
+
+		_Init = true;
+	}
 }
 
 
 void CMainFrame::OnClose()
 {
+	if (_ChartServer) {
+		_ChartServer->Stop();
+	}
+
 	ClearAllResource();
 
 	CFrameWnd::OnClose();
@@ -612,4 +639,15 @@ void CMainFrame::OnServerShowchartdata()
 {
 	CShowChartData dlg;
 	dlg.DoModal();
+}
+
+
+void CMainFrame::OnServerCalcorrelation()
+{
+	SmCorrelationManager* corMgr = SmCorrelationManager::GetInstance();
+	//corMgr->GetSymbolList();
+	corMgr->TestLib();
+
+	//for(int i = 0; i < 1000; i++)
+	SmAIIndicatorManager::GetInstance()->GetAIIndicator("101Q3000", 12);
 }

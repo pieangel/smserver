@@ -25,6 +25,10 @@
 #include "SmSymbol.h"
 #include "Log/loguru.hpp"
 #include "SmSymbolManager.h"
+#include "SmHdClient.h"
+#include "SmChartDataManager.h"
+#include "SmAIIndicatorManager.h"
+#include "SmCorrelationManager.h"
 using namespace nlohmann;
 SmProtocolManager::SmProtocolManager()
 {
@@ -85,7 +89,7 @@ void SmProtocolManager::ParseMessage(std::string message, SmWebsocketSession* so
 			OnOrder(json_object);
 			break;
 		case SmProtocol::req_chart_data:
-			OnReqChartData(json_object, socket);
+			OnReqChartData(json_object);
 			break;
 		case SmProtocol::req_sise_data:
 			OnReqSiseData(json_object);
@@ -164,6 +168,15 @@ void SmProtocolManager::ParseMessage(std::string message, SmWebsocketSession* so
 		case SmProtocol::req_recent_hoga_data_all:
 			OnReqRecentHogaDataAll(json_object);
 			break;
+		case SmProtocol::req_trade_list:
+			OnReqTradeList(json_object);
+			break;
+		case SmProtocol::req_indicator:
+			OnReqIndicator(json_object);
+			break;
+		case SmProtocol::req_correlation:
+			OnReqCorrelation(json_object);
+			break;
 		default:
 			break;
 		}
@@ -239,6 +252,45 @@ void SmProtocolManager::SendResult(int session_id, int result_code, std::string 
 {
 
 }
+
+void SmProtocolManager::SendIndicatorResult(int result, SmIndicatorRequest ind_req)
+{
+	json send_object;
+	send_object["res_id"] = SmProtocol::res_indicator;
+	send_object["chart_type"] = (int)ind_req.chartType;
+	send_object["symbol_code"] = ind_req.symbolCode;
+	send_object["cycle"] = ind_req.cycle;
+	send_object["indicator_type"] = (int)ind_req.indicatorType;
+	int temp_result = result;
+	if (temp_result == -2)
+		temp_result = -1;
+	if (temp_result == 2)
+		temp_result = 1;
+	send_object["result"] = temp_result;
+	send_object["result_detail"] = result;
+
+	std::string content = send_object.dump();
+	SmGlobal* global = SmGlobal::GetInstance();
+	std::shared_ptr<SmSessionManager> sessMgr = global->GetSessionManager();
+	sessMgr->send(ind_req.session_id, content);
+}
+
+void SmProtocolManager::SendCorrelationResult(double result, SmCorrelationRequest ind_req)
+{
+	json send_object;
+	send_object["res_id"] = SmProtocol::res_correlation;
+	send_object["chart_type"] = (int)ind_req.chartType;
+	send_object["symbol_code_row"] = ind_req.symbol_code_row;
+	send_object["symbol_code_col"] = ind_req.symbol_code_col;
+	send_object["cycle"] = ind_req.cycle;
+	send_object["correlation"] = result;
+
+	std::string content = send_object.dump();
+	SmGlobal* global = SmGlobal::GetInstance();
+	std::shared_ptr<SmSessionManager> sessMgr = global->GetSessionManager();
+	sessMgr->send(ind_req.session_id, content);
+}
+
 /// <summary>
 /// 클라이언트에서 차트 데이터를 하나씩 보낼때 대응하는 함수
 /// 차트 리스트에 저장하고 바로 앱으로 보낸다.
@@ -319,7 +371,7 @@ void SmProtocolManager::OnReqCycleDataResendOneByOne(nlohmann::json& obj)
 	data.v = v;
 
 	char buffer[4096];
-	sprintf(buffer, "SendChartDataOnebyOne%s : %s\n", date.c_str(), time.c_str());
+	sprintf(buffer, "SendChartDataOnebyOne symbol_code = %s, cycle %d, %s : %s\n", symbol_code.c_str(), cycle, date.c_str(), time.c_str());
 	OutputDebugString(buffer);
 
 	// 차트데이터에 추가한다.
@@ -461,25 +513,80 @@ void SmProtocolManager::OnOrder(nlohmann::json& obj)
 	}
 }
 
-void SmProtocolManager::OnReqChartData(nlohmann::json& obj)
+void SmProtocolManager::OnReqCorrelation(nlohmann::json& obj)
 {
 	try {
-		std::string chart_id = obj["chart_id"];
-		std::string id = obj["user_id"];
+		int session_id = obj["session_id"];
+		std::string symCode_row = obj["symbol_code_row"];
+		std::string symCode_col = obj["symbol_code_col"];
+		int chart_type = obj["chart_type"];
+		int cycle = obj["cycle"];
+		SmCorrelationRequest req;
+		req.symbol_code_row = symCode_row;
+		req.symbol_code_col = symCode_col;
+		req.chartType = (SmChartType)chart_type;
+		req.cycle = cycle;
+		req.session_id = session_id;
+
+		SmCorrelationManager::GetInstance()->RequestCorrelation(req);
+	}
+	catch (std::exception e) {
+		std::string error = e.what();
+	}
+}
+
+void SmProtocolManager::OnReqIndicator(nlohmann::json& obj)
+{
+	try {
+		int session_id = obj["session_id"];
 		std::string symCode = obj["symbol_code"];
 		int chart_type = obj["chart_type"];
 		int cycle = obj["cycle"];
-		int count = obj["count"];
-		SmChartDataRequest req;
-		req.reqType = SmChartDataReqestType::FIRST;
-		req.user_id = id;
+		int indicator_type = obj["indicator_type"];
+		SmIndicatorRequest req;
 		req.symbolCode = symCode;
 		req.chartType = (SmChartType)chart_type;
 		req.cycle = cycle;
-		req.count = count;
-		req.next = 0;
-		SmMongoDBManager* mongoMgr = SmMongoDBManager::GetInstance();
-		mongoMgr->SendChartDataFromDB(std::move(req));
+		req.indicatorType = (SmIndicatorType)indicator_type;
+		req.session_id = session_id;
+
+		SmAIIndicatorManager::GetInstance()->RequestIndicator(req);
+	}
+	catch (std::exception e) {
+		std::string error = e.what();
+	}
+}
+
+void SmProtocolManager::OnReqTradeList(nlohmann::json& obj)
+{
+	try {
+		std::string id = obj["user_id"];
+		int session_id = obj["session_id"];
+		std::vector<SmTrade> trade_list = SmMongoDBManager::GetInstance()->GetTradeList(id);
+
+		for (size_t i = 0; i < trade_list.size(); ++i) {
+			SmTrade trade = trade_list[i];
+			json send_object;
+			send_object["res_id"] = SmProtocol::res_trade_list;
+			send_object["total_count"] = (int)trade_list.size();
+			send_object["current_count"] = (int)i;
+			send_object["date"] = trade.date;
+			send_object["time"] = trade.time;
+			send_object["account_no"] = trade.account_no;
+			send_object["symbol_code"] = trade.symbol_code;
+			send_object["liq_count"] = trade.liq_count;
+			send_object["liq_value"] = trade.liq_value;
+			send_object["current_profit_loss"] = trade.current_profit_loss;
+			send_object["trade_profit_loss"] = trade.trade_profit_loss;
+			send_object["total_profit_loss"] = trade.total_profit_loss;
+			send_object["total_account_amount"] = trade.total_account_amount;
+	
+			std::string content = send_object.dump();
+			SmGlobal* global = SmGlobal::GetInstance();
+			std::shared_ptr<SmSessionManager> sessMgr = global->GetSessionManager();
+			sessMgr->send(session_id, content);
+		}
+
 	}
 	catch (std::exception e) {
 		std::string error = e.what();
@@ -491,56 +598,24 @@ void SmProtocolManager::OnReqChartData(std::string message)
 	
 }
 
-void SmProtocolManager::OnReqChartData(nlohmann::json& obj, SmWebsocketSession* socket)
+void SmProtocolManager::OnReqChartData(nlohmann::json& obj)
 {
 	try {
-		if (!socket)
-			return;
-
-		std::string chart_id = obj["chart_id"];
-		std::string id = obj["user_id"];
+		
 		std::string symCode = obj["symbol_code"];
 		int chart_type = obj["chart_type"];
 		int cycle = obj["cycle"];
 		int count = obj["count"];
-		std::string data_key = SmChartData::MakeDataKey(symCode, chart_type, cycle);
-		// 요청이 일별 데이터이면 먼저 데이터베이스에서 찾아 본다.
-		if (chart_type == 3) {
-			std::shared_ptr<SmSymbol> symbol = SmSymbolManager::GetInstance()->FindSymbol(symCode);
-			if (symbol) {
-				SmChartDataRequest req;
-				req.symbolCode = symCode;
-				req.chartType = (SmChartType)chart_type;
-				req.cycle = cycle;
-				req.count = count;
-				req.product_code = symbol->CategoryCode();
-				req.session_id = socket->SessionID();
-				SmMongoDBManager::GetInstance()->LoadDailyChartData(req);
-				SmTimeSeriesServiceManager::GetInstance()->ResendChartDataRequest(req);
-				LOG_F(INFO, "OnReqChartData data_count = 0: %s", data_key.c_str());
-				return;
-			}
-		}
+		int session_id = obj["session_id"];
 
-		LOG_F(INFO, "OnReqChartData : %s", data_key.c_str());
-		std::shared_ptr<SmChartData> chart_data = SmChartDataManager::GetInstance()->AddChartData(symCode, chart_type, cycle);
-		size_t data_count = chart_data->GetDataCount();
-		// 데이터가 없으면 증권사 서버에 요청을 한다.
-		if (data_count == 0) {
-			SmChartDataRequest req;
-			req.symbolCode = symCode;
-			req.chartType = (SmChartType)chart_type;
-			req.cycle = cycle;
-			req.count = count;
-			req.session_id = socket->SessionID();
-			SmTimeSeriesServiceManager::GetInstance()->ResendChartDataRequest(req);
-			SmMongoDBManager::GetInstance()->SaveChartDataRequest(req);
-			LOG_F(INFO, "OnReqChartData data_count = 0: %s", data_key.c_str());
-		} 
-		else { // 데이터가 있으면 바로 보낸다.
-			LOG_F(INFO, "OnReqChartData direct send : %s", data_key.c_str());
-			SmTimeSeriesServiceManager::GetInstance()->SendChartData(socket->SessionID(), chart_data);
-		}
+		SmChartDataRequest req;
+		req.symbolCode = symCode;
+		req.chartType = (SmChartType)chart_type;
+		req.cycle = cycle;
+		req.count = count;
+		req.session_id = session_id;
+
+		SmChartDataManager::GetInstance()->RequestChartData(std::move(req));
 	}
 	catch (std::exception e) {
 		std::string error = e.what();
@@ -795,9 +870,9 @@ void SmProtocolManager::OnReqUpdateHoga(nlohmann::json& obj)
 	std::string symbol_code = obj["symbol_code"];
 	std::shared_ptr<SmSymbol> sym = SmSymbolManager::GetInstance()->FindSymbol(symbol_code);
 	if (sym) {
-		sym->Hoga.Time = obj["time"];
-		sym->Hoga.DomesticDate = obj["domestic_date"];
-		sym->Hoga.DomesticTime = obj["domestic_time"];
+		sym->Hoga.Time = obj["time"].get<std::string>();
+		sym->Hoga.DomesticDate = obj["domestic_date"].get<std::string>();
+		sym->Hoga.DomesticTime = obj["domestic_time"].get<std::string>();
 		sym->Hoga.TotBuyQty = obj["tot_buy_qty"];
 		sym->Hoga.TotSellQty = obj["tot_sell_qty"];
 		sym->Hoga.TotBuyCnt = obj["tot_buy_cnt"];

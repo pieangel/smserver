@@ -9,7 +9,7 @@ std::string SmAccountNumGenerator::GetNewAccountNumber(int type)
 
 	SmMongoDBManager* mongoMgr = SmMongoDBManager::GetInstance();
 	
-	std::tuple acc_no = mongoMgr->GetAccountNo(type);
+	auto acc_no = mongoMgr->GetAccountNo(type);
 	_First = std::get<0>(acc_no);
 	_Second = std::get<1>(acc_no);
 	_Last = std::get<2>(acc_no);

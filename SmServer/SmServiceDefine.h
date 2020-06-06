@@ -154,5 +154,13 @@ enum class SmProtocol {
 	// 최근 심볼에 대한 호가 정보
 	req_recent_hoga_data_all,
 	// 최근 심볼에 대한 호가 정보
-	res_recent_hoga_data_all
+	res_recent_hoga_data_all,
+	// 지표값 요청
+	req_indicator,
+	// 지표값 응답
+	res_indicator,
+	// 상관관계값 요청
+	req_correlation,
+	// 상관관계값 응답
+	res_correlation
 };

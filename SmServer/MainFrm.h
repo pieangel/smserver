@@ -4,6 +4,7 @@
 
 #pragma once
 #include "Scheduler/Scheduler.h"
+
 class SmChartServer;
 class Bosma::Scheduler;
 
@@ -55,6 +56,7 @@ private:
 	void RegisterProduct();
 	void ClearAllResource();
 	void GetChartData();
+	bool _Init = false;
 public:
 	afx_msg void OnShowWindow(BOOL bShow, UINT nStatus);
 	afx_msg void OnClose();
@@ -70,6 +72,7 @@ public:
 	afx_msg void OnServerDeletemeasure();
 	afx_msg void OnServerCreatedatabase();
 	afx_msg void OnServerShowchartdata();
+	afx_msg void OnServerCalcorrelation();
 };
 
 

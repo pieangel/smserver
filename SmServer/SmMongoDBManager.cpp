@@ -43,6 +43,8 @@
 #include "Xml/pugixml.hpp"
 #include <windows.h>
 #include "SmAccountManager.h"
+#include "Log/loguru.hpp"
+#include <list>
 
 using namespace nlohmann;
 
@@ -89,10 +91,7 @@ SmMongoDBManager::~SmMongoDBManager()
 		_Client = nullptr;
 	}
 
-	if (_Instance) {
-		delete _Instance;
-		_Instance = nullptr;
-	}
+	
 
 	if (_ConnPool) {
 		delete _ConnPool;
@@ -102,6 +101,12 @@ SmMongoDBManager::~SmMongoDBManager()
 	if (_URI) {
 		delete _URI;
 		_URI = nullptr;
+	}
+
+
+	if (_Instance) {
+		delete _Instance;
+		_Instance = nullptr;
 	}
 }
 
@@ -262,10 +267,13 @@ void SmMongoDBManager::LoadMarketList()
 				std::string market_name2 = product["market_name"];
 				market_name2 = SmUtfUtil::Utf8ToAnsi(market_name2);
 
-				if (product_code.length() > 2 && std::isdigit(product_code.at(2))) {
-					auto it = _DomesticList.find(product_code);
-					if (it == _DomesticList.end())
-						continue;
+				// ETF가 아닐때는 국내 시장 목록에 있는지 확인을 한다.
+				if (market_index != 8) {
+					if (product_code.length() > 2 && std::isdigit(product_code.at(2))) {
+						auto it = _DomesticList.find(product_code);
+						if (it == _DomesticList.end())
+							continue;
+					}
 				}
 				
 				SmCategory* category = newMarket->AddCategory(product_code);
@@ -516,7 +524,7 @@ void SmMongoDBManager::SendChartDataFromDB(SmChartDataRequest&& data_req)
 		long long data_count = coll.count_documents({});
 		// 데이터가 없거나 요청한 갯수보다 적으면 서버에 요청을 한다.
 		if (data_count == 0 || data_count < data_req.count) {
-			if (tsMgr->SisiSocket()) {
+			if (tsMgr->GetSiseSocketCount() > 0) {
 				//SendChartDataOneByOne(data_req);
 				tsMgr->ResendChartDataRequest(data_req);
 				return;
@@ -530,7 +538,7 @@ void SmMongoDBManager::SendChartDataFromDB(SmChartDataRequest&& data_req)
 			coll.find_one(bsoncxx::builder::stream::document{} << "date_time" << d_t << finalize);
 		// 최신 데이터가 현재 날짜와 같지 않으면 서버에 요청한다.
 		if (!found_symbol) {
-			if (tsMgr->SisiSocket()) {
+			if (tsMgr->GetSiseSocketCount() > 0) {
 				//SendChartDataOneByOne(data_req);
 				tsMgr->ResendChartDataRequest(data_req);
 				return;
@@ -1190,6 +1198,7 @@ void SmMongoDBManager::AddPosition(std::shared_ptr<SmPosition> posi)
 				<< "average_price" << posi->AvgPrice
 				<< "current_price" << posi->CurPrice
 				<< "open_profitloss" << posi->OpenPL
+				<< "user_id" << posi->UserID
 				<< close_document << finalize);
 		}
 		else {
@@ -1205,6 +1214,7 @@ void SmMongoDBManager::AddPosition(std::shared_ptr<SmPosition> posi)
 				<< "average_price" << posi->AvgPrice
 				<< "current_price" << posi->CurPrice
 				<< "open_profitloss" << posi->OpenPL
+				<< "user_id" << posi->UserID
 				<< bsoncxx::builder::stream::finalize;
 			auto res = db["position_list"].insert_one(std::move(doc_value));
 		}
@@ -1254,6 +1264,7 @@ void SmMongoDBManager::UpdatePosition(std::shared_ptr<SmPosition> posi)
 				<< "average_price" << posi->AvgPrice
 				<< "current_price" << posi->CurPrice
 				<< "open_profitloss" << posi->OpenPL
+				<< "user_id" << posi->UserID
 				<< close_document << finalize);
 
 			/*
@@ -1283,6 +1294,7 @@ void SmMongoDBManager::UpdatePosition(std::shared_ptr<SmPosition> posi)
 				<< "average_price" << posi->AvgPrice
 				<< "current_price" << posi->CurPrice
 				<< "open_profitloss" << posi->OpenPL
+				<< "user_id" << posi->UserID
 				<< bsoncxx::builder::stream::finalize;
 			auto res = db["position_list"].insert_one(std::move(doc_value));
 		}
@@ -1340,11 +1352,12 @@ void SmMongoDBManager::AddOrder(std::shared_ptr<SmOrder> order)
 				<< "filled_price" << order->FilledPrice
 				<< "filled_qty" << order->FilledQty
 				<< "order_state" << (int)order->OrderState
-				<< "symbol_decimal" << order->SymbolDecimal 
+				<< "symbol_decimal" << order->SymbolDecimal
 				<< "remain_qty" << order->RemainQty
 				<< "strategy_name" << order->StrategyName
 				<< "system_name" << order->SystemName
 				<< "fund_name" << order->FundName
+				<< "user_id" << order->UserID
 				<< close_document << finalize);
 		}
 		else {
@@ -1371,6 +1384,7 @@ void SmMongoDBManager::AddOrder(std::shared_ptr<SmOrder> order)
 				<< "strategy_name" << order->StrategyName
 				<< "system_name" << order->SystemName
 				<< "fund_name" << order->FundName
+				<< "user_id" << order->UserID
 				<< bsoncxx::builder::stream::finalize;
 			auto res = db["order_list"].insert_one(std::move(doc_value));
 		}
@@ -1514,6 +1528,7 @@ void SmMongoDBManager::SaveFilledOrder(std::shared_ptr<SmOrder> order)
 				<< "strategy_name" << order->StrategyName
 				<< "system_name" << order->SystemName
 				<< "fund_name" << order->FundName
+				<< "user_id" << order->UserID
 				<< close_document << finalize);
 		}
 		else {
@@ -1540,6 +1555,7 @@ void SmMongoDBManager::SaveFilledOrder(std::shared_ptr<SmOrder> order)
 				<< "strategy_name" << order->StrategyName
 				<< "system_name" << order->SystemName
 				<< "fund_name" << order->FundName
+				<< "user_id" << order->UserID
 				<< bsoncxx::builder::stream::finalize;
 			auto res = db["filled_order_list"].insert_one(std::move(doc_value));
 		}
@@ -1651,28 +1667,29 @@ std::vector<std::shared_ptr<SmOrder>> SmMongoDBManager::GetAcceptedOrderList(std
 			auto json_object = json::parse(message);
 			std::shared_ptr<SmOrder> order = std::make_shared<SmOrder>();
 
-			order->AccountNo = json_object["account_no"];
+			order->AccountNo = json_object["account_no"].get<std::string>();
 			order->OrderType = json_object["order_type"];
 			order->Position = json_object["position_type"];
 			order->PriceType = json_object["price_type"];
-			order->SymbolCode = json_object["symbol_code"];
+			order->SymbolCode = json_object["symbol_code"].get<std::string>();
 			order->OrderPrice = json_object["order_price"];
 			order->OrderNo = json_object["order_no"];
 			order->OrderAmount = json_object["order_amount"];
 			order->OriOrderNo = json_object["ori_order_no"];
-			order->FilledDate = json_object["filled_date"];
-			order->FilledTime = json_object["filled_time"];
-			order->OrderDate = json_object["order_date"];
-			order->OrderTime = json_object["order_time"];
+			order->FilledDate = json_object["filled_date"].get<std::string>();
+			order->FilledTime = json_object["filled_time"].get<std::string>();
+			order->OrderDate = json_object["order_date"].get<std::string>();
+			order->OrderTime = json_object["order_time"].get<std::string>();
 			order->FilledQty = json_object["filled_qty"];
 			order->FilledPrice = json_object["filled_price"];
 			order->OrderState = json_object["order_state"];
 			order->FilledCondition = json_object["filled_condition"];
 			order->SymbolDecimal = json_object["symbol_decimal"];
 			order->RemainQty = json_object["remain_qty"];
-			order->StrategyName = json_object["strategy_name"];
-			order->SystemName = json_object["system_name"];
-			order->FundName = json_object["fund_name"];
+			order->StrategyName = json_object["strategy_name"].get<std::string>();
+			order->SystemName = json_object["system_name"].get<std::string>();
+			order->FundName = json_object["fund_name"].get<std::string>();
+			order->UserID = json_object["user_id"].get<std::string>();
 
 			order_list.push_back(order);
 		}
@@ -1709,28 +1726,29 @@ std::vector<std::shared_ptr<SmOrder>> SmMongoDBManager::GetFilledOrderList(std::
 			auto json_object = json::parse(message);
 			std::shared_ptr<SmOrder> order = std::make_shared<SmOrder>();
 
-			order->AccountNo = json_object["account_no"];
+			order->AccountNo = json_object["account_no"].get<std::string>();
 			order->OrderType = json_object["order_type"];
 			order->Position = json_object["position_type"];
 			order->PriceType = json_object["price_type"];
-			order->SymbolCode = json_object["symbol_code"];
+			order->SymbolCode = json_object["symbol_code"].get<std::string>();
 			order->OrderPrice = json_object["order_price"];
 			order->OrderNo = json_object["order_no"];
 			order->OrderAmount = json_object["order_amount"];
 			order->OriOrderNo = json_object["ori_order_no"];
-			order->FilledDate = json_object["filled_date"];
-			order->FilledTime = json_object["filled_time"];
-			order->OrderDate = json_object["order_date"];
-			order->OrderTime = json_object["order_time"];
+			order->FilledDate = json_object["filled_date"].get<std::string>();
+			order->FilledTime = json_object["filled_time"].get<std::string>();
+			order->OrderDate = json_object["order_date"].get<std::string>();
+			order->OrderTime = json_object["order_time"].get<std::string>();
 			order->FilledQty = json_object["filled_qty"];
 			order->FilledPrice = json_object["filled_price"];
 			order->OrderState = json_object["order_state"];
 			order->FilledCondition = json_object["filled_condition"];
 			order->SymbolDecimal = json_object["symbol_decimal"];
 			order->RemainQty = json_object["remain_qty"];
-			order->StrategyName = json_object["strategy_name"];
-			order->SystemName = json_object["system_name"];
-			order->FundName = json_object["fund_name"];
+			order->StrategyName = json_object["strategy_name"].get<std::string>();
+			order->SystemName = json_object["system_name"].get<std::string>();
+			order->FundName = json_object["fund_name"].get<std::string>();
+			order->UserID = json_object["user_id"].get<std::string>();
 
 			order_list.push_back(order);
 		}
@@ -1769,28 +1787,29 @@ std::vector<std::shared_ptr<SmOrder>> SmMongoDBManager::GetOrderList(std::string
 			auto json_object = json::parse(message);
 			std::shared_ptr<SmOrder> order = std::make_shared<SmOrder>();
 
-			order->AccountNo = json_object["account_no"];
+			order->AccountNo = json_object["account_no"].get<std::string>();
 			order->OrderType = json_object["order_type"];
 			order->Position = json_object["position_type"];
 			order->PriceType = json_object["price_type"];
-			order->SymbolCode = json_object["symbol_code"];
+			order->SymbolCode = json_object["symbol_code"].get<std::string>();
 			order->OrderPrice = json_object["order_price"];
 			order->OrderNo = json_object["order_no"];
 			order->OrderAmount = json_object["order_amount"];
 			order->OriOrderNo = json_object["ori_order_no"];
-			order->FilledDate = json_object["filled_date"];
-			order->FilledTime = json_object["filled_time"];
-			order->OrderDate = json_object["order_date"];
-			order->OrderTime = json_object["order_time"];
+			order->FilledDate = json_object["filled_date"].get<std::string>();
+			order->FilledTime = json_object["filled_time"].get<std::string>();
+			order->OrderDate = json_object["order_date"].get<std::string>();
+			order->OrderTime = json_object["order_time"].get<std::string>();
 			order->FilledQty = json_object["filled_qty"];
 			order->FilledPrice = json_object["filled_price"];
 			order->OrderState = json_object["order_state"];
 			order->FilledCondition = json_object["filled_condition"];
 			order->SymbolDecimal = json_object["symbol_decimal"];
 			order->RemainQty = json_object["remain_qty"];
-			order->StrategyName = json_object["strategy_name"];
-			order->SystemName = json_object["system_name"];
-			order->FundName = json_object["fund_name"];
+			order->StrategyName = json_object["strategy_name"].get<std::string>();
+			order->SystemName = json_object["system_name"].get<std::string>();
+			order->FundName = json_object["fund_name"].get<std::string>();
+			order->UserID = json_object["user_id"].get<std::string>();
 			
 			order_list.push_back(order);
 		}
@@ -1828,28 +1847,29 @@ std::vector<std::shared_ptr<SmOrder>> SmMongoDBManager::GetOrderList(std::string
 			auto json_object = json::parse(message);
 			std::shared_ptr<SmOrder> order = std::make_shared<SmOrder>();
 
-			order->AccountNo = json_object["account_no"];
+			order->AccountNo = json_object["account_no"].get<std::string>();
 			order->OrderType = json_object["order_type"];
 			order->Position = json_object["position_type"];
 			order->PriceType = json_object["price_type"];
-			order->SymbolCode = json_object["symbol_code"];
+			order->SymbolCode = json_object["symbol_code"].get<std::string>();
 			order->OrderPrice = json_object["order_price"];
 			order->OrderNo = json_object["order_no"];
 			order->OrderAmount = json_object["order_amount"];
 			order->OriOrderNo = json_object["ori_order_no"];
-			order->FilledDate = json_object["filled_date"];
-			order->FilledTime = json_object["filled_time"];
-			order->OrderDate = json_object["order_date"];
-			order->OrderTime = json_object["order_time"];
+			order->FilledDate = json_object["filled_date"].get<std::string>();
+			order->FilledTime = json_object["filled_time"].get<std::string>();
+			order->OrderDate = json_object["order_date"].get<std::string>();
+			order->OrderTime = json_object["order_time"].get<std::string>();
 			order->FilledQty = json_object["filled_qty"];
 			order->FilledPrice = json_object["filled_price"];
 			order->OrderState = json_object["order_state"];
 			order->FilledCondition = json_object["filled_condition"];
 			order->SymbolDecimal = json_object["symbol_decimal"];
 			order->RemainQty = json_object["remain_qty"];
-			order->StrategyName = json_object["strategy_name"];
-			order->SystemName = json_object["system_name"];
-			order->FundName = json_object["fund_name"];
+			order->StrategyName = json_object["strategy_name"].get<std::string>();
+			order->SystemName = json_object["system_name"].get<std::string>();
+			order->FundName = json_object["fund_name"].get<std::string>();
+			order->UserID = json_object["user_id"].get<std::string>();
 
 			order_list.push_back(order);
 		}
@@ -1896,28 +1916,29 @@ std::vector<std::shared_ptr<SmOrder>> SmMongoDBManager::GetOrderList(std::string
 			auto json_object = json::parse(message);
 			std::shared_ptr<SmOrder> order = std::make_shared<SmOrder>();
 
-			order->AccountNo = json_object["account_no"];
+			order->AccountNo = json_object["account_no"].get<std::string>();
 			order->OrderType = json_object["order_type"];
 			order->Position = json_object["position_type"];
 			order->PriceType = json_object["price_type"];
-			order->SymbolCode = json_object["symbol_code"];
+			order->SymbolCode = json_object["symbol_code"].get<std::string>();
 			order->OrderPrice = json_object["order_price"];
 			order->OrderNo = json_object["order_no"];
 			order->OrderAmount = json_object["order_amount"];
 			order->OriOrderNo = json_object["ori_order_no"];
-			order->FilledDate = json_object["filled_date"];
-			order->FilledTime = json_object["filled_time"];
-			order->OrderDate = json_object["order_date"];
-			order->OrderTime = json_object["order_time"];
+			order->FilledDate = json_object["filled_date"].get<std::string>();
+			order->FilledTime = json_object["filled_time"].get<std::string>();
+			order->OrderDate = json_object["order_date"].get<std::string>();
+			order->OrderTime = json_object["order_time"].get<std::string>();
 			order->FilledQty = json_object["filled_qty"];
 			order->FilledPrice = json_object["filled_price"];
 			order->OrderState = json_object["order_state"];
 			order->FilledCondition = json_object["filled_condition"];
 			order->SymbolDecimal = json_object["symbol_decimal"];
 			order->RemainQty = json_object["remain_qty"];
-			order->StrategyName = json_object["strategy_name"];
-			order->SystemName = json_object["system_name"];
-			order->FundName = json_object["fund_name"];
+			order->StrategyName = json_object["strategy_name"].get<std::string>();
+			order->SystemName = json_object["system_name"].get<std::string>();
+			order->FundName = json_object["fund_name"].get<std::string>();
+			order->UserID = json_object["user_id"].get<std::string>();
 
 			order_list.push_back(order);
 		}
@@ -1955,10 +1976,10 @@ std::vector<std::shared_ptr<SmPosition>> SmMongoDBManager::GetPositionList(std::
 			auto json_object = json::parse(message);
 			std::shared_ptr<SmPosition> posi = std::make_shared<SmPosition>();
 
-			posi->CreatedDate = json_object["created_date"];
-			posi->CreatedTime = json_object["created_time"];
-			posi->SymbolCode = json_object["symbol_code"];
-			posi->AccountNo = json_object["account_no"];
+			posi->CreatedDate = json_object["created_date"].get<std::string>();
+			posi->CreatedTime = json_object["created_time"].get<std::string>();
+			posi->SymbolCode = json_object["symbol_code"].get<std::string>();
+			posi->AccountNo = json_object["account_no"].get<std::string>();
 			posi->Position = json_object["position_type"];
 			posi->OpenQty = json_object["open_qty"];
 			posi->FeeCount =json_object["fee_count"];
@@ -1966,6 +1987,7 @@ std::vector<std::shared_ptr<SmPosition>> SmMongoDBManager::GetPositionList(std::
 			posi->AvgPrice = json_object["average_price"];
 			posi->CurPrice = json_object["current_price"];
 			posi->OpenPL = json_object["open_profitloss"];
+			posi->UserID = json_object["user_id"].get<std::string>();
 			
 			posi_list.push_back(posi);
 		}
@@ -2003,10 +2025,10 @@ std::vector<std::shared_ptr<SmPosition>> SmMongoDBManager::GetPositionList(std::
 			auto json_object = json::parse(message);
 			std::shared_ptr<SmPosition> posi = std::make_shared<SmPosition>();
 
-			posi->CreatedDate = json_object["created_date"];
-			posi->CreatedTime = json_object["created_time"];
-			posi->SymbolCode = json_object["symbol_code"];
-			posi->AccountNo = json_object["account_no"];
+			posi->CreatedDate = json_object["created_date"].get<std::string>();
+			posi->CreatedTime = json_object["created_time"].get<std::string>();
+			posi->SymbolCode = json_object["symbol_code"].get<std::string>();
+			posi->AccountNo = json_object["account_no"].get<std::string>();
 			posi->Position = json_object["position_type"];
 			posi->OpenQty = json_object["open_qty"];
 			posi->FeeCount = json_object["fee_count"];
@@ -2014,6 +2036,7 @@ std::vector<std::shared_ptr<SmPosition>> SmMongoDBManager::GetPositionList(std::
 			posi->AvgPrice = json_object["average_price"];
 			posi->CurPrice = json_object["current_price"];
 			posi->OpenPL = json_object["open_profitloss"];
+			posi->UserID = json_object["user_id"].get<std::string>();
 
 			posi_list.push_back(posi);
 		}
@@ -2051,10 +2074,10 @@ std::shared_ptr<SmPosition> SmMongoDBManager::GetPosition(std::string account_no
 			auto json_object = json::parse(message);
 			std::shared_ptr<SmPosition> posi = std::make_shared<SmPosition>();
 
-			posi->CreatedDate = json_object["created_date"];
-			posi->CreatedTime = json_object["created_time"];
-			posi->SymbolCode = json_object["symbol_code"];
-			posi->AccountNo = json_object["account_no"];
+			posi->CreatedDate = json_object["created_date"].get<std::string>();
+			posi->CreatedTime = json_object["created_time"].get<std::string>();
+			posi->SymbolCode = json_object["symbol_code"].get<std::string>();
+			posi->AccountNo = json_object["account_no"].get<std::string>();
 			posi->Position = json_object["position_type"];
 			posi->OpenQty = json_object["open_qty"];
 			posi->FeeCount = json_object["fee_count"];
@@ -2062,6 +2085,7 @@ std::shared_ptr<SmPosition> SmMongoDBManager::GetPosition(std::string account_no
 			posi->AvgPrice = json_object["average_price"];
 			posi->CurPrice = json_object["current_price"];
 			posi->OpenPL = json_object["open_profitloss"];
+			posi->UserID = json_object["user_id"].get<std::string>();
 
 			return posi;
 		}
@@ -2096,10 +2120,10 @@ std::shared_ptr<SmPosition> SmMongoDBManager::GetPosition(std::string date, std:
 			auto json_object = json::parse(message);
 			std::shared_ptr<SmPosition> posi = std::make_shared<SmPosition>();
 
-			posi->CreatedDate = json_object["created_date"];
-			posi->CreatedTime = json_object["created_time"];
-			posi->SymbolCode = json_object["symbol_code"];
-			posi->AccountNo = json_object["account_no"];
+			posi->CreatedDate = json_object["created_date"].get<std::string>();
+			posi->CreatedTime = json_object["created_time"].get<std::string>();
+			posi->SymbolCode = json_object["symbol_code"].get<std::string>();
+			posi->AccountNo = json_object["account_no"].get<std::string>();
 			posi->Position = json_object["position_type"];
 			posi->OpenQty = json_object["open_qty"];
 			posi->FeeCount = json_object["fee_count"];
@@ -2107,6 +2131,7 @@ std::shared_ptr<SmPosition> SmMongoDBManager::GetPosition(std::string date, std:
 			posi->AvgPrice = json_object["average_price"];
 			posi->CurPrice = json_object["current_price"];
 			posi->OpenPL = json_object["open_profitloss"];
+			posi->UserID = json_object["user_id"].get<std::string>();
 
 			return posi;
 		}
@@ -2189,29 +2214,30 @@ void SmMongoDBManager::LoadFilledOrderList()
 			auto json_object = json::parse(message);
 			std::shared_ptr<SmOrder> order = std::make_shared<SmOrder>();
 
-			order->AccountNo = json_object["account_no"];
+			order->AccountNo = json_object["account_no"].get<std::string>();
 			order->OrderType = json_object["order_type"];
 			order->Position = json_object["position_type"];
 			order->PriceType = json_object["price_type"];
-			order->SymbolCode = json_object["symbol_code"];
+			order->SymbolCode = json_object["symbol_code"].get<std::string>();
 			order->OrderPrice = json_object["order_price"];
 			order->OrderNo = json_object["order_no"];
 			//SmOrderNumberGenerator::SetID(order->OrderNo);
 			order->OrderAmount = json_object["order_amount"];
 			order->OriOrderNo = json_object["ori_order_no"];
-			order->FilledDate = json_object["filled_date"];
-			order->FilledTime = json_object["filled_time"];
-			order->OrderDate = json_object["order_date"];
-			order->OrderTime = json_object["order_time"];
+			order->FilledDate = json_object["filled_date"].get<std::string>();
+			order->FilledTime = json_object["filled_time"].get<std::string>();
+			order->OrderDate = json_object["order_date"].get<std::string>();
+			order->OrderTime = json_object["order_time"].get<std::string>();
 			order->FilledQty = json_object["filled_qty"];
 			order->FilledPrice = json_object["filled_price"];
 			order->OrderState = json_object["order_state"];
 			order->FilledCondition = json_object["filled_condition"];
 			order->SymbolDecimal = json_object["symbol_decimal"];
 			order->RemainQty = json_object["remain_qty"];
-			order->StrategyName = json_object["strategy_name"];
-			order->SystemName = json_object["system_name"];
-			order->FundName = json_object["fund_name"];
+			order->StrategyName = json_object["strategy_name"].get<std::string>();
+			order->SystemName = json_object["system_name"].get<std::string>();
+			order->FundName = json_object["fund_name"].get<std::string>();
+			order->UserID = json_object["user_id"].get<std::string>();
 			// 체결된 주문에 추가시킨다.
 			totalOrderMgr->AddFilledOrder(order);
 		}
@@ -2246,29 +2272,30 @@ void SmMongoDBManager::LoadAcceptedOrderList()
 			auto json_object = json::parse(message);
 			std::shared_ptr<SmOrder> order = std::make_shared<SmOrder>();
 
-			order->AccountNo = json_object["account_no"];
+			order->AccountNo = json_object["account_no"].get<std::string>();
 			order->OrderType = json_object["order_type"];
 			order->Position = json_object["position_type"];
 			order->PriceType = json_object["price_type"];
-			order->SymbolCode = json_object["symbol_code"];
+			order->SymbolCode = json_object["symbol_code"].get<std::string>();
 			order->OrderPrice = json_object["order_price"];
 			order->OrderNo = json_object["order_no"];
 			//SmOrderNumberGenerator::SetID(order->OrderNo);
 			order->OrderAmount = json_object["order_amount"];
 			order->OriOrderNo = json_object["ori_order_no"];
-			order->FilledDate = json_object["filled_date"];
-			order->FilledTime = json_object["filled_time"];
-			order->OrderDate = json_object["order_date"];
-			order->OrderTime = json_object["order_time"];
+			order->FilledDate = json_object["filled_date"].get<std::string>();
+			order->FilledTime = json_object["filled_time"].get<std::string>();
+			order->OrderDate = json_object["order_date"].get<std::string>();
+			order->OrderTime = json_object["order_time"].get<std::string>();
 			order->FilledQty = json_object["filled_qty"];
 			order->FilledPrice = json_object["filled_price"];
 			order->OrderState = json_object["order_state"];
 			order->FilledCondition = json_object["filled_condition"];
 			order->SymbolDecimal = json_object["symbol_decimal"];
 			order->RemainQty = json_object["remain_qty"];
-			order->StrategyName = json_object["strategy_name"];
-			order->SystemName = json_object["system_name"];
-			order->FundName = json_object["fund_name"];
+			order->StrategyName = json_object["strategy_name"].get<std::string>();
+			order->SystemName = json_object["system_name"].get<std::string>();
+			order->FundName = json_object["fund_name"].get<std::string>();
+			order->UserID = json_object["user_id"].get<std::string>();
 
 			totalOrderMgr->AddAcceptedOrder(order);
 		}
@@ -2309,10 +2336,10 @@ void SmMongoDBManager::LoadPositionList()
 			auto json_object = json::parse(message);
 			std::shared_ptr<SmPosition> posi = std::make_shared<SmPosition>();
 
-			posi->CreatedDate = json_object["created_date"];
-			posi->CreatedTime = json_object["created_time"];
-			posi->SymbolCode = json_object["symbol_code"];
-			posi->AccountNo = json_object["account_no"];
+			posi->CreatedDate = json_object["created_date"].get<std::string>();
+			posi->CreatedTime = json_object["created_time"].get<std::string>();
+			posi->SymbolCode = json_object["symbol_code"].get<std::string>();
+			posi->AccountNo = json_object["account_no"].get<std::string>();
 			posi->Position = json_object["position_type"];
 			posi->OpenQty = json_object["open_qty"];
 			posi->FeeCount = json_object["fee_count"];
@@ -2320,6 +2347,7 @@ void SmMongoDBManager::LoadPositionList()
 			posi->AvgPrice = json_object["average_price"];
 			posi->CurPrice = json_object["current_price"];
 			posi->OpenPL = json_object["open_profitloss"];
+			posi->UserID = json_object["user_id"].get<std::string>();
 
 			tpMgr->AddPosition(posi);
 		}
@@ -2334,7 +2362,7 @@ void SmMongoDBManager::SaveChartDataRequest(SmChartDataRequest req)
 {
 	try
 	{
-		//std::lock_guard<std::mutex> lock(_mutex);
+		std::lock_guard<std::mutex> lock(_mutex);
 
 		auto c = _ConnPool->acquire();
 
@@ -2369,6 +2397,8 @@ void SmMongoDBManager::SendOrderList(int session_id, std::string account_no, std
 {
 	try
 	{
+		std::lock_guard<std::mutex> lock(_mutex);
+
 		std::vector<std::shared_ptr<SmOrder>> order_list = GetOrderList(date_time, account_no);
 	}
 	catch (std::exception e) {
@@ -2382,7 +2412,7 @@ void SmMongoDBManager::SaveFee(std::shared_ptr<SmFee> fee)
 {
 	try
 	{
-		//std::lock_guard<std::mutex> lock(_mutex);
+		std::lock_guard<std::mutex> lock(_mutex);
 
 		auto c = _ConnPool->acquire();
 
@@ -2439,7 +2469,7 @@ void SmMongoDBManager::LoadFee()
 				std::string symbol_code = json_object["symbol_code"];
 				fee->SymbolCode = symbol_code;
 				fee->AccountNo = account_no;
-				fee->Date = json_object["date"];
+				fee->Date = json_object["date"].get<std::string>();
 				fee->FeeCount = json_object["fee_count"];
 			}
 		}
@@ -2450,7 +2480,7 @@ void SmMongoDBManager::LoadFee()
 	}
 }
 
-void SmMongoDBManager::SaveTradePL(std::shared_ptr<SmAccount> account, std::shared_ptr<SmPosition> posi, double current_tradePL)
+void SmMongoDBManager::SaveTradePL(std::shared_ptr<SmAccount> account, std::shared_ptr<SmPosition> posi, double current_tradePL, std::string user_id, int liq_count, double liq_value)
 {
 	if (!account)
 		return;
@@ -2458,7 +2488,7 @@ void SmMongoDBManager::SaveTradePL(std::shared_ptr<SmAccount> account, std::shar
 	std::pair<std::string, std::string> date_time = VtStringUtil::GetCurrentDateTime();
 	try
 	{
-		//std::lock_guard<std::mutex> lock(_mutex);
+		std::lock_guard<std::mutex> lock(_mutex);
 
 		auto c = _ConnPool->acquire();
 
@@ -2472,14 +2502,19 @@ void SmMongoDBManager::SaveTradePL(std::shared_ptr<SmAccount> account, std::shar
 		builder::stream::document builder{};
 
 		bsoncxx::document::value doc_value = builder
+			<< "date_time" << date_time.first + date_time.second
 			<< "date" << date_time.first
 			<< "time" << date_time.second
 			<< "account_no" << account->AccountNo()
 			<< "symbol_code" << posi->SymbolCode
+			<< "liq_value" << liq_value // 수익을 발생시킨 가격
+			<< "liq_count" << liq_count // 수익을 발생시킨 주문의 갯수
 			<< "current_profit_loss" << current_tradePL // 지금 발생한 수익
 			<< "trade_profit_loss" << posi->TradePL // 종목 누적 수익
 			<< "acc_profit_loss" << account->TradePL() // 계좌 누적 수익
 			<< "total_profit_loss" << account->TotalTradePL() // 계좌 개설 후 총 누적 수익
+			<< "current_account_amount" << account->InitialBalance() // 현재 계좌의 총액
+			<< "user_id" << user_id
 			<< bsoncxx::builder::stream::finalize;
 		auto res = db["trade_profit_loss_history"].insert_one(std::move(doc_value));
 	}
@@ -2493,6 +2528,8 @@ void SmMongoDBManager::LoadDailyChartData(SmChartDataRequest req)
 {
 	try
 	{
+		std::lock_guard<std::mutex> lock(_mutex);
+
 		auto c = _ConnPool->acquire();
 
 		auto db = (*c)["andromeda"];
@@ -2503,6 +2540,7 @@ void SmMongoDBManager::LoadDailyChartData(SmChartDataRequest req)
 		// @begin: cpp-query-sort
 		mongocxx::options::find opts;
 
+		// 과거의 것이 뒤에 오게 한다.
 		opts.sort(make_document(kvp("date_time", -1)));
 
 		auto item_count = db[req.GetDailyKey()].count_documents({});
@@ -2537,7 +2575,8 @@ void SmMongoDBManager::LoadDailyChartData(SmChartDataRequest req)
 			data.chartType = req.chartType;
 			data.cycle = req.cycle;
 			data.date = date;
-			data.time = "";
+			data.time = time;
+			data.date_time = date_time;
 			data.h = h;
 			data.l = l;
 			data.o = o;
@@ -2561,11 +2600,256 @@ void SmMongoDBManager::LoadDailyChartData(SmChartDataRequest req)
 	}
 }
 
+void SmMongoDBManager::LoadChartData(SmChartDataRequest req)
+{
+	try
+	{
+		std::lock_guard<std::mutex> lock(_mutex);
+
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		std::string data_key;
+		if (req.chartType == SmChartType::DAY)
+			data_key = req.GetDailyKey();
+		else
+			data_key = req.GetDataKey();
+
+		mongocxx::collection coll = db[data_key];
+
+		// @begin: cpp-query-sort
+		mongocxx::options::find opts;
+
+		// 과거의 것이 앞에 오게 한다.
+		//opts.sort(make_document(kvp("date_time", 1)));
+		// 데이터의 갯수를 읽어 온다.
+		auto item_count = db[data_key].count_documents({});
+		if (item_count == 0)
+			return;
+
+		// 최대 갯수를 넘지않게 옵션을 조절해 준다.
+		int limit = item_count > req.count ? req.count : item_count;
+		// 전체 데이터에서 최신의 것이 앞에 오도록 한다.
+		opts.sort(make_document(kvp("date_time", -1)));
+		opts.limit(limit);
+
+		mongocxx::cursor cursor = coll.find({}, opts);
+		SmChartDataManager* chartDataMgr = SmChartDataManager::GetInstance();
+		std::shared_ptr<SmChartData> chart_data = chartDataMgr->AddChartData(req);
+		std::list<SmChartDataItem> data_list;
+		int count = 1;
+		for (auto&& doc : cursor) {
+			std::string object = bsoncxx::to_json(doc);
+			auto json_object = json::parse(object);
+			std::string date_time = json_object["date_time"];
+			std::string date = json_object["local_date"];
+			std::string time = json_object["local_time"];
+			int o = json_object["o"];
+			int h = json_object["h"];
+			int l = json_object["l"];
+			int c = json_object["c"];
+			int v = json_object["v"];
+
+			SmChartDataItem data;
+			data.current_count = count;
+			data.total_count = limit;
+			data.symbolCode = req.symbolCode;
+			data.chartType = req.chartType;
+			data.cycle = req.cycle;
+			data.date = date;
+			data.time = time;
+			data.date_time = date_time;
+			data.h = h;
+			data.l = l;
+			data.o = o;
+			data.c = c;
+			data.v = v;
+
+			char buffer[4096];
+			sprintf(buffer, "LoadChartData symbol_code = %s, date_time = %s, cycle = %d, count = %d, o = %d, h = %d, l = %d, c = %d\n", req.symbolCode.c_str(), date_time.c_str(), req.cycle, count, o, h, l, c);
+			OutputDebugString(buffer);
+
+			data_list.push_front(data);
+
+			// 차트데이터에 추가한다.
+			chart_data->AddData(data);
+
+			count++;
+
+		}
+
+		count = 1;
+		for (auto it = data_list.begin(); it != data_list.end(); ++it) {
+			SmChartDataItem data = *it;
+			data.current_count = count;
+			// 차트데이터를 보낸다.
+			SmTimeSeriesServiceManager* tsMgr = SmTimeSeriesServiceManager::GetInstance();
+			tsMgr->SendChartData(req, data);
+			count++;
+		}
+		// 차트 데이터를 받았을 설정한다.
+		chart_data->Received(true);
+
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+		LOG_F(INFO, "LoadChartData exception msg = %s", e.what());
+	}
+}
+
+void SmMongoDBManager::GetChartData(SmChartDataRequest req)
+{
+	try
+	{
+		std::lock_guard<std::mutex> lock(_mutex);
+
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		std::string data_key;
+		if (req.chartType == SmChartType::DAY)
+			data_key = req.GetDailyKey();
+		else
+			data_key = req.GetDataKey();
+
+		mongocxx::collection coll = db[data_key];
+
+		// @begin: cpp-query-sort
+		mongocxx::options::find opts;
+
+		// 과거의 것이 앞에 오게 한다.
+		//opts.sort(make_document(kvp("date_time", 1)));
+		// 데이터의 갯수를 읽어 온다.
+		auto item_count = db[data_key].count_documents({});
+		if (item_count == 0)
+			return;
+
+		// 최대 갯수를 넘지않게 옵션을 조절해 준다.
+		int limit = item_count > req.count ? req.count : item_count;
+		// 전체 데이터에서 최신의 것이 앞에 오도록 한다.
+		opts.sort(make_document(kvp("date_time", -1)));
+		opts.limit(limit);
+
+		mongocxx::cursor cursor = coll.find({}, opts);
+		SmChartDataManager* chartDataMgr = SmChartDataManager::GetInstance();
+		std::shared_ptr<SmChartData> chart_data = chartDataMgr->AddChartData(req);
+		std::list<SmChartDataItem> data_list;
+		int count = 1;
+		for (auto&& doc : cursor) {
+			std::string object = bsoncxx::to_json(doc);
+			auto json_object = json::parse(object);
+			std::string date_time = json_object["date_time"];
+			std::string date = json_object["local_date"];
+			std::string time = json_object["local_time"];
+			int o = json_object["o"];
+			int h = json_object["h"];
+			int l = json_object["l"];
+			int c = json_object["c"];
+			int v = json_object["v"];
+
+			SmChartDataItem data;
+			data.current_count = count;
+			data.total_count = limit;
+			data.symbolCode = req.symbolCode;
+			data.chartType = req.chartType;
+			data.cycle = req.cycle;
+			data.date = date;
+			data.time = time;
+			data.date_time = date_time;
+			data.h = h;
+			data.l = l;
+			data.o = o;
+			data.c = c;
+			data.v = v;
+
+			char buffer[4096];
+			sprintf(buffer, "LoadChartData symbol_code = %s, date_time = %s, cycle = %d, count = %d, o = %d, h = %d, l = %d, c = %d\n", req.symbolCode.c_str(), date_time.c_str(), req.cycle, count, o, h, l, c);
+			//OutputDebugString(buffer);
+
+			data_list.push_front(data);
+
+			// 차트데이터에 추가한다.
+			chart_data->AddData(data);
+
+			count++;
+
+		}
+
+		// 차트 데이터를 받았을 설정한다.
+		chart_data->Received(true);
+
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+		LOG_F(INFO, "LoadChartData exception msg = %s", e.what());
+	}
+}
+
+std::vector<double> SmMongoDBManager::GetDailyData(SmChartDataRequest req)
+{
+	try
+	{
+		std::lock_guard<std::mutex> lock(_mutex);
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		mongocxx::collection coll = db[req.GetDailyKey()];
+
+		// @begin: cpp-query-sort
+		mongocxx::options::find opts;
+
+		// 과거의 것이 앞에 오도록 한다.
+		//opts.sort(make_document(kvp("date_time", 1)));
+		// 과거의 것이 뒤에 오도록 한다.
+		opts.sort(make_document(kvp("date_time", -1)));
+		std::vector<double> close_vector;
+		auto item_count = db[req.GetDailyKey()].count_documents({});
+		if (item_count == 0)
+			return close_vector;
+
+		int limit = item_count > req.count ? req.count : item_count;
+		
+		opts.limit(limit);
+
+		mongocxx::cursor cursor = coll.find({}, opts);
+		
+		for (auto&& doc : cursor) {
+			std::string object = bsoncxx::to_json(doc);
+			auto json_object = json::parse(object);
+			std::string date_time = json_object["date_time"];
+			std::string date = json_object["local_date"];
+			std::string time = json_object["local_time"];
+			int o = json_object["o"];
+			int h = json_object["h"];
+			int l = json_object["l"];
+			int c = json_object["c"];
+			int v = json_object["v"];
+			
+			close_vector.push_back(c);
+		}
+
+		return close_vector;
+
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+}
+
 void SmMongoDBManager::SaveAccountNo(int type, int first, int second, int last)
 {
 	try
 	{
-		//std::lock_guard<std::mutex> lock(_mutex);
+		std::lock_guard<std::mutex> lock(_mutex);
 
 		auto c = _ConnPool->acquire();
 
@@ -2614,7 +2898,7 @@ void SmMongoDBManager::SaveCurrentOrderNo(int order_no)
 {
 	try
 	{
-		//std::lock_guard<std::mutex> lock(_mutex);
+		std::lock_guard<std::mutex> lock(_mutex);
 
 		auto c = _ConnPool->acquire();
 
@@ -2655,6 +2939,8 @@ int SmMongoDBManager::GetOrderNo()
 {
 	try
 	{
+		std::lock_guard<std::mutex> lock(_mutex);
+
 		auto c = _ConnPool->acquire();
 
 		auto db = (*c)["andromeda"];
@@ -2682,6 +2968,67 @@ int SmMongoDBManager::GetOrderNo()
 	}
 
 	return 1;
+}
+
+std::vector<SmTrade> SmMongoDBManager::GetTradeList(std::string user_id)
+{
+	std::vector<SmTrade> trade_list;
+	try
+	{
+		std::lock_guard<std::mutex> lock(_mutex);
+
+		auto c = _ConnPool->acquire();
+
+		auto db = (*c)["andromeda"];
+		using namespace bsoncxx;
+
+		mongocxx::collection coll = db["trade_profit_loss_history"];
+
+		// @begin: cpp-query-sort
+		mongocxx::options::find opts;
+
+		// 과거의 것이 뒤에 오게 한다.
+		opts.sort(make_document(kvp("date_time", -1)));
+
+		
+
+
+		builder::stream::document builder{};
+
+		mongocxx::cursor cursor = coll.find(bsoncxx::builder::stream::document{}
+			<< "user_id" << user_id
+			<< finalize, opts);
+		
+		//mongocxx::cursor cursor = coll.find(bsoncxx::builder::stream::document{}
+		//	<< "user_id" << user_id
+		//	<< finalize);
+		for (auto doc : cursor) {
+			std::string message = bsoncxx::to_json(doc);
+			auto json_object = json::parse(message);
+			SmTrade trade;
+			trade.date_time = json_object["date_time"].get<std::string>();
+			trade.date = json_object["date"].get<std::string>();
+			trade.time = json_object["time"].get<std::string>();
+			trade.account_no = json_object["account_no"].get<std::string>();
+			trade.symbol_code = json_object["symbol_code"].get<std::string>();
+			trade.liq_count = json_object["liq_count"];
+			trade.liq_value = json_object["liq_value"];
+			trade.current_profit_loss = json_object["current_profit_loss"];
+			trade.trade_profit_loss = json_object["trade_profit_loss"];
+			trade.total_profit_loss = json_object["total_profit_loss"];
+			//total_account_amount
+			trade.total_account_amount = json_object["current_account_amount"];
+			trade.total_account_amount = round(trade.total_account_amount * 100) / 100;
+			trade_list.push_back(trade);
+		}
+
+	}
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
+	}
+
+	return trade_list;
 }
 
 void SmMongoDBManager::SaveMarketsToDatabase()
@@ -2799,7 +3146,7 @@ void SmMongoDBManager::SaveSymbolsToDatabase()
 void SmMongoDBManager::InitDatabase()
 {
 	_Instance = new mongocxx::instance();
-	_URI = new mongocxx::uri{ "mongodb://localhost:27017/?minPoolSize=3&maxPoolSize=10" };
-	_Client = new mongocxx::client(mongocxx::uri{});
+	//_URI = new mongocxx::uri{ "mongodb://localhost:27017/?minPoolSize=3&maxPoolSize=10" };
+	//_Client = new mongocxx::client(mongocxx::uri{});
 	_ConnPool = new mongocxx::pool(mongocxx::uri{ "mongodb://localhost:27017/?minPoolSize=3&maxPoolSize=10" });
 }

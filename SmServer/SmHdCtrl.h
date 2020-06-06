@@ -2,6 +2,8 @@
 #include "HDCtrl/hdfcommagent.h"
 #include <string>
 #include <map>
+#include <queue>
+#include <mutex>
 #include "SmChartDefine.h"
 
 #pragma once
@@ -130,19 +132,28 @@ public:
 	void LogOut();
 	void RegisterProduct(std::string symCode);
 	void UnregisterProduct(std::string symCode);
-	void GetChartData(SmChartDataRequest req);
 	void DownloadMasterFiles(std::string param);
 	void GetSiseData(std::string symCode);
 	void GetHogaData(std::string symCode);
+	void RequestChartData(SmChartDataRequest req);
 private:
+	void GetChartData(SmChartDataRequest req);
 	void OnRcvdAbroadHoga(CString& strKey, LONG& nRealType);
 	void OnRcvdAbroadSise(CString& strKey, LONG& nRealType);
 	void OnRcvdAbroadSiseByReq(CString& sTrCode, LONG& nRqID);
 	void OnRcvdAbroadHogaByReq(CString& sTrCode, LONG& nRqID);
+	// 해외 차트 데이터 수신 
 	void OnRcvdAbroadChartData(CString& sTrCode, LONG& nRqID);
+	// 해외 차트 데이터 수신
 	void OnRcvdAbroadChartData2(CString& sTrCode, LONG& nRqID);
 	void GetChartDataShortCycle(SmChartDataRequest req);
 	void GetChartDataLongCycle(SmChartDataRequest req);
+	// 국내 차트 데이터
+	void GetChartDataForDomestic(SmChartDataRequest req);
+	// 국내 차트 데이터 수신
+	void OnRcvdDomesticChartData(CString& sTrCode, LONG& nRqID);
+	// 큐에서 차트 데이터 요청
+	void RequestChartDataFromQ();
 	/// <summary>
 	/// 차트 데이터 요청 맵 
 	/// 키 : 요청 번호
@@ -150,4 +161,6 @@ private:
 	/// </summary>
 	std::map<int, SmChartDataRequest> _ChartDataReqMap;
 	std::map<int, std::string> _SiseDataReqMap;
+	std::queue< SmChartDataRequest> _ChartDataReqQueue;
+	std::mutex _mutex;
 };

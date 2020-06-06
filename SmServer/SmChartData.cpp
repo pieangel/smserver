@@ -115,25 +115,85 @@ void SmChartData::SendCyclicChartDataToUsers()
 	}
 }
 
+std::vector<double> SmChartData::GetClose()
+{
+	std::vector<double> data_list;
+	for(auto it = _DataMap.begin(); it != _DataMap.end(); ++it) {
+		SmChartDataItem& data = it->second;
+		data_list.push_back(data.c);
+	}
+	return data_list;
+}
+
+std::vector<double> SmChartData::GetOpen()
+{
+	std::vector<double> data_list;
+	for (auto it = _DataMap.begin(); it != _DataMap.end(); ++it) {
+		SmChartDataItem& data = it->second;
+		data_list.push_back(data.c);
+	}
+	return data_list;
+}
+
+std::vector<double> SmChartData::GetHigh()
+{
+	std::vector<double> data_list;
+	for (auto it = _DataMap.begin(); it != _DataMap.end(); ++it) {
+		SmChartDataItem& data = it->second;
+		data_list.push_back(data.h);
+	}
+	return data_list;
+}
+
+std::vector<double> SmChartData::GetLow()
+{
+	std::vector<double> data_list;
+	for (auto it = _DataMap.begin(); it != _DataMap.end(); ++it) {
+		SmChartDataItem& data = it->second;
+		data_list.push_back(data.l);
+	}
+	return data_list;
+}
+
+std::vector<double> SmChartData::GetVolume()
+{
+	std::vector<double> data_list;
+	for (auto it = _DataMap.begin(); it != _DataMap.end(); ++it) {
+		SmChartDataItem& data = it->second;
+		data_list.push_back(data.v);
+	}
+	return data_list;
+}
+
 void SmChartData::AddData(SmChartDataItem& data_item)
 {
-	auto it = _DataMap.find(data_item.date_time);
-	if (it != _DataMap.end()) {
-		SmChartDataItem& data = it->second;
-		data.c = data_item.c;
-		data.o = data_item.o;
-		data.h = data_item.h;
-		data.l = data_item.l;
-		data.v = data_item.v;
-		return;
+	
+	try
+	{
+		auto it = _DataMap.find(data_item.date_time);
+		if (it != _DataMap.end()) {
+			SmChartDataItem& data = it->second;
+			data.c = data_item.c;
+			data.o = data_item.o;
+			data.h = data_item.h;
+			data.l = data_item.l;
+			data.v = data_item.v;
+			return;
+		}
+		_DataMap.insert(std::make_pair(data_item.date_time, data_item));
+		
+		size_t count = _DataMap.size();
+		if (count > _DataQueueSize) {
+			// 큐의 크기를 넘어서면 맨 과거 데이터를 제거해 준다.
+			auto it = _DataMap.begin();
+			_DataMap.erase(it);
+		}
 	}
-	_DataMap.insert(std::make_pair(data_item.date_time,data_item));
-	size_t count = _DataMap.size();
-	if (count > _DataQueueSize) {
-		// 큐의 크기를 넘어서면 맨 과거 데이터를 제거해 준다.
-		auto it = _DataMap.begin();
-		_DataMap.erase(it);
+	catch (std::exception e) {
+		std::string error;
+		error = e.what();
 	}
+	
 }
 
 std::pair<int, int> SmChartData::GetCycleByTimeDif()
@@ -185,7 +245,7 @@ void SmChartData::PushChartDataItemToBack(SmChartDataItem data)
 	//msg.Format(_T("pushed data :: size = %d, code = %s, date = %s, time = %s, o = %d, h = %d, l = %d, c = %d, v = %d\n"), _DataItemList.size(), SymbolCode().c_str(), data.date.c_str(), data.time.c_str(), data.o, data.h, data.l, data.c, data.v);
 	//TRACE(msg);
 
-	GetCycleByTimeDif();
+	//GetCycleByTimeDif();
 }
 
 void SmChartData::PushChartDataItemToFront(SmChartDataItem data)

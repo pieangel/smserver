@@ -64,9 +64,9 @@ send(std::string message)
 		for (auto it = _session_map.begin(); it != _session_map.end(); ++it) {
 			SmTimeSeriesServiceManager* tsMgr = SmTimeSeriesServiceManager::GetInstance();
 			// 시세 전용 소켓이 있을 때
-			if (tsMgr->SisiSocket()) {
+			if (tsMgr->GetSiseSocketCount() > 0) {
 				// 시세 소켓과 다른 것들에게만 메시지를 보낸다.
-				if (tsMgr->SisiSocket()->SessionID() != it->second->SessionID()) {
+				if (it->second->Type() == 0) {
 					v.emplace_back(it->second->weak_from_this());
 				}
 			}

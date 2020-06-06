@@ -11,5 +11,7 @@
 #include "framework.h"
 #include <afxcontrolbars.h>
 #include <afxcontrolbars.h>
+#undef min
+#undef max
 
 #endif //PCH_H

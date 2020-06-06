@@ -19,6 +19,8 @@
 #include "SmChartDataManager.h"
 #include "SmChartData.h"
 #include "SmTimeSeriesServiceManager.h"
+#include "SmSymbolManager.h"
+#include "SmAIIndicatorManager.h"
 using namespace nlohmann;
 // VtHdCtrl dialog
 
@@ -163,18 +165,39 @@ void SmHdCtrl::UnregisterProduct(std::string symCode)
 
 void SmHdCtrl::GetChartData(SmChartDataRequest req)
 {
-	if (req.chartType == SmChartType::TICK)
-		GetChartDataShortCycle(req);
-	else if (req.chartType == SmChartType::MIN)
-		GetChartDataShortCycle(req);
-	else if (req.chartType == SmChartType::DAY)
-		GetChartDataLongCycle(req);
-	else if (req.chartType == SmChartType::WEEK)
-		GetChartDataLongCycle(req);
-	else if (req.chartType == SmChartType::MON)
-		GetChartDataLongCycle(req);
-	else
-		GetChartDataShortCycle(req);
+	LOG_F(INFO, "GetChartData symbol Code: %s", req.symbolCode.c_str());
+	LOG_F(INFO, "GetChartData : %s", req.GetDataKey().c_str());
+
+	if (req.GetDataKey().length() < 8)
+		return;
+	if (std::isdigit(req.symbolCode.at(2))) {
+		if (req.symbolCode.length() < 8)
+			return;
+		std::string prefix = req.symbolCode.substr(0, 3);
+		GetChartDataForDomestic(req);
+	}
+	else {
+
+		if (req.symbolCode.length() < 4)
+			return;
+		// 심볼 테이블에 있는 것만 요청을 한다.
+		std::shared_ptr<SmSymbol> sym = SmSymbolManager::GetInstance()->FindSymbol(req.symbolCode);
+		if (!sym)
+			return;
+
+		if (req.chartType == SmChartType::TICK)
+			GetChartDataLongCycle(req);
+		else if (req.chartType == SmChartType::MIN)
+			GetChartDataShortCycle(req);
+		else if (req.chartType == SmChartType::DAY)
+			GetChartDataLongCycle(req);
+		else if (req.chartType == SmChartType::WEEK)
+			GetChartDataLongCycle(req);
+		else if (req.chartType == SmChartType::MON)
+			GetChartDataLongCycle(req);
+		else
+			GetChartDataShortCycle(req);
+	}
 }
 
 
@@ -300,6 +323,179 @@ void SmHdCtrl::GetChartDataLongCycle(SmChartDataRequest req)
 	_ChartDataReqMap[nRqID] = req;
 }
 
+void SmHdCtrl::GetChartDataForDomestic(SmChartDataRequest req)
+{
+	std::string temp;
+	std::string reqString;
+
+	temp = VtStringUtil::PadRight(req.symbolCode, ' ', 15);
+	reqString.append(temp);
+
+	std::string str = VtStringUtil::getCurentDate();
+	reqString.append(str);
+
+	reqString.append(_T("999999"));
+
+	temp = VtStringUtil::PadLeft(req.count, '0', 4);
+	reqString.append(temp);
+
+	temp = VtStringUtil::PadLeft(req.cycle, '0', 3);
+	reqString.append(temp);
+
+	if (req.chartType == SmChartType::TICK)
+		reqString.append("0");
+	else if (req.chartType == SmChartType::MIN)
+		reqString.append("1");
+	else if (req.chartType == SmChartType::DAY)
+		reqString.append("2");
+	else if (req.chartType == SmChartType::WEEK)
+		reqString.append("3");
+	else if (req.chartType == SmChartType::MON)
+		reqString.append("4");
+	else
+		reqString.append("1");
+
+	if (req.next == 0)
+		reqString.append(_T("0"));
+	else
+		reqString.append(_T("1"));
+
+	temp = VtStringUtil::PadRight(req.reqKey, ' ', 21);
+	reqString.append(temp);
+
+	reqString.append(_T("0"));
+	reqString.append(_T("0"));
+	reqString.append(_T("00"));
+	reqString.append(_T("000000"));
+	reqString.append(_T(" "));
+
+	if (req.seq == 0)
+		reqString.append(_T("0"));
+	else
+		reqString.append(_T("1"));
+
+	CString sTrCode = "v90003";
+	CString sInput = reqString.c_str();
+	LOG_F(INFO, "GetChartDataDomestic %s", reqString.c_str());
+	CString strNextKey = _T("");
+	int nRqID = m_CommAgent.CommRqData(sTrCode, sInput, sInput.GetLength(), "");
+	_ChartDataReqMap[nRqID] = req;
+}
+
+void SmHdCtrl::OnRcvdDomesticChartData(CString& sTrCode, LONG& nRqID)
+{
+	try {
+		int nRepeatCnt = m_CommAgent.CommGetRepeatCnt(sTrCode, -1, "OutRec2");
+		//influxdb_cpp::server_info si("127.0.0.1", 8086, "abroad_future", "angelpie", "orion1");
+		//influxdb_cpp::server_info si("127.0.0.1", 8086, "test_x", "test", "test");
+		CString msg;
+
+		auto it = _ChartDataReqMap.find(nRqID);
+		if (it == _ChartDataReqMap.end())
+			return;
+		SmChartDataRequest req = it->second;
+		SmTimeSeriesCollector* tsCol = SmTimeSeriesCollector::GetInstance();
+		SmChartDataManager* chartDataMgr = SmChartDataManager::GetInstance();
+		// 차트 데이터 목록에 추가한다.
+		std::shared_ptr<SmChartData> chart_data = chartDataMgr->AddChartData(req);
+		int total_count = nRepeatCnt;
+		int current_count = 1;
+		std::vector<SmChartDataItem> chart_vec;
+		// 가장 최근것이 가장 먼저 온다. 따라서 가장 과거의 데이터를 먼저 가져온다.
+		// Received the chart data first.
+		for (int i = nRepeatCnt - 1; i >= 0; --i) {
+			CString strDate = "";
+			CString strTime = "";
+
+			CString tempDate = m_CommAgent.CommGetData(sTrCode, -1, "OutRec2", i, "날짜시간");
+
+			if (chart_data->ChartType() == SmChartType::MIN)
+				tempDate.Append(_T("00"));
+			else
+				tempDate.Append(_T("000000"));
+
+
+			strTime = tempDate.Right(6);
+			strDate = tempDate.Left(8);
+
+			CString strOpen = m_CommAgent.CommGetData(sTrCode, -1, "OutRec2", i, "시가");
+			CString strHigh = m_CommAgent.CommGetData(sTrCode, -1, "OutRec2", i, "고가");
+			CString strLow = m_CommAgent.CommGetData(sTrCode, -1, "OutRec2", i, "저가");
+			CString strClose = m_CommAgent.CommGetData(sTrCode, -1, "OutRec2", i, "종가");
+			CString strVol = m_CommAgent.CommGetData(sTrCode, -1, "OutRec2", i, "거래량");
+
+			// 차트 데이터가 중간에 이상이 있으면 나머지는 전송을 하지 않는다.
+			if (strDate.GetLength() == 0) {
+				chart_data->Received(true);
+				SmAIIndicatorManager::GetInstance()->OnReceivedChartData(chart_data);
+				break;
+			}
+
+			//msg.Format(_T("OnRcvdAbroadChartData :: index = %d, date = %s, t = %s, o = %s, h = %s, l = %s, c = %s, v = %s\n"), i, strDate, strTime, strOpen, strHigh, strLow, strClose, strVol);
+			//TRACE(msg);
+
+			SmChartDataItem data;
+			data.symbolCode = req.symbolCode;
+			data.chartType = req.chartType;
+			data.cycle = req.cycle;
+			data.date = strDate.Trim();
+			data.time = strTime.Trim();
+			data.date_time = data.date + data.time;
+			data.h = _ttoi(strHigh);
+			data.l = _ttoi(strLow);
+			data.o = _ttoi(strOpen);
+			data.c = _ttoi(strClose);
+			data.v = _ttoi(strVol);
+			data.total_count = total_count;
+			data.current_count = current_count;
+			//chart_data->PushChartDataItemToBack(data);
+
+
+			char buffer[4096];
+			sprintf(buffer, "SendChartDataOnebyOne%s : %s\n", data.date.c_str(), data.time.c_str());
+			OutputDebugString(buffer);
+			//LOG_F(INFO, "OnReqResendCharrtDataOneByOne %s", data.GetDataKey().c_str());
+
+			// 차트데이터에 추가한다.
+			std::shared_ptr<SmChartData> chart_data = SmChartDataManager::GetInstance()->AddChartData(data);
+			chart_data->AddData(data);
+
+			// 전체 갯수와 현재 갯수가 일치하면 차트 데이터를 받았다고 표시한다.
+			if (total_count == current_count) {
+				chart_data->Received(true);
+				SmAIIndicatorManager::GetInstance()->OnReceivedChartData(chart_data);
+			}
+			current_count++;
+
+			// 차트데이터는 바로 보낸다.
+			SmTimeSeriesServiceManager* tsMgr = SmTimeSeriesServiceManager::GetInstance();
+			tsMgr->SendChartData(req.session_id, data);
+		}
+
+		LOG_F(INFO, "OnRcvdDomesticChartData %s", req.GetDataKey().c_str());
+
+		// 아직 처리되지 못한 데이터는 큐를 통해서 처리한다.
+		RequestChartDataFromQ();
+
+		// 차트 데이터 수신 요청 목록에서 제거한다.
+		_ChartDataReqMap.erase(it);
+	}
+	catch (std::exception e)
+	{
+		std::string error = e.what();
+		LOG_F(INFO, "%s", error);
+	}
+}
+
+void SmHdCtrl::RequestChartDataFromQ()
+{
+	if (!_ChartDataReqQueue.empty()) {
+		//Sleep(700);
+		GetChartData(_ChartDataReqQueue.front());
+		_ChartDataReqQueue.pop();
+	}
+}
+
 void SmHdCtrl::DownloadMasterFiles(std::string param)
 {
 	m_CommAgent.CommReqMakeCod(param.c_str(), 0);
@@ -325,6 +521,24 @@ void SmHdCtrl::GetHogaData(std::string symCode)
 	CString strNextKey = "";
 	int nRqID = m_CommAgent.CommFIDRqData(sFidCode, sInput, sReqFidInput, sInput.GetLength(), strNextKey);
 	_SiseDataReqMap[nRqID] = symCode;
+}
+
+void SmHdCtrl::RequestChartData(SmChartDataRequest req)
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+
+	LOG_F(INFO, "RequestChartData %s", req.GetDataKey().c_str());
+	_ChartDataReqQueue.push(req);
+
+// 	if (_ChartDataReqQueue.size() > 2) {
+// 		while (!_ChartDataReqQueue.empty()) _ChartDataReqQueue.pop();
+// 		return;
+// 	}
+// 	else 
+//	if (_ChartDataReqQueue.size() > 1)
+//		return;
+
+	GetChartData(_ChartDataReqQueue.front());
 }
 
 void SmHdCtrl::OnRcvdAbroadHoga(CString& strKey, LONG& nRealType)
@@ -598,67 +812,88 @@ void SmHdCtrl::OnRcvdAbroadHogaByReq(CString& sTrCode, LONG& nRqID)
 
 void SmHdCtrl::OnRcvdAbroadChartData(CString& sTrCode, LONG& nRqID)
 {
-	int nRepeatCnt = m_CommAgent.CommGetRepeatCnt(sTrCode, -1, "OutRec1");
-	//influxdb_cpp::server_info si("127.0.0.1", 8086, "abroad_future", "angelpie", "orion1");
-	//influxdb_cpp::server_info si("127.0.0.1", 8086, "test_x", "test", "test");
-	CString msg;
+	try {
+		int nRepeatCnt = m_CommAgent.CommGetRepeatCnt(sTrCode, -1, "OutRec1");
+		//influxdb_cpp::server_info si("127.0.0.1", 8086, "abroad_future", "angelpie", "orion1");
+		//influxdb_cpp::server_info si("127.0.0.1", 8086, "test_x", "test", "test");
+		CString msg;
 
-	auto it = _ChartDataReqMap.find(nRqID);
-	if (it == _ChartDataReqMap.end())
-		return;
-	SmChartDataRequest req = it->second;
-	SmTimeSeriesCollector* tsCol = SmTimeSeriesCollector::GetInstance();
-	SmChartDataManager* chartDataMgr = SmChartDataManager::GetInstance();
-	std::shared_ptr<SmChartData> chart_data = chartDataMgr->AddChartData(req);
-	// 가장 최근것이 가장 먼저 온다. 따라서 가장 과거의 데이터를 먼저 가져온다.
-	// Received the chart data first.
-	for (int i = nRepeatCnt - 1; i >= 0; --i) {
-		CString strDate = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "국내일자");
-		CString strTime = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "국내시간");
-		CString strOpen = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "시가");
-		CString strHigh = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "고가");
-		CString strLow = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "저가");
-		CString strClose = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "종가");
-		CString strVol = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "체결량");
+		auto it = _ChartDataReqMap.find(nRqID);
+		if (it == _ChartDataReqMap.end())
+			return;
+		SmChartDataRequest req = it->second;
+		SmTimeSeriesCollector* tsCol = SmTimeSeriesCollector::GetInstance();
+		SmChartDataManager* chartDataMgr = SmChartDataManager::GetInstance();
+		std::shared_ptr<SmChartData> chart_data = chartDataMgr->AddChartData(req);
+		// 가장 최근것이 가장 먼저 온다. 따라서 가장 과거의 데이터를 먼저 가져온다.
+		// Received the chart data first.
+		int total_count = nRepeatCnt;
+		int current_count = 1;
+		for (int i = nRepeatCnt - 1; i >= 0; --i) {
+			CString strDate = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "국내일자");
+			CString strTime = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "국내시간");
+			CString strOpen = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "시가");
+			CString strHigh = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "고가");
+			CString strLow = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "저가");
+			CString strClose = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "종가");
+			CString strVol = m_CommAgent.CommGetData(sTrCode, -1, "OutRec1", i, "체결량");
 
-		if (strDate.GetLength() == 0)
-			continue;
-		
-		msg.Format(_T("OnRcvdAbroadChartData :: index = %d, date = %s, t = %s, o = %s, h = %s, l = %s, c = %s, v = %s\n"), i, strDate, strTime, strOpen, strHigh, strLow, strClose, strVol);
-		//TRACE(msg);
+			// 차트 데이터가 중간에 이상이 있으면 나머지는 전송을 하지 않는다.
+			if (strDate.GetLength() == 0) {
+				chart_data->Received(true);
+				SmAIIndicatorManager::GetInstance()->OnReceivedChartData(chart_data);
+				break;
+			}
 
-		SmChartDataItem data;
-		data.symbolCode = req.symbolCode;
-		data.chartType = req.chartType;
-		data.cycle = req.cycle;
-		data.date = strDate.Trim();
-		data.time = strTime.Trim();
-		data.h = _ttoi(strHigh);
-		data.l = _ttoi(strLow);
-		data.o = _ttoi(strOpen);
-		data.c = _ttoi(strClose);
-		data.v = _ttoi(strVol);
-		if (req.reqType == SmChartDataReqestType::FIRST)
-			chart_data->PushChartDataItemToBack(data);
-		else
-			chart_data->UpdateChartData(data);
-		// 차트 데이터를 데이터 베이스에 저장한다.
-		// 이 부분은 일단 주석처리한다. - 시스템 리소스를 너무 많이 잡아 먹어서 따로 비동기로 수행해야 한다. 
-		tsCol->OnChartDataItem(data);
+			//msg.Format(_T("OnRcvdAbroadChartData :: index = %d, date = %s, t = %s, o = %s, h = %s, l = %s, c = %s, v = %s\n"), i, strDate, strTime, strOpen, strHigh, strLow, strClose, strVol);
+			//TRACE(msg);
+
+			SmChartDataItem data;
+			data.symbolCode = req.symbolCode;
+			data.chartType = req.chartType;
+			data.cycle = req.cycle;
+			data.date = strDate.Trim();
+			data.time = strTime.Trim();
+			data.date_time = data.date + data.time;
+			data.h = _ttoi(strHigh);
+			data.l = _ttoi(strLow);
+			data.o = _ttoi(strOpen);
+			data.c = _ttoi(strClose);
+			data.v = _ttoi(strVol);
+			data.total_count = total_count;
+			data.current_count = current_count;
+			//chart_data->PushChartDataItemToBack(data);
+
+
+			char buffer[4096];
+			sprintf(buffer, "SendChartDataOnebyOne%s : %s\n", data.date.c_str(), data.time.c_str());
+			OutputDebugString(buffer);
+			LOG_F(INFO, "OnReqResendCharrtDataOneByOne %s", data.GetDataKey().c_str());
+
+			// 차트데이터에 추가한다.
+			std::shared_ptr<SmChartData> chart_data = SmChartDataManager::GetInstance()->AddChartData(data);
+			chart_data->AddData(data);
+
+			// 전체 갯수와 현재 갯수가 일치하면 차트 데이터를 받았다고 표시한다.
+			if (total_count == current_count) {
+				chart_data->Received(true);
+				SmAIIndicatorManager::GetInstance()->OnReceivedChartData(chart_data);
+			}
+			current_count++;
+
+			// 차트데이터는 바로 보낸다.
+			SmTimeSeriesServiceManager* tsMgr = SmTimeSeriesServiceManager::GetInstance();
+			tsMgr->SendChartData(req.session_id, data);
+		}
+
+		// 차트 데이터 수신 요청 목록에서 제거한다.
+		_ChartDataReqMap.erase(it);
+
+		// 아직 처리되지 못한 데이터는 큐를 통해서 처리한다.
+		RequestChartDataFromQ();
 	}
-
-	// 차트 데이터 수신 요청 목록에서 제거한다.
-	_ChartDataReqMap.erase(it);
-	// 주기데이터가 도착했음을 알린다.
-	if (chart_data) {
-		if (nRepeatCnt == chart_data->CycleDataSize()) {
-			chart_data->OnChartDataUpdated();
-		}
-		else {
-			// 차트 데이터 수신 완료를 알릴다.
-			SmTimeSeriesServiceManager* tsSvcMgr = SmTimeSeriesServiceManager::GetInstance();
-			tsSvcMgr->OnCompleteChartData(req, chart_data);
-		}
+	catch (std::exception exception) {
+		std::string err = exception.what();
 	}
 }
 
@@ -677,6 +912,8 @@ void SmHdCtrl::OnRcvdAbroadChartData2(CString& sTrCode, LONG& nRqID)
 	SmTimeSeriesCollector* tsCol = SmTimeSeriesCollector::GetInstance();
 	SmChartDataManager* chartDataMgr = SmChartDataManager::GetInstance();
 	std::shared_ptr<SmChartData> chart_data = chartDataMgr->AddChartData(req);
+	int total_count = nRepeatCnt;
+	int current_count = 1;
 	// 가장 최근것이 가장 먼저 온다. 따라서 가장 과거의 데이터를 먼저 가져온다.
 	// Received the chart data first.
 	for (int i = 0; i < nRepeatCnt; ++i) {
@@ -690,12 +927,15 @@ void SmHdCtrl::OnRcvdAbroadChartData2(CString& sTrCode, LONG& nRqID)
 		CString strTotalVol = m_CommAgent.CommGetData(sTrCode, -1, "OutRec2", i, "누적거래량");
 
 		
-		if (strDate.GetLength() == 0)
-			continue;
+		// 차트 데이터가 중간에 이상이 있으면 나머지는 전송을 하지 않는다.
+		if (strDate.GetLength() == 0) {
+			chart_data->Received(true);
+			SmAIIndicatorManager::GetInstance()->OnReceivedChartData(chart_data);
+			break;
+		}
 
-		msg.Format(_T("OnRcvdAbroadChartData :: index = %d, date = %s, t = %s, o = %s, h = %s, l = %s, c = %s, v = %s\n"), i, strDate, strTime, strOpen, strHigh, strLow, strClose, strVol);
-		TRACE(msg);
-
+		//msg.Format(_T("OnRcvdAbroadChartData :: index = %d, date = %s, t = %s, o = %s, h = %s, l = %s, c = %s, v = %s\n"), i, strDate, strTime, strOpen, strHigh, strLow, strClose, strVol);
+		//TRACE(msg);
 
 		SmChartDataItem data;
 		data.symbolCode = req.symbolCode;
@@ -703,33 +943,43 @@ void SmHdCtrl::OnRcvdAbroadChartData2(CString& sTrCode, LONG& nRqID)
 		data.cycle = req.cycle;
 		data.date = strDate.Trim();
 		data.time = strTime.Trim();
+		data.date_time = data.date + data.time;
 		data.h = _ttoi(strHigh);
 		data.l = _ttoi(strLow);
 		data.o = _ttoi(strOpen);
 		data.c = _ttoi(strClose);
 		data.v = _ttoi(strVol);
-		if (req.reqType == SmChartDataReqestType::FIRST)
-			chart_data->PushChartDataItemToFront(data);
-		else
-			chart_data->UpdateChartData(data);
-		// 차트 데이터를 데이터 베이스에 저장한다.
-		// 이 부분은 일단 주석처리한다. - 시스템 리소스를 너무 많이 잡아 먹어서 따로 비동기로 수행해야 한다. 
-		//tsCol->OnChartDataItem(data);
+		data.total_count = total_count;
+		data.current_count = current_count;
+		// 차트데이터에 데이터를 쌓는다.
+		//chart_data->PushChartDataItemToBack(data);
+
+
+		char buffer[4096];
+		sprintf(buffer, "SendChartDataOnebyOne%s : %s\n", data.date.c_str(), data.time.c_str());
+		OutputDebugString(buffer);
+		LOG_F(INFO, "OnReqResendCharrtDataOneByOne %s", data.GetDataKey().c_str());
+
+		// 차트데이터에 추가한다.
+		std::shared_ptr<SmChartData> chart_data = SmChartDataManager::GetInstance()->AddChartData(data);
+		chart_data->AddData(data);
+
+		// 전체 갯수와 현재 갯수가 일치하면 차트 데이터를 받았다고 표시한다.
+		if (total_count == current_count) {
+			chart_data->Received(true);
+			SmAIIndicatorManager::GetInstance()->OnReceivedChartData(chart_data);
+		}
+		current_count++;
+
+		// 차트데이터는 바로 보낸다.
+		SmTimeSeriesServiceManager* tsMgr = SmTimeSeriesServiceManager::GetInstance();
+		tsMgr->SendChartData(req.session_id, data);
 	}
 
 	// 차트 데이터 수신 요청 목록에서 제거한다.
 	_ChartDataReqMap.erase(it);
-	// 주기데이터가 도착했음을 알린다.
-	if (chart_data) {
-		if (nRepeatCnt == chart_data->CycleDataSize()) {
-			chart_data->OnChartDataUpdated();
-		}
-		else {
-			// 차트 데이터 수신 완료를 알릴다.
-			SmTimeSeriesServiceManager* tsSvcMgr = SmTimeSeriesServiceManager::GetInstance();
-			tsSvcMgr->OnCompleteChartData(req, chart_data);
-		}
-	}
+	// 아직 처리되지 못한 데이터는 큐를 통해서 처리한다.
+	RequestChartDataFromQ();
 }
 
 
@@ -760,6 +1010,9 @@ void SmHdCtrl::OnDataRecv(CString sTrCode, LONG nRqID)
 	else if (sTrCode == DefAbsChartData2) {
 		OnRcvdAbroadChartData2(sTrCode, nRqID);
 	}
+	else if (sTrCode == DefChartData) {
+		OnRcvdDomesticChartData(sTrCode, nRqID);
+	}
 }
 
 void SmHdCtrl::OnGetBroadData(CString strKey, LONG nRealType)
@@ -781,12 +1034,25 @@ void SmHdCtrl::OnGetBroadData(CString strKey, LONG nRealType)
 
 void SmHdCtrl::OnGetMsg(CString strCode, CString strMsg)
 {
-	int i = 0;
+	try {
+		LOG_F(INFO, "OnGetMsg code = %s, msg = %s", strCode, strMsg);
+	}
+	catch (std::exception e) {
+		std::string msg = e.what();
+		LOG_F(INFO, "OnGetMsg Error code = %s, msg = %s", strCode, msg.c_str());
+	}
 }
 
 void SmHdCtrl::OnGetMsgWithRqId(int nRqId, CString strCode, CString strMsg)
 {
-	CString msg;
-	msg.Format(_T("req_id = %d, hd_server_code = %s, hd_server_msg = %s\n"), nRqId, strCode, strMsg);
-	TRACE(msg);
+	try {
+		CString msg;
+		msg.Format(_T("req_id = %d, hd_server_code = %s, hd_server_msg = %s\n"), nRqId, strCode, strMsg);
+		//TRACE(msg);
+		LOG_F(INFO, "OnGetMsgWithRqId nRqId = %d, code = %s, msg = %s", nRqId, strCode, strMsg);
+	}
+	catch (std::exception e) {
+		std::string msg = e.what();
+		LOG_F(INFO, "OnGetMsgWithRqId nRqId = %d, code = %s, msg = %s", nRqId, strCode, msg.c_str());
+	}
 }

@@ -5,6 +5,7 @@
 #include <set>
 #include <list>
 #include <map>
+#include <array>
 class SmChartData
 {
 private:
@@ -27,6 +28,11 @@ private:
 	// 등록된 사용자들에게 차트 정기 데이터를 보내준다.
 	void SendCyclicChartDataToUsers();
 public:
+	std::vector<double> GetClose();
+	std::vector<double> GetOpen();
+	std::vector<double> GetHigh();
+	std::vector<double> GetLow();
+	std::vector<double> GetVolume();
 	std::multimap<std::string, SmChartDataItem>& GetDataMap() {
 		return _DataMap;
 	}

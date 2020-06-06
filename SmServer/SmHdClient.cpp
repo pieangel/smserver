@@ -39,7 +39,7 @@ void SmHdClient::UnregisterProduct(std::string symCode)
 
 void SmHdClient::GetChartData(SmChartDataRequest req)
 {
-	_HdCtrl->GetChartData(req);
+	_HdCtrl->RequestChartData(req);
 }
 
 void SmHdClient::OnRcvdAbroadHoga(SmSymbol* sym)

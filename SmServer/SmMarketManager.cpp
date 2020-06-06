@@ -342,7 +342,7 @@ SmMarket* SmMarketManager::FindMarket(std::string mrkt_name)
 {
 	for (auto it = _MarketList.begin(); it != _MarketList.end(); ++it) {
 		SmMarket* mrkt = *it;
-		if (mrkt->Name().compare(mrkt_name) == 0) {
+		if (mrkt->Name().find(mrkt_name) != std::string::npos) {
 			return mrkt;
 		}
 	}
